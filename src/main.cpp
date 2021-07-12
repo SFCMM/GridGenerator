@@ -7,6 +7,27 @@
 #include <omp.h>
 #endif
 
+static auto run(const int debug) -> int {
+  if(debug == NO_DEBUG) {
+    GridGenerator<NO_DEBUG> gridGen{};
+    return gridGen.run();
+  }
+  if(debug == MIN_DEBUG) {
+    GridGenerator<MIN_DEBUG> gridGen{};
+    return gridGen.run();
+  }
+  if(debug == DEBUG) {
+    GridGenerator<DEBUG> gridGen{};
+    return gridGen.run();
+  }
+  if(debug == MORE_DEBUG) {
+    GridGenerator<MORE_DEBUG> gridGen{};
+    return gridGen.run();
+  }
+  GridGenerator<MAX_DEBUG> gridGen{};
+  return gridGen.run();
+}
+
 auto main(int argc, char** argv) -> int {
   cxxopts::Options options("GridGenerator", "A highly parallel grid generator.");
 
@@ -28,23 +49,5 @@ auto main(int argc, char** argv) -> int {
     std::cout << "Activated debug level " << DEBUG_LEVEL.at(debug) << std::endl;
   }
 
-  int return_code = 0;
-  if(debug == NO_DEBUG) {
-    GridGenerator<NO_DEBUG> gridGen{};
-    return_code = gridGen.run();
-  } else if(debug == MIN_DEBUG) {
-    GridGenerator<MIN_DEBUG> gridGen{};
-    return_code = gridGen.run();
-  } else if(debug == DEBUG) {
-    GridGenerator<DEBUG> gridGen{};
-    return_code = gridGen.run();
-  } else if(debug == MORE_DEBUG) {
-    GridGenerator<MORE_DEBUG> gridGen{};
-    return_code = gridGen.run();
-  } else if(debug == MAX_DEBUG) {
-    GridGenerator<MAX_DEBUG> gridGen{};
-    return_code = gridGen.run();
-  }
-
-  return return_code;
+  return run(debug);
 }
