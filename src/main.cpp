@@ -7,25 +7,25 @@
 #include <omp.h>
 #endif
 
-static auto run(const int debug) -> int {
+static auto run(const int debug, int argc, char** argv) -> int {
   if(debug == NO_DEBUG) {
     GridGenerator<NO_DEBUG> gridGen{};
-    return gridGen.run();
+    return gridGen.run(argc, argv);
   }
   if(debug == MIN_DEBUG) {
     GridGenerator<MIN_DEBUG> gridGen{};
-    return gridGen.run();
+    return gridGen.run(argc, argv);
   }
   if(debug == DEBUG) {
     GridGenerator<DEBUG> gridGen{};
-    return gridGen.run();
+    return gridGen.run(argc, argv);
   }
   if(debug == MORE_DEBUG) {
     GridGenerator<MORE_DEBUG> gridGen{};
-    return gridGen.run();
+    return gridGen.run(argc, argv);
   }
   GridGenerator<MAX_DEBUG> gridGen{};
-  return gridGen.run();
+  return gridGen.run(argc, argv);
 }
 
 auto main(int argc, char** argv) -> int {
@@ -49,5 +49,5 @@ auto main(int argc, char** argv) -> int {
     std::cout << "Activated debug level " << DEBUG_LEVEL.at(debug) << std::endl;
   }
 
-  return run(debug);
+  return run(debug, argc, argv);
 }

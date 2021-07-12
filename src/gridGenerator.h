@@ -11,7 +11,7 @@ class GridGenerator {
   GridGenerator()  = default;
   ~GridGenerator() = default;
 
-  auto run() -> int { return 0; }
+  auto run(int argc, char** argv) -> int;
 
  private:
 };
