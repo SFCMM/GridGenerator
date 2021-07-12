@@ -1,0 +1,2 @@
+Checks: '-*,misc-*,bugprone-*,clang-analyzer-*,mpi-*,performance-*,modernize-*,
+cppcoreguidelines-*,readability-*,-readability-avoid-const-params-in-decls, portability-*, openmp-*'
