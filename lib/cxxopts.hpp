@@ -25,6 +25,7 @@ THE SOFTWARE.
 */
 
 #define CXXOPTS_NO_RTTI
+#define CXXOPTS_NO_EXCEPTIONS
 
 #ifndef CXXOPTS_HPP_INCLUDED
 #define CXXOPTS_HPP_INCLUDED
@@ -1454,12 +1455,12 @@ inline OptionAdder &
 OptionAdder::operator()(const std::string &opts, const std::string &desc,
                         const std::shared_ptr<const Value> &value,
                         std::string arg_help) {
-  std::string short_sw, long_sw;
+  std::string short_sw;
+  std::string long_sw;
   std::tie(short_sw, long_sw) = values::parser_tool::SplitSwitchDef(opts);
 
-  if (!short_sw.length() && !long_sw.length()) {
-    throw_or_mimic<invalid_option_format_error>(opts);
-  } else if (long_sw.length() == 1 && short_sw.length()) {
+  if ((short_sw.empty() && long_sw.empty()) or
+      (long_sw.length() == 1 && !short_sw.empty())) {
     throw_or_mimic<invalid_option_format_error>(opts);
   }
 
@@ -1674,8 +1675,8 @@ inline auto OptionParser::parse(int argc, const char *const *argv)
     ++current;
   }
 
-  for (auto &opt : m_options) {
-    auto &detail = opt.second;
+  for (const auto &opt : m_options) {
+    const auto &detail = opt.second;
     const auto &value = detail->value();
 
     auto &store = m_parsed[detail->hash()];
@@ -1712,7 +1713,7 @@ inline auto OptionParser::parse(int argc, const char *const *argv)
 }
 
 inline void OptionParser::finalise_aliases() {
-  for (auto &option : m_options) {
+  for (const auto &option : m_options) {
     auto &detail = *option.second;
     auto hash = detail.hash();
     m_keys[detail.short_name()] = hash;
@@ -1742,7 +1743,7 @@ inline void Options::add_option(const std::string &group, const std::string &s,
     add_one_option(l, option);
   }
 
-  m_option_list.push_front(*option.get());
+  m_option_list.push_front(*option);
   auto iter = m_option_list.begin();
   m_option_map[s] = iter;
   m_option_map[l] = iter;
