@@ -8,8 +8,13 @@
 template <int DEBUG_LEVEL>
 class GridGenerator {
  public:
-  GridGenerator()  = default;
-  ~GridGenerator() = default;
+  GridGenerator()                     = default;
+  ~GridGenerator()                    = default;
+  GridGenerator(const GridGenerator&) = delete;
+  GridGenerator(GridGenerator&&)      = delete;
+  auto operator=(const GridGenerator&) -> GridGenerator& = delete;
+  auto operator=(GridGenerator&&) -> GridGenerator& = delete;
+
 
   auto run(int argc, char** argv) -> int;
 

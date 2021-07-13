@@ -18,3 +18,9 @@ auto GridGenerator<DEBUG_LEVEL>::run(int argc, char** argv) -> int {
 
   return 0;
 }
+
+template class GridGenerator<0>;
+template class GridGenerator<1>;
+template class GridGenerator<2>;
+template class GridGenerator<3>;
+template class GridGenerator<4>;

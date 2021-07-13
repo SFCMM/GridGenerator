@@ -7,3 +7,9 @@ include_directories(lib)
 
 add_executable(gridgenerator
         src/main.cpp src/gridGenerator.cpp src/gridGenerator.h)
+
+
+#todo: move to aux/host file
+include_directories(/home/svenb/build/omp411/include)
+link_directories(/home/svenb/build/omp411/lib)
+TARGET_LINK_LIBRARIES(gridgenerator mpi)

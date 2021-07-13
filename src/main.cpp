@@ -3,10 +3,6 @@
 #include "constants.h"
 #include "gridGenerator.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 static auto run(const int debug, int argc, char** argv) -> int {
   if(debug == NO_DEBUG) {
     GridGenerator<NO_DEBUG> gridGen{};
