@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 */
 
+#define CXXOPTS_NO_RTTI
+
 #ifndef CXXOPTS_HPP_INCLUDED
 #define CXXOPTS_HPP_INCLUDED
 
@@ -192,26 +194,30 @@ inline cxxopts::UnicodeStringIterator end(const icu::UnicodeString &s) {
 namespace cxxopts {
 using String = std::string;
 
-template <typename T> T toLocalString(T &&t) { return std::forward<T>(t); }
+template <typename T> auto toLocalString(T &&t) -> T {
+  return std::forward<T>(t);
+}
 
-inline size_t stringLength(const String &s) { return s.length(); }
+inline auto stringLength(const String &s) -> size_t { return s.length(); }
 
-inline String &stringAppend(String &s, const String &a) { return s.append(a); }
+inline auto stringAppend(String &s, const String &a) -> String & {
+  return s.append(a);
+}
 
-inline String &stringAppend(String &s, size_t n, char c) {
+inline auto stringAppend(String &s, size_t n, char c) -> String & {
   return s.append(n, c);
 }
 
 template <typename Iterator>
-String &stringAppend(String &s, Iterator begin, Iterator end) {
+auto stringAppend(String &s, Iterator begin, Iterator end) -> String & {
   return s.append(begin, end);
 }
 
-template <typename T> std::string toUTF8String(T &&t) {
+template <typename T> auto toUTF8String(T &&t) -> std::string {
   return std::forward<T>(t);
 }
 
-inline bool empty(const std::string &s) { return s.empty(); }
+inline auto empty(const std::string &s) -> bool { return s.empty(); }
 } // namespace cxxopts
 
 // ifdef CXXOPTS_USE_UNICODE
@@ -242,29 +248,31 @@ class Value : public std::enable_shared_from_this<Value> {
 public:
   virtual ~Value() = default;
 
-  virtual std::shared_ptr<Value> clone() const = 0;
+  virtual auto clone() const -> std::shared_ptr<Value> = 0;
 
   virtual void parse(const std::string &text) const = 0;
 
   virtual void parse() const = 0;
 
-  virtual bool has_default() const = 0;
+  virtual auto has_default() const -> bool = 0;
 
-  virtual bool is_container() const = 0;
+  virtual auto is_container() const -> bool = 0;
 
-  virtual bool has_implicit() const = 0;
+  virtual auto has_implicit() const -> bool = 0;
 
-  virtual std::string get_default_value() const = 0;
+  virtual auto get_default_value() const -> std::string = 0;
 
-  virtual std::string get_implicit_value() const = 0;
+  virtual auto get_implicit_value() const -> std::string = 0;
 
-  virtual std::shared_ptr<Value> default_value(const std::string &value) = 0;
+  virtual auto default_value(const std::string &value)
+      -> std::shared_ptr<Value> = 0;
 
-  virtual std::shared_ptr<Value> implicit_value(const std::string &value) = 0;
+  virtual auto implicit_value(const std::string &value)
+      -> std::shared_ptr<Value> = 0;
 
-  virtual std::shared_ptr<Value> no_implicit_value() = 0;
+  virtual auto no_implicit_value() -> std::shared_ptr<Value> = 0;
 
-  virtual bool is_boolean() const = 0;
+  virtual auto is_boolean() const -> bool = 0;
 };
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
@@ -275,7 +283,9 @@ public:
       : m_message(std::move(message)) {}
 
   CXXOPTS_NODISCARD
-  const char *what() const noexcept override { return m_message.c_str(); }
+  auto what() const noexcept -> const char * override {
+    return m_message.c_str();
+  }
 
 private:
   std::string m_message;
@@ -393,15 +403,15 @@ template <typename T> void throw_or_mimic(const std::string &text) {
 namespace values {
 namespace parser_tool {
 struct IntegerDesc {
-  std::string negative = "";
-  std::string base = "";
-  std::string value = "";
+  std::string negative;
+  std::string base;
+  std::string value;
 };
 struct ArguDesc {
-  std::string arg_name = "";
+  std::string arg_name;
   bool grouping = false;
   bool set_value = false;
-  std::string value = "";
+  std::string value;
 };
 #ifdef CXXOPTS_NO_REGEX
 inline IntegerDesc SplitInteger(const std::string &text) {
@@ -531,7 +541,7 @@ std::basic_regex<char>
 
 } // namespace
 
-inline IntegerDesc SplitInteger(const std::string &text) {
+inline auto SplitInteger(const std::string &text) -> IntegerDesc {
   std::smatch match;
   std::regex_match(text, match, integer_pattern);
 
@@ -553,20 +563,20 @@ inline IntegerDesc SplitInteger(const std::string &text) {
   return desc;
 }
 
-inline bool IsTrueText(const std::string &text) {
+inline auto IsTrueText(const std::string &text) -> bool {
   std::smatch result;
   std::regex_match(text, result, truthy_pattern);
   return !result.empty();
 }
 
-inline bool IsFalseText(const std::string &text) {
+inline auto IsFalseText(const std::string &text) -> bool {
   std::smatch result;
   std::regex_match(text, result, falsy_pattern);
   return !result.empty();
 }
 
-inline std::pair<std::string, std::string>
-SplitSwitchDef(const std::string &text) {
+inline auto SplitSwitchDef(const std::string &text)
+    -> std::pair<std::string, std::string> {
   std::match_results<const char *> result;
   std::regex_match(text.c_str(), result, option_specifier);
   if (result.empty()) {
@@ -579,7 +589,7 @@ SplitSwitchDef(const std::string &text) {
   return std::pair<std::string, std::string>(short_sw, long_sw);
 }
 
-inline ArguDesc ParseArgument(const char *arg, bool &matched) {
+inline auto ParseArgument(const char *arg, bool &matched) -> ArguDesc {
   std::match_results<const char *> result;
   std::regex_match(arg, result, option_matcher);
   matched = !result.empty();
@@ -639,7 +649,8 @@ void checked_negate(R &r, T &&t, const std::string &, std::true_type) {
 }
 
 template <typename R, typename T>
-void checked_negate(R &, T &&, const std::string &text, std::false_type) {
+void checked_negate(R & /*unused*/, T && /*unused*/, const std::string &text,
+                    std::false_type /*unused*/) {
   throw_or_mimic<argument_incorrect_type>(text);
 }
 
@@ -794,38 +805,48 @@ public:
     parse_value(text, *m_store);
   }
 
-  bool is_container() const override { return type_is_container<T>::value; }
+  auto is_container() const -> bool override {
+    return type_is_container<T>::value;
+  }
 
   void parse() const override { parse_value(m_default_value, *m_store); }
 
-  bool has_default() const override { return m_default; }
+  auto has_default() const -> bool override { return m_default; }
 
-  bool has_implicit() const override { return m_implicit; }
+  auto has_implicit() const -> bool override { return m_implicit; }
 
-  std::shared_ptr<Value> default_value(const std::string &value) override {
+  auto default_value(const std::string &value)
+      -> std::shared_ptr<Value> override {
     m_default = true;
     m_default_value = value;
     return shared_from_this();
   }
 
-  std::shared_ptr<Value> implicit_value(const std::string &value) override {
+  auto implicit_value(const std::string &value)
+      -> std::shared_ptr<Value> override {
     m_implicit = true;
     m_implicit_value = value;
     return shared_from_this();
   }
 
-  std::shared_ptr<Value> no_implicit_value() override {
+  auto no_implicit_value() -> std::shared_ptr<Value> override {
     m_implicit = false;
     return shared_from_this();
   }
 
-  std::string get_default_value() const override { return m_default_value; }
+  auto get_default_value() const -> std::string override {
+    return m_default_value;
+  }
 
-  std::string get_implicit_value() const override { return m_implicit_value; }
+  auto get_implicit_value() const -> std::string override {
+    return m_implicit_value;
+  }
 
-  bool is_boolean() const override { return std::is_same<T, bool>::value; }
+  auto is_boolean() const -> bool override {
+    return std::is_same<T, bool>::value;
+  }
 
-  const T &get() const {
+  auto get() const -> const T & {
     if (m_store == nullptr) {
       return *m_result;
     }
@@ -848,7 +869,7 @@ public:
   using abstract_value<T>::abstract_value;
 
   CXXOPTS_NODISCARD
-  std::shared_ptr<Value> clone() const override {
+  auto clone() const -> std::shared_ptr<Value> override {
     return std::make_shared<standard_value<T>>(*this);
   }
 };
@@ -863,7 +884,7 @@ public:
     set_default_and_implicit();
   }
 
-  std::shared_ptr<Value> clone() const override {
+  auto clone() const -> std::shared_ptr<Value> override {
     return std::make_shared<standard_value<bool>>(*this);
   }
 
@@ -877,11 +898,11 @@ private:
 };
 } // namespace values
 
-template <typename T> std::shared_ptr<Value> value() {
+template <typename T> auto value() -> std::shared_ptr<Value> {
   return std::make_shared<values::standard_value<T>>();
 }
 
-template <typename T> std::shared_ptr<Value> value(T &t) {
+template <typename T> auto value(T &t) -> std::shared_ptr<Value> {
   return std::make_shared<values::standard_value<T>>(&t);
 }
 
@@ -903,21 +924,24 @@ public:
   OptionDetails(OptionDetails &&rhs) = default;
 
   CXXOPTS_NODISCARD
-  const String &description() const { return m_desc; }
+  auto description() const -> const String & { return m_desc; }
 
   CXXOPTS_NODISCARD
-  const Value &value() const { return *m_value; }
+  auto value() const -> const Value & { return *m_value; }
 
   CXXOPTS_NODISCARD
-  std::shared_ptr<Value> make_storage() const { return m_value->clone(); }
+  auto make_storage() const -> std::shared_ptr<Value> {
+    return m_value->clone();
+  }
 
   CXXOPTS_NODISCARD
-  const std::string &short_name() const { return m_short; }
+  auto short_name() const -> const std::string & { return m_short; }
 
   CXXOPTS_NODISCARD
-  const std::string &long_name() const { return m_long; }
+  auto long_name() const -> const std::string & { return m_long; }
 
-  size_t hash() const { return m_hash; }
+  CXXOPTS_NODISCARD
+  auto hash() const -> size_t { return m_hash; }
 
 private:
   std::string m_short{};
@@ -975,7 +999,7 @@ public:
 #endif
 
   CXXOPTS_NODISCARD
-  size_t count() const noexcept { return m_count; }
+  auto count() const noexcept -> size_t { return m_count; }
 
 #if defined(CXXOPTS_NULL_DEREF_IGNORE)
 #pragma GCC diagnostic pop
@@ -983,9 +1007,9 @@ public:
 
   // TODO: maybe default options should count towards the number of arguments
   CXXOPTS_NODISCARD
-  bool has_default() const noexcept { return m_default; }
+  auto has_default() const noexcept -> bool { return m_default; }
 
-  template <typename T> const T &as() const {
+  template <typename T> auto as() const -> const T & {
     if (m_value == nullptr) {
       throw_or_mimic<option_has_no_value_exception>(
           m_long_name == nullptr ? "" : *m_long_name);
@@ -1019,12 +1043,12 @@ public:
       : m_key(std::move(key_)), m_value(std::move(value_)) {}
 
   CXXOPTS_NODISCARD
-  const std::string &key() const { return m_key; }
+  auto key() const -> const std::string & { return m_key; }
 
   CXXOPTS_NODISCARD
-  const std::string &value() const { return m_value; }
+  auto value() const -> const std::string & { return m_value; }
 
-  template <typename T> T as() const {
+  template <typename T> auto as() const -> T {
     T result;
     values::parse_value(m_value, result);
     return result;
@@ -1050,10 +1074,10 @@ public:
         m_sequential(std::move(sequential)),
         m_unmatched(std::move(unmatched_args)) {}
 
-  ParseResult &operator=(ParseResult &&) = default;
-  ParseResult &operator=(const ParseResult &) = default;
+  auto operator=(ParseResult &&) -> ParseResult & = default;
+  auto operator=(const ParseResult &) -> ParseResult & = default;
 
-  size_t count(const std::string &o) const {
+  auto count(const std::string &o) const -> size_t {
     auto iter = m_keys.find(o);
     if (iter == m_keys.end()) {
       return 0;
@@ -1084,9 +1108,13 @@ public:
     return viter->second;
   }
 
-  const std::vector<KeyValue> &arguments() const { return m_sequential; }
+  auto arguments() const -> const std::vector<KeyValue> & {
+    return m_sequential;
+  }
 
-  const std::vector<std::string> &unmatched() const { return m_unmatched; }
+  auto unmatched() const -> const std::vector<std::string> & {
+    return m_unmatched;
+  }
 
 private:
   NameHashMap m_keys{};
@@ -1120,9 +1148,10 @@ public:
       : m_options(options), m_positional(positional),
         m_allow_unrecognised(allow_unrecognised) {}
 
-  ParseResult parse(int argc, const char *const *argv);
+  auto parse(int argc, const char *const *argv) -> ParseResult;
 
-  bool consume_positional(const std::string &a, PositionalListIterator &next);
+  auto consume_positional(const std::string &a, PositionalListIterator &next)
+      -> bool;
 
   void checked_parse_arg(int argc, const char *const *argv, int &current,
                          const std::shared_ptr<OptionDetails> &value,
@@ -1161,39 +1190,39 @@ public:
         m_allow_unrecognised(false), m_width(76), m_tab_expansion(false),
         m_options(std::make_shared<OptionMap>()) {}
 
-  Options &positional_help(std::string help_text) {
+  auto positional_help(std::string help_text) -> Options & {
     m_positional_help = std::move(help_text);
     return *this;
   }
 
-  Options &custom_help(std::string help_text) {
+  auto custom_help(std::string help_text) -> Options & {
     m_custom_help = std::move(help_text);
     return *this;
   }
 
-  Options &show_positional_help() {
+  auto show_positional_help() -> Options & {
     m_show_positional = true;
     return *this;
   }
 
-  Options &allow_unrecognised_options() {
+  auto allow_unrecognised_options() -> Options & {
     m_allow_unrecognised = true;
     return *this;
   }
 
-  Options &set_width(size_t width) {
+  auto set_width(size_t width) -> Options & {
     m_width = width;
     return *this;
   }
 
-  Options &set_tab_expansion(bool expansion = true) {
+  auto set_tab_expansion(bool expansion = true) -> Options & {
     m_tab_expansion = expansion;
     return *this;
   }
 
-  ParseResult parse(int argc, const char *const *argv);
+  auto parse(int argc, const char *const *argv) -> ParseResult;
 
-  OptionAdder add_options(std::string group = "");
+  auto add_options(std::string group = "") -> OptionAdder;
 
   void add_options(const std::string &group,
                    std::initializer_list<Option> options);
@@ -1217,17 +1246,17 @@ public:
     parse_positional(std::vector<std::string>{begin, end});
   }
 
-  std::string help(const std::vector<std::string> &groups = {}) const;
+  auto help(const std::vector<std::string> &groups = {}) const -> std::string;
 
-  std::vector<std::string> groups() const;
+  auto groups() const -> std::vector<std::string>;
 
-  const HelpGroupDetails &group_help(const std::string &group) const;
+  auto group_help(const std::string &group) const -> const HelpGroupDetails &;
 
 private:
   void add_one_option(const std::string &option,
                       const std::shared_ptr<OptionDetails> &details);
 
-  String help_one_group(const std::string &group) const;
+  auto help_one_group(const std::string &group) const -> String;
 
   void generate_group_help(String &result,
                            const std::vector<std::string> &groups) const;
@@ -1274,7 +1303,7 @@ namespace {
 constexpr size_t OPTION_LONGEST = 30;
 constexpr size_t OPTION_DESC_GAP = 2;
 
-String format_option(const HelpOptionDetails &o) {
+inline auto format_option(const HelpOptionDetails &o) -> String {
   const auto &s = o.s;
   const auto &l = o.l;
 
@@ -1306,8 +1335,8 @@ String format_option(const HelpOptionDetails &o) {
   return result;
 }
 
-String format_description(const HelpOptionDetails &o, size_t start,
-                          size_t allowed, bool tab_expansion) {
+inline auto format_description(const HelpOptionDetails &o, size_t start,
+                               size_t allowed, bool tab_expansion) -> String {
   auto desc = o.desc;
 
   if (o.has_default && (!o.is_boolean || o.default_value != "false")) {
@@ -1417,7 +1446,7 @@ inline void Options::add_options(const std::string &group,
   }
 }
 
-inline OptionAdder Options::add_options(std::string group) {
+inline auto Options::add_options(std::string group) -> OptionAdder {
   return OptionAdder(*this, std::move(group));
 }
 
@@ -1498,8 +1527,9 @@ inline void OptionParser::add_to_option(OptionMap::const_iterator iter,
   parse_option(iter->second, option, arg);
 }
 
-inline bool OptionParser::consume_positional(const std::string &a,
-                                             PositionalListIterator &next) {
+inline auto OptionParser::consume_positional(const std::string &a,
+                                             PositionalListIterator &next)
+    -> bool {
   while (next != m_positional.end()) {
     auto iter = m_options.find(*next);
     if (iter != m_options.end()) {
@@ -1537,13 +1567,14 @@ Options::parse_positional(std::initializer_list<std::string> options) {
   parse_positional(std::vector<std::string>(options));
 }
 
-inline ParseResult Options::parse(int argc, const char *const *argv) {
+inline auto Options::parse(int argc, const char *const *argv) -> ParseResult {
   OptionParser parser(*m_options, m_positional, m_allow_unrecognised);
 
   return parser.parse(argc, argv);
 }
 
-inline ParseResult OptionParser::parse(int argc, const char *const *argv) {
+inline auto OptionParser::parse(int argc, const char *const *argv)
+    -> ParseResult {
   int current = 1;
   bool consume_remaining = false;
   auto next_positional = m_positional.begin();
@@ -1735,7 +1766,7 @@ Options::add_one_option(const std::string &option,
   }
 }
 
-inline String Options::help_one_group(const std::string &g) const {
+inline auto Options::help_one_group(const std::string &g) const -> String {
   using OptionHelp = std::vector<std::pair<String, String>>;
 
   auto group = m_help.find(g);
@@ -1824,8 +1855,8 @@ inline void Options::generate_all_groups_help(String &result) const {
   generate_group_help(result, all_groups);
 }
 
-inline std::string
-Options::help(const std::vector<std::string> &help_groups) const {
+inline auto Options::help(const std::vector<std::string> &help_groups) const
+    -> std::string {
   String result = m_help_string + "\nUsage:\n  " + toLocalString(m_program) +
                   " " + toLocalString(m_custom_help);
 
@@ -1844,7 +1875,7 @@ Options::help(const std::vector<std::string> &help_groups) const {
   return toUTF8String(result);
 }
 
-inline std::vector<std::string> Options::groups() const {
+inline auto Options::groups() const -> std::vector<std::string> {
   std::vector<std::string> g;
 
   std::transform(
@@ -1856,8 +1887,8 @@ inline std::vector<std::string> Options::groups() const {
   return g;
 }
 
-inline const HelpGroupDetails &
-Options::group_help(const std::string &group) const {
+inline auto Options::group_help(const std::string &group) const
+    -> const HelpGroupDetails & {
   return m_help.at(group);
 }
 
