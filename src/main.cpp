@@ -5,22 +5,22 @@
 
 static auto run(const int debug, int argc, char** argv) -> int {
   if(debug == NO_DEBUG) {
-    GridGenerator<NO_DEBUG> gridGen{};
+    GRIDGEN::GridGenerator<NO_DEBUG> gridGen{};
     return gridGen.run(argc, argv);
   }
   if(debug == MIN_DEBUG) {
-    GridGenerator<MIN_DEBUG> gridGen{};
+    GRIDGEN::GridGenerator<MIN_DEBUG> gridGen{};
     return gridGen.run(argc, argv);
   }
   if(debug == DEBUG) {
-    GridGenerator<DEBUG> gridGen{};
+    GRIDGEN::GridGenerator<DEBUG> gridGen{};
     return gridGen.run(argc, argv);
   }
   if(debug == MORE_DEBUG) {
-    GridGenerator<MORE_DEBUG> gridGen{};
+    GRIDGEN::GridGenerator<MORE_DEBUG> gridGen{};
     return gridGen.run(argc, argv);
   }
-  GridGenerator<MAX_DEBUG> gridGen{};
+  GRIDGEN::GridGenerator<MAX_DEBUG> gridGen{};
   return gridGen.run(argc, argv);
 }
 

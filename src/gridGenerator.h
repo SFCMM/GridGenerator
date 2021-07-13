@@ -1,9 +1,15 @@
-//
-// Created by svenb on 7/12/21.
-//
-
 #ifndef GRIDGENERATOR_GRIDGENERATOR_H
 #define GRIDGENERATOR_GRIDGENERATOR_H
+
+#include <ostream>
+
+extern std::ostream cerr0;
+
+namespace GRIDGEN {
+class NullBuffer : public std::streambuf {
+ public:
+  int overflow(int c) override { return c; }
+};
 
 template <int DEBUG_LEVEL>
 class GridGenerator {
@@ -19,7 +25,12 @@ class GridGenerator {
   auto run(int argc, char** argv) -> int;
 
  private:
+  NullBuffer nullBuffer;
+
+  int m_domainId;
+  int m_noDomains;
 };
 
+} // namespace GRIDGEN
 
 #endif // GRIDGENERATOR_GRIDGENERATOR_H
