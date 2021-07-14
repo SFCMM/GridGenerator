@@ -2,6 +2,7 @@
 #include "config.h"
 #include "macros.h"
 
+#include <array>
 #include <pwd.h>
 #include <unistd.h>
 
@@ -55,7 +56,7 @@ void Log::modifyAttribute(int attId, const pair<std::string, std::string>& att) 
  * \return Modified string with XML entities escaped.
  */
 auto Log_buffer::encodeXml(const std::string& inputStr) -> std::string {
-  char          c;               // Contains the current character
+  char          c = 0;           // Contains the current character
   ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
 
   // Create a for loop that uses an iterator to traverse the complete string
@@ -160,27 +161,27 @@ inline auto Log_buffer::setMinFlushSize(int minFlushSize) -> int {
  * \return The XML header.
  */
 auto Log_buffer::getXmlHeader() -> std::string {
-  const int maxNoChars = 1024;
+  static constexpr int maxNoChars = 1024;
 
   // Gets the current hostname
-  char host[maxNoChars];
-  gethostname(host, maxNoChars - 1);
+  std::array<char, maxNoChars> host{};
+  gethostname(&host[0], maxNoChars - 1);
   host[maxNoChars - 1] = '\0';
 
   // Gets the current username
   std::string user;
 
-  passwd* p;
-  p = getpwuid(getuid());
-  if(p) {
+  passwd* p = nullptr;
+  p         = getpwuid(getuid());
+  if(p != nullptr) {
     user = std::string(p->pw_name);
   } else {
     user = "n/a";
   }
 
   // Gets the current directory
-  char dir[maxNoChars];
-  if(getcwd(dir, maxNoChars - 1) == nullptr) {
+  std::array<char, maxNoChars> dir{};
+  if(getcwd(&dir[0], maxNoChars - 1) == nullptr) {
     TERMM(-1, "Invalid path!");
   }
   dir[maxNoChars - 1] = '\0';
@@ -195,9 +196,10 @@ auto Log_buffer::getXmlHeader() -> std::string {
 
 
   // Create start timestamp
-  char   tmpDateTime[128];
-  tm*    timeInfo;
-  time_t rawTime;
+  static constexpr int          date_length = 128;
+  std::array<char, date_length> tmpDateTime{};
+  tm*                           timeInfo = nullptr;
+  time_t                        rawTime  = 0;
 
   // Get the current time and write it to rawTime
   time(&rawTime);
@@ -206,7 +208,7 @@ auto Log_buffer::getXmlHeader() -> std::string {
   timeInfo = localtime(&rawTime);
 
   // Format time to string and save to buffer
-  strftime(tmpDateTime, 128, "%Y-%m-%d %H:%M:%S", timeInfo);
+  strftime(&tmpDateTime[0], date_length, "%Y-%m-%d %H:%M:%S", timeInfo);
 
   // Create temporary buffer
   ostringstream tmpBuffer;
@@ -215,11 +217,11 @@ auto Log_buffer::getXmlHeader() -> std::string {
   tmpBuffer << "<?xml version=\"1.0\" standalone=\"yes\" ?>\n";
   tmpBuffer << "<root>\n";
   tmpBuffer << "<meta name=\"noDomains\" content=\"" << m_noDomains << "\" />\n";
-  tmpBuffer << "<meta name=\"dateCreation\" content=\"" << tmpDateTime << "\" />\n";
+  tmpBuffer << "<meta name=\"dateCreation\" content=\"" << tmpDateTime.data() << "\" />\n";
   tmpBuffer << "<meta name=\"fileFormatVersion\" content=\"" << m_fileFormatVersion << "\" />\n";
   tmpBuffer << "<meta name=\"user\" content=\"" << user << "\" />\n";
-  tmpBuffer << "<meta name=\"host\" content=\"" << host << "\" />\n";
-  tmpBuffer << "<meta name=\"dir\" content=\"" << dir << "\" />\n";
+  tmpBuffer << "<meta name=\"host\" content=\"" << host.data() << "\" />\n";
+  tmpBuffer << "<meta name=\"dir\" content=\"" << dir.data() << "\" />\n";
   tmpBuffer << "<meta name=\"executionCommand\" content=\"" << executionCommand.str() << "\" />\n";
   tmpBuffer << "<meta name=\"revision\" content=\"" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
   tmpBuffer << "<meta name=\"build\" content=\"" << XSTRINGIFY(COMPILER_NAME) << " " << XSTRINGIFY(BUILD_TYPE) << " ("
@@ -238,7 +240,7 @@ auto Log_buffer::getXmlHeader() -> std::string {
  *
  * \return The XML footer.
  */
-std::string Log_buffer::getXmlFooter() {
+auto Log_buffer::getXmlFooter() -> std::string {
   // Create timestamp
   char   tmpDateTime[128];
   tm*    timeInfo;
@@ -262,16 +264,6 @@ std::string Log_buffer::getXmlFooter() {
 
   // Return XML footer
   return tmpBuffer.str();
-}
-
-/**
- * \brief Generic constructor is used when no information is provided during declaration.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
- */
-Log_simpleFileBuffer::Log_simpleFileBuffer()
-  : m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm() {
-  // Nothing here
 }
 
 /**
@@ -388,14 +380,14 @@ void Log_simpleFileBuffer::close(bool forceClose) {
  *
  * \return Zero by default.
  */
-int Log_simpleFileBuffer::sync() {
+auto Log_simpleFileBuffer::sync() -> int {
   // Only write if the file was already opened
   if(m_isOpen) {
     // Create formatted string, escape any XML entities in the message, and save to temporary buffer
     m_tmpBuffer << m_prefixMessage << encodeXml(str()) << m_suffixMessage;
 
     // Only write to file if current buffer length exceeds the minimum size for flushing
-    if(m_tmpBuffer.str().length() >= (unsigned)m_minFlushSize) {
+    if(m_tmpBuffer.str().length() >= static_cast<unsigned>(m_minFlushSize)) {
       // Write the string to the file and flush the stream
       m_file << m_tmpBuffer.str() << flush;
 
@@ -441,7 +433,6 @@ inline void Log_simpleFileBuffer::flushBuffer() {
  *
  * \param[in] filename Name of the file to open.
  * \param[in] mpiComm MPI communicator for which to open the file.
- * \param[in] projectName Projectname given.
  */
 LogFile::LogFile(const std::string& filename, MPI_Comm mpiComm, bool rootOnlyHardwired) : m_isOpen(false) {
   open(filename, rootOnlyHardwired, 0, nullptr, mpiComm);

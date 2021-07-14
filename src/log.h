@@ -101,7 +101,7 @@ class Log_simpleFileBuffer : public Log_buffer {
   void flushBuffer() override;
 
  public:
-  Log_simpleFileBuffer();
+  Log_simpleFileBuffer() : m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm(){};
   Log_simpleFileBuffer(const std::string& filename, int m_argc, char** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
                        bool rootOnlyHardwired = false);
   ~Log_simpleFileBuffer() override;
