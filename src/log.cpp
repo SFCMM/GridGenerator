@@ -241,10 +241,12 @@ auto Log_buffer::getXmlHeader() -> std::string {
  * \return The XML footer.
  */
 auto Log_buffer::getXmlFooter() -> std::string {
+  static constexpr int date_length = 128;
+
   // Create timestamp
-  char   tmpDateTime[128];
-  tm*    timeInfo;
-  time_t rawTime;
+  std::array<char, date_length> tmpDateTime{};
+  tm*                           timeInfo = nullptr;
+  time_t                        rawTime  = 0;
 
   // Get the current time and write it to rawTime
   time(&rawTime);
@@ -253,13 +255,13 @@ auto Log_buffer::getXmlFooter() -> std::string {
   timeInfo = localtime(&rawTime);
 
   // Format time to string and save to buffer
-  strftime(tmpDateTime, 128, "%Y-%m-%d %H:%M:%S", timeInfo);
+  strftime(&tmpDateTime[0], date_length, "%Y-%m-%d %H:%M:%S", timeInfo);
 
   // Create temporary buffer
   ostringstream tmpBuffer;
 
   // Write XML footer to buffer
-  tmpBuffer << "<meta name=\"dateClosing\" content=\"" << tmpDateTime << "\" />\n";
+  tmpBuffer << "<meta name=\"dateClosing\" content=\"" << tmpDateTime.data() << "\" />\n";
   tmpBuffer << "</root>\n";
 
   // Return XML footer
