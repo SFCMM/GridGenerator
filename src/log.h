@@ -16,7 +16,7 @@ class Log_buffer : public std::stringbuf {
   int                m_noDomains;     //!< Contains the MPI rank count (= number of domains)
   int                m_minFlushSize;  //!< Minimum length of the internal buffer before flushing
   std::string        m_prefixMessage; //!< Stores the prefix that is prepended to each output
-  std::string        m_suffixMessage; //!< Stores the suffix that is apended to each output
+  std::string        m_suffixMessage; //!< Stores the suffix that is appended to each output
   std::ostringstream m_tmpBuffer;     //!< Temporary buffer to hold string until flushing
   int                m_argc{};
   char**             m_argv{};
