@@ -70,7 +70,14 @@ class Log : public std::ostream {
   Log_buffer* m_buffer = nullptr;
 
  public:
+#if defined(CLANG_COMPILER)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
+#endif
   Log() : std::ostream(m_buffer){};
+#if defined(CLANG_COMPILER)
+#pragma clang diagnostic pop
+#endif
   virtual auto setRootOnly(bool rootOnly = true) -> bool = 0;
   auto         addAttribute(const std::pair<std::string, std::string>&) -> int;
   void         eraseAttribute(int);

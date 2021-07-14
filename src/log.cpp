@@ -8,6 +8,9 @@
 
 using namespace std;
 
+// todo: fix documentation
+// todo: add tests
+
 /** \brief Adds an attribute to the prefix of the XML string.
  * \author Andreas Lintermann, Sven Berger
  * \date 13.08.2012
@@ -62,7 +65,7 @@ auto Log_buffer::encodeXml(const std::string& inputStr) -> std::string {
   // Create a for loop that uses an iterator to traverse the complete string
   for(std::string::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
     // Get current character
-    c = (char)*iter;
+    c = static_cast<char>(*iter);
 
     // Use a switch/case statement for the five XML entities
     switch(c) {
@@ -278,11 +281,10 @@ auto Log_buffer::getXmlFooter() -> std::string {
  * \param[in] mpiComm           MPI communicator which is used to determine rank/domain information.
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
- * \param[in] projectName       Projectname that should be used for the executed program.
  */
 Log_simpleFileBuffer::Log_simpleFileBuffer(const std::string& filename, int argc, char** argv, MPI_Comm mpiComm,
                                            bool rootOnlyHardwired)
-  : m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm(), Log_buffer(argc, argv) {
+  : Log_buffer(argc, argv), m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm() {
   open(filename, mpiComm, rootOnlyHardwired);
 }
 
@@ -306,7 +308,6 @@ Log_simpleFileBuffer::~Log_simpleFileBuffer() { close(); }
  * \param[in] mpiComm           MPI communicator which is used to determine rank/domain information.
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
- * \param[in] projectName       Projectname that should be used for the executed program.
  */
 void Log_simpleFileBuffer::open(const std::string& filename, MPI_Comm mpiComm, bool rootOnlyHardwired) {
   // Open file only if it was not yet done
