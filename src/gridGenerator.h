@@ -2,13 +2,14 @@
 #define GRIDGENERATOR_GRIDGENERATOR_H
 
 #include <ostream>
+#include "global.h"
 
-extern std::ostream cerr0;
+extern std::ostream cerr0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 namespace GRIDGEN {
 class NullBuffer : public std::streambuf {
  public:
-  int overflow(int c) override { return c; }
+  auto overflow(int c) -> int override { return c; }
 };
 
 template <int DEBUG_LEVEL>
@@ -27,8 +28,8 @@ class GridGenerator {
  private:
   NullBuffer nullBuffer;
 
-  int m_domainId;
-  int m_noDomains;
+  int m_domainId  = -1;
+  int m_noDomains = -1;
 };
 
 } // namespace GRIDGEN

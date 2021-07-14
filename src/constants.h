@@ -1,6 +1,8 @@
 #ifndef GRIDGENERATOR_CONSTANTS_H
 #define GRIDGENERATOR_CONSTANTS_H
 
+#include <array>
+
 static constexpr int NO_DEBUG   = 0;
 static constexpr int MIN_DEBUG  = 1;
 static constexpr int DEBUG      = 2;

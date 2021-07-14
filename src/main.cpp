@@ -1,5 +1,6 @@
 #include <cxxopts.hpp>
 
+#include "config.h.in"
 #include "constants.h"
 #include "gridGenerator.h"
 

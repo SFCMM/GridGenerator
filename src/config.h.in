@@ -1,0 +1,15 @@
+#ifndef GRIDGENERATOR_CONFIG_H_IN
+#define GRIDGENERATOR_CONFIG_H_IN
+
+// just write a single file as a logfile
+#define GRIDGEN_SINGLE_FILE_LOG
+
+/// Print global MPI information at startup
+// #define MPI_IO_PRINT_INFO
+
+#define PROJECT_VER @PROJECT_VERSION @
+#define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION @
+#define COMPILER_NAME @CMAKE_CXX_COMPILER_ID @
+#define BUILD_TYPE @CMAKE_BUILD_TYPE @
+
+#endif // GRIDGENERATOR_CONFIG_H_IN
