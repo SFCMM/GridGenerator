@@ -17,7 +17,7 @@ using namespace std;
 std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 template <GInt DEBUG_LEVEL>
-auto GridGenerator<DEBUG_LEVEL>::run(int argc, GChar** argv) -> GInt {
+void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 #ifdef _OPENMP
   int provided = 0;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
@@ -47,13 +47,22 @@ auto GridGenerator<DEBUG_LEVEL>::run(int argc, GChar** argv) -> GInt {
     gridgen_log.open("gridgen_log", false, argc, argv, MPI_COMM_WORLD);
   }
 #endif
+}
 
+template <GInt DEBUG_LEVEL>
+auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   gridgen_log << "Grid generator started"<<endl;
+  showLogo();
   loadConfiguration();
   generateGrid();
   gridgen_log << "Grid generator finished"<<endl;
 
   return 0;
+}
+template <GInt DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::showLogo() {
+
+
 }
 
 template <GInt DEBUG_LEVEL>
@@ -67,6 +76,8 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid..." << endl;
 
 }
+
+
 
 template class GRIDGEN::GridGenerator<0>;
 template class GRIDGEN::GridGenerator<1>;

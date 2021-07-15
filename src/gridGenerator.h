@@ -28,8 +28,10 @@ class GridGenerator {
   auto operator=(GridGenerator&&) -> GridGenerator& = delete;
 
 
-  auto run(int argc, GChar** argv) -> GInt;
+  void init(int argc, GChar** argv);
+  auto run() -> int;
 
+  void showLogo();
   void loadConfiguration();
   void generateGrid();
 
@@ -38,6 +40,8 @@ class GridGenerator {
 
   int m_domainId  = -1;
   int m_noDomains = -1;
+
+  GString configurationFileName="grid.json";
 
   json config;
 };
