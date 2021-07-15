@@ -4333,6 +4333,8 @@ public:
   operator+(const string_literal<CharT1, N1>& x, const string_literal<CharT2, N2>& y) NOEXCEPT;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
 template <class CharT>
 CONSTCD11
 inline
@@ -4341,6 +4343,8 @@ operator+(const string_literal<CharT, 2>& x, const string_literal<CharT, 2>& y) 
 {
   return string_literal<CharT, 3>(x[0], y[0]);
 }
+#pragma GCC diagnostic pop
+
 
 template <class CharT>
 CONSTCD11
@@ -4541,6 +4545,9 @@ msl(std::pico) NOEXCEPT
   return string_literal<CharT, 2>{'p'};
 }
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
 template <class CharT>
 CONSTCD11
 inline
@@ -4549,6 +4556,8 @@ msl(std::nano) NOEXCEPT
 {
   return string_literal<CharT, 2>{'n'};
 }
+#pragma GCC diagnostic pop
+
 
 template <class CharT>
 CONSTCD11
@@ -4675,6 +4684,8 @@ msl(std::exa) NOEXCEPT
   return string_literal<CharT, 2>{'E'};
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
 template <class CharT, class Period>
 CONSTCD11
 inline
@@ -4684,6 +4695,7 @@ get_units(Period p)
 {
   return msl<CharT>(p) + string_literal<CharT, 2>{'s'};
 }
+#pragma GCC diagnostic pop
 
 template <class CharT>
 CONSTCD11
@@ -5038,7 +5050,8 @@ scan_keyword(std::basic_istream<CharT, Traits>& is, FwdIter kb, FwdIter ke)
 }  // namespace detail
 
 #endif  // ONLY_C_LOCALE
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
 template <class CharT, class Traits, class Duration>
 std::basic_ostream<CharT, Traits>&
 to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
@@ -5153,7 +5166,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
           tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
           if (os.fail())
             return os;
-          tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+          tm.tm_yday = (ld - local_days(ymd.year()/1/1)).count();
           CharT f[3] = {'%'};
           auto fe = std::begin(f) + 1;
           if (modified == CharT{'E'})
@@ -5782,7 +5795,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
             if (os.fail())
               return os;
-            tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+            tm.tm_yday = (ld - local_days(ymd.year()/1/1)).count();
             facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
           }
 #endif
@@ -5830,7 +5843,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
             if (os.fail())
               return os;
-            tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+            tm.tm_yday = (ld - local_days(ymd.year()/1/1)).count();
             facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
           }
 #endif
@@ -5907,7 +5920,7 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
             tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
             if (os.fail())
               return os;
-            tm.tm_yday = static_cast<int>((ld - local_days(ymd.year()/1/1)).count());
+            tm.tm_yday = (ld - local_days(ymd.year()/1/1)).count();
             facet.put(os, os, os.fill(), &tm, std::begin(f), std::end(f));
           }
 #endif
@@ -6123,6 +6136,8 @@ to_stream(std::basic_ostream<CharT, Traits>& os, const CharT* fmt,
     os << modified;
   return os;
 }
+#pragma GCC diagnostic pop
+
 
 template <class CharT, class Traits>
 inline
@@ -7774,8 +7789,8 @@ from_stream(std::basic_istream<CharT, Traits>& is, const CharT* fmt,
       if (ymd.ok())
       {
         if (wd == not_a_weekday)
-          wd = static_cast<int>((weekday(sys_days(ymd)) - Sunday).count());
-        else if (wd != static_cast<int>((weekday(sys_days(ymd)) - Sunday).count()))
+          wd = (weekday(sys_days(ymd)) - Sunday).count();
+        else if (wd != (weekday(sys_days(ymd)) - Sunday).count())
           goto broken;
         if (!computed)
         {
