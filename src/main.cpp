@@ -4,7 +4,7 @@
 #include "constants.h"
 #include "gridGenerator.h"
 
-static auto run(const int debug, int argc, char** argv) -> int {
+static auto run(const GInt debug, GInt argc, GChar** argv) -> GInt {
   if(debug == NO_DEBUG) {
     GRIDGEN::GridGenerator<NO_DEBUG> gridGen{};
     return gridGen.run(argc, argv);
@@ -25,10 +25,10 @@ static auto run(const int debug, int argc, char** argv) -> int {
   return gridGen.run(argc, argv);
 }
 
-auto main(int argc, char** argv) -> int {
+auto main(int argc, GChar** argv) -> int {
   cxxopts::Options options("GridGenerator", "A highly parallel grid generator.");
 
-  options.add_options()("d,debug", "Enable debugging with given level.", cxxopts::value<int>()->default_value("0"));
+  options.add_options()("d,debug", "Enable debugging with given level.", cxxopts::value<GInt>()->default_value("0"));
   options.add_options()("h,help", "Print usage");
 
   auto result = options.parse(argc, argv);
@@ -38,7 +38,7 @@ auto main(int argc, char** argv) -> int {
     exit(0);
   }
 
-  int debug = result["debug"].as<int>();
+  GInt debug = result["debug"].as<GInt>();
   if(debug > 0) {
     if(debug > MAX_DEBUG) {
       debug = MAX_DEBUG;

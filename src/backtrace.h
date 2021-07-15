@@ -68,12 +68,12 @@ inline void backtrace() {
 #ifdef GCC_COMPILER
 inline void backtrace_gcc(const MString& fileName, const MInt noFramesOmitted = 1) {
   // Get trace
-  const int maxNoTraces = 128;
-  void*     trace[maxNoTraces];
-  int       noTraces = ::backtrace(trace, maxNoTraces);
+  const GInt maxNoTraces = 128;
+  void*      trace[maxNoTraces];
+  GInt       noTraces = ::backtrace(trace, maxNoTraces);
 
   // Get messages (i.e. function names)
-  char** messages = backtrace_symbols(trace, noTraces);
+  GChar** messages = backtrace_symbols(trace, noTraces);
 
   // Create stream and char buffer for single-flush printing
   std::stringstream s;
@@ -92,22 +92,22 @@ inline void backtrace_gcc(const MString& fileName, const MInt noFramesOmitted = 
     MString mangled(messages[i]);
     mangled = mangled.substr(mangled.find("(") + 1);
     mangled = mangled.substr(0, mangled.find("+"));
-    int   status;
-    char* demangledChar = abi::__cxa_demangle(mangled.c_str(), 0, 0, &status);
+    GInt   status;
+    GChar* demangledChar = abi::__cxa_demangle(mangled.c_str(), 0, 0, &status);
 
     // Only use demangled name if demangling worked
     const MString demangled = (status == 0) ? demangledChar : messages[i];
     free(demangledChar);
 
     // Get filename/line number using addr2line
-    char cmd[maxCmdSize];
+    GChar cmd[maxCmdSize];
     std::sprintf(cmd, "addr2line %p -s -e %s", trace[i], fileName.c_str());
     MString fileline;
     FILE*   pipe = popen(cmd, "r");
     if(!pipe) {
       fileline = "n/a";
     } else {
-      char buffer[128];
+      GChar buffer[128];
       while(!feof(pipe)) {
         if(fgets(buffer, 128, pipe) != nullptr) {
           fileline += buffer;
@@ -130,7 +130,7 @@ inline void backtrace_gcc(const MString& fileName, const MInt noFramesOmitted = 
   std::cout << s.str() << std::endl;
 }
 #else
-inline void backtrace_gcc(const std::string& /*unused*/, int /*unused*/) {
+inline void backtrace_gcc(const GString& /*unused*/, GInt /*unused*/) {
   std::cout << "Not using GCC - backtrace disabled." << std::endl;
 }
 #endif

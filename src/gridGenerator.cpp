@@ -15,8 +15,8 @@ using namespace GRIDGEN;
 
 std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-template <int DEBUG_LEVEL>
-auto GridGenerator<DEBUG_LEVEL>::run(int argc, char** argv) -> int {
+template <GInt DEBUG_LEVEL>
+auto GridGenerator<DEBUG_LEVEL>::run(int argc, GChar** argv) -> GInt {
 #ifdef _OPENMP
   int provided = 0;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);

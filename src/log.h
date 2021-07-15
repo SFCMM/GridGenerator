@@ -4,28 +4,29 @@
 #include <mpi.h>
 #include <sstream>
 #include <vector>
+#include "types.h"
 
 class Log_buffer : public std::stringbuf {
   friend class Log;
 
  protected:
-  static const int m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
+  static const GInt m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
   //!< changes that could affect postprocessing tools)
-  bool               m_rootOnly;      //!< Stores whether only the root domain writes a log file
+  GBool              m_rootOnly;      //!< Stores whether only the root domain writes a log file
   int                m_domainId;      //!< Contains the MPI rank (= domain id) of this process
   int                m_noDomains;     //!< Contains the MPI rank count (= number of domains)
-  int                m_minFlushSize;  //!< Minimum length of the internal buffer before flushing
-  std::string        m_prefixMessage; //!< Stores the prefix that is prepended to each output
-  std::string        m_suffixMessage; //!< Stores the suffix that is appended to each output
+  GInt               m_minFlushSize;  //!< Minimum length of the internal buffer before flushing
+  GString            m_prefixMessage; //!< Stores the prefix that is prepended to each output
+  GString            m_suffixMessage; //!< Stores the suffix that is appended to each output
   std::ostringstream m_tmpBuffer;     //!< Temporary buffer to hold string until flushing
-  int                m_argc{};
-  char**             m_argv{};
+  GInt               m_argc{};
+  GChar**            m_argv{};
 
-  std::vector<std::pair<std::string, std::string>> m_prefixAttributes;
+  std::vector<std::pair<GString, GString>> m_prefixAttributes;
 
-  virtual auto encodeXml(const std::string& str) -> std::string;
-  virtual auto getXmlHeader() -> std::string;
-  virtual auto getXmlFooter() -> std::string;
+  virtual auto encodeXml(const GString& str) -> GString;
+  virtual auto getXmlHeader() -> GString;
+  virtual auto getXmlFooter() -> GString;
   virtual void createPrefixMessage();
   virtual void createSuffixMessage();
   virtual void flushBuffer() = 0;
@@ -40,7 +41,7 @@ class Log_buffer : public std::stringbuf {
       m_suffixMessage(),
       m_tmpBuffer() {}
 
-  Log_buffer(int argc, char** argv)
+  Log_buffer(GInt argc, GChar** argv)
     : m_rootOnly(false),
       m_domainId(0),
       m_noDomains(1),
@@ -51,8 +52,8 @@ class Log_buffer : public std::stringbuf {
       m_argc(argc),
       m_argv(argv) {}
 
-  virtual auto setRootOnly(bool rootOnly = true) -> bool;
-  virtual auto setMinFlushSize(int minFlushSize) -> int;
+  virtual auto setRootOnly(GBool rootOnly = true) -> GBool;
+  virtual auto setMinFlushSize(GInt minFlushSize) -> GInt;
 };
 
 /**
@@ -78,10 +79,10 @@ class Log : public std::ostream {
 #if defined(CLANG_COMPILER)
 #pragma clang diagnostic pop
 #endif
-  virtual auto setRootOnly(bool rootOnly = true) -> bool = 0;
-  auto         addAttribute(const std::pair<std::string, std::string>&) -> int;
-  void         eraseAttribute(int);
-  void         modifyAttribute(int, const std::pair<std::string, std::string>&);
+  virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;
+  auto         addAttribute(const std::pair<GString, GString>&) -> GInt;
+  void         eraseAttribute(GInt);
+  void         modifyAttribute(GInt, const std::pair<GString, GString>&);
 };
 
 
@@ -97,9 +98,9 @@ class Log : public std::ostream {
  */
 class Log_simpleFileBuffer : public Log_buffer {
  private:
-  bool          m_isOpen;            //!< Stores whether the file(s) were already opened
-  bool          m_rootOnlyHardwired; //!< If true, only domain 0 opens and uses a file
-  std::string   m_filename;          //!< Filename on disk
+  GBool         m_isOpen;            //!< Stores whether the file(s) were already opened
+  GBool         m_rootOnlyHardwired; //!< If true, only domain 0 opens and uses a file
+  GString       m_filename;          //!< Filename on disk
   std::ofstream m_file;              //!< File stream tied to physical file on disk
   MPI_Comm      m_mpiComm;           //!< MPI communicator group
 
@@ -109,15 +110,20 @@ class Log_simpleFileBuffer : public Log_buffer {
 
  public:
   Log_simpleFileBuffer() : m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm(){};
-  Log_simpleFileBuffer(const std::string& filename, int m_argc, char** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
-                       bool rootOnlyHardwired = false);
+  Log_simpleFileBuffer(const GString& filename, GInt m_argc, GChar** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
+                       GBool rootOnlyHardwired = false);
   ~Log_simpleFileBuffer() override;
-  void open(const std::string& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, bool rootOnlyHardwired = false);
-  void close(bool forceClose = false);
+  Log_simpleFileBuffer(const Log_simpleFileBuffer&) = delete;
+  Log_simpleFileBuffer(Log_simpleFileBuffer&&)      = delete;
+  auto operator=(const Log_simpleFileBuffer&) -> Log_simpleFileBuffer& = delete;
+  auto operator=(Log_simpleFileBuffer&&) -> Log_simpleFileBuffer& = delete;
+
+  void open(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false);
+  void close(GBool forceClose = false);
 };
 
 /**
- * \brief Class to create a create an output stream for a writable file, using either MPI I/O or a physical file.
+ * \brief Class to create an output stream for a writable file, using a physical file.
  * \author Michael Schlottke, Sven Berger
  * \date June 2012
  * \details This class can be used to open a file on all processors (alternatively: only on a specified MPI
@@ -133,13 +139,18 @@ class LogFile : public Log {
 
  public:
   LogFile() = default;
-  LogFile(const std::string& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, bool rootOnlyHardwired = false);
+  LogFile(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false);
   ~LogFile() override;
-  void open(const std::string& filename, bool rootOnlyHardwired, int argc, char** argv,
+  LogFile(const LogFile&) = delete;
+  LogFile(LogFile&&)      = delete;
+  auto operator=(const LogFile&) -> LogFile& = delete;
+  auto operator=(LogFile&&) -> LogFile& = delete;
+
+  void open(const GString& filename, GBool rootOnlyHardwired, GInt argc, GChar** argv,
             MPI_Comm mpiComm = MPI_COMM_WORLD);
-  void close(bool forceClose = false);
-  auto setRootOnly(bool rootOnly = true) -> bool override;
-  auto setMinFlushSize(int minFlushSize) -> int;
+  void close(GBool forceClose = false);
+  auto setRootOnly(GBool rootOnly = true) -> GBool override;
+  auto setMinFlushSize(GInt minFlushSize) -> GInt;
 };
 
 #endif // GRIDGENERATOR_LOG_H

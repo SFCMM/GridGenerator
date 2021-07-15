@@ -18,7 +18,7 @@ using namespace std;
  * \param[in] att The attribute to add, consists of a pair of MStrings.
  * \return The location of the attribute in the vector of pairs.
  */
-auto Log::addAttribute(const pair<std::string, std::string>& att) -> int {
+auto Log::addAttribute(const pair<GString, GString>& att) -> GInt {
   m_buffer->m_prefixAttributes.push_back(att);
   m_buffer->createPrefixMessage();
   return m_buffer->m_prefixAttributes.size() - 1;
@@ -30,7 +30,7 @@ auto Log::addAttribute(const pair<std::string, std::string>& att) -> int {
  *
  *  \param[in] attId The ID of the attribute to delete.
  */
-void Log::eraseAttribute(int attId) {
+void Log::eraseAttribute(GInt attId) {
   m_buffer->m_prefixAttributes.erase(m_buffer->m_prefixAttributes.begin() + attId);
   m_buffer->createPrefixMessage();
 }
@@ -42,7 +42,7 @@ void Log::eraseAttribute(int attId) {
  *  \param[in] attId The ID of the attribute to modify.
  *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
  */
-void Log::modifyAttribute(int attId, const pair<std::string, std::string>& att) {
+void Log::modifyAttribute(GInt attId, const pair<GString, GString>& att) {
   m_buffer->m_prefixAttributes[attId] = att;
   m_buffer->createPrefixMessage();
 }
@@ -58,14 +58,14 @@ void Log::modifyAttribute(int attId, const pair<std::string, std::string>& att) 
  * \param[in] str Input string that has characters which need escaping.
  * \return Modified string with XML entities escaped.
  */
-auto Log_buffer::encodeXml(const std::string& inputStr) -> std::string {
-  char          c = 0;           // Contains the current character
+auto Log_buffer::encodeXml(const GString& inputStr) -> GString {
+  GChar         c = 0;           // Contains the current character
   ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
 
   // Create a for loop that uses an iterator to traverse the complete string
-  for(std::string::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
+  for(GString::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
     // Get current character
-    c = static_cast<char>(*iter);
+    c = static_cast<GChar>(*iter);
 
     // Use a switch/case statement for the five XML entities
     switch(c) {
@@ -137,9 +137,9 @@ inline void Log_buffer::createSuffixMessage() { m_suffixMessage = "</m>\n"; }
  * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
  * \return The previous internal state (may be stored to return to the previous behavior).
  */
-inline auto Log_buffer::setRootOnly(bool rootOnly) -> bool {
-  bool previousValue = m_rootOnly;
-  m_rootOnly         = rootOnly;
+inline auto Log_buffer::setRootOnly(GBool rootOnly) -> GBool {
+  GBool previousValue = m_rootOnly;
+  m_rootOnly          = rootOnly;
   return previousValue;
 }
 
@@ -151,9 +151,9 @@ inline auto Log_buffer::setRootOnly(bool rootOnly) -> bool {
  * \params[in] minFlushSize Minimum buffer length.
  * \return The previous value of the minimum flush size.
  */
-inline auto Log_buffer::setMinFlushSize(int minFlushSize) -> int {
-  int previousValue = m_minFlushSize;
-  m_minFlushSize    = minFlushSize;
+inline auto Log_buffer::setMinFlushSize(GInt minFlushSize) -> GInt {
+  GInt previousValue = m_minFlushSize;
+  m_minFlushSize     = minFlushSize;
   return previousValue;
 }
 
@@ -163,27 +163,27 @@ inline auto Log_buffer::setMinFlushSize(int minFlushSize) -> int {
  * \date June 2012
  * \return The XML header.
  */
-auto Log_buffer::getXmlHeader() -> std::string {
-  static constexpr int maxNoChars = 1024;
+auto Log_buffer::getXmlHeader() -> GString {
+  static constexpr GInt maxNoChars = 1024;
 
   // Gets the current hostname
-  std::array<char, maxNoChars> host{};
+  std::array<GChar, maxNoChars> host{};
   gethostname(&host[0], maxNoChars - 1);
   host[maxNoChars - 1] = '\0';
 
   // Gets the current username
-  std::string user;
+  GString user;
 
   passwd* p = nullptr;
   p         = getpwuid(getuid());
   if(p != nullptr) {
-    user = std::string(p->pw_name);
+    user = GString(p->pw_name);
   } else {
     user = "n/a";
   }
 
   // Gets the current directory
-  std::array<char, maxNoChars> dir{};
+  std::array<GChar, maxNoChars> dir{};
   if(getcwd(&dir[0], maxNoChars - 1) == nullptr) {
     TERMM(-1, "Invalid path!");
   }
@@ -193,16 +193,16 @@ auto Log_buffer::getXmlHeader() -> std::string {
   stringstream executionCommand;
   executionCommand.str("");
   executionCommand << m_argv[0];
-  for(int n = 1; n < m_argc; n++) {
+  for(GInt n = 1; n < m_argc; n++) {
     executionCommand << " " << m_argv[n];
   }
 
 
   // Create start timestamp
-  static constexpr int          date_length = 128;
-  std::array<char, date_length> tmpDateTime{};
-  tm*                           timeInfo = nullptr;
-  time_t                        rawTime  = 0;
+  static constexpr GInt          date_length = 128;
+  std::array<GChar, date_length> tmpDateTime{};
+  tm*                            timeInfo = nullptr;
+  time_t                         rawTime  = 0;
 
   // Get the current time and write it to rawTime
   time(&rawTime);
@@ -228,7 +228,7 @@ auto Log_buffer::getXmlHeader() -> std::string {
   tmpBuffer << "<meta name=\"executionCommand\" content=\"" << executionCommand.str() << "\" />\n";
   tmpBuffer << "<meta name=\"revision\" content=\"" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
   tmpBuffer << "<meta name=\"build\" content=\"" << XSTRINGIFY(COMPILER_NAME) << " " << XSTRINGIFY(BUILD_TYPE) << " ("
-            << std::string(XSTRINGIFY(COMPILER_VER)) << ")"
+            << GString(XSTRINGIFY(COMPILER_VER)) << ")"
             << "\" />\n";
 
 
@@ -243,13 +243,13 @@ auto Log_buffer::getXmlHeader() -> std::string {
  *
  * \return The XML footer.
  */
-auto Log_buffer::getXmlFooter() -> std::string {
-  static constexpr int date_length = 128;
+auto Log_buffer::getXmlFooter() -> GString {
+  static constexpr GInt date_length = 128;
 
   // Create timestamp
-  std::array<char, date_length> tmpDateTime{};
-  tm*                           timeInfo = nullptr;
-  time_t                        rawTime  = 0;
+  std::array<GChar, date_length> tmpDateTime{};
+  tm*                            timeInfo = nullptr;
+  time_t                         rawTime  = 0;
 
   // Get the current time and write it to rawTime
   time(&rawTime);
@@ -282,8 +282,8 @@ auto Log_buffer::getXmlFooter() -> std::string {
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-Log_simpleFileBuffer::Log_simpleFileBuffer(const std::string& filename, int argc, char** argv, MPI_Comm mpiComm,
-                                           bool rootOnlyHardwired)
+Log_simpleFileBuffer::Log_simpleFileBuffer(const GString& filename, GInt argc, GChar** argv, MPI_Comm mpiComm,
+                                           GBool rootOnlyHardwired)
   : Log_buffer(argc, argv), m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm() {
   open(filename, mpiComm, rootOnlyHardwired);
 }
@@ -309,7 +309,7 @@ Log_simpleFileBuffer::~Log_simpleFileBuffer() { close(); }
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-void Log_simpleFileBuffer::open(const std::string& filename, MPI_Comm mpiComm, bool rootOnlyHardwired) {
+void Log_simpleFileBuffer::open(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwired) {
   // Open file only if it was not yet done
   if(!m_isOpen) {
     // Set MPI communicator group
@@ -353,7 +353,7 @@ void Log_simpleFileBuffer::open(const std::string& filename, MPI_Comm mpiComm, b
  * \details Any subsequent write statements to the file stream are discarded after this method is called. After
  *          close() is called, an XML footer is written to the file. Then the file is closed.
  */
-void Log_simpleFileBuffer::close(bool forceClose) {
+void Log_simpleFileBuffer::close(GBool forceClose) {
   // forceClose is not needed here (only kept for interface consistency reasons)
   static_cast<void>(forceClose);
 
@@ -437,7 +437,7 @@ inline void Log_simpleFileBuffer::flushBuffer() {
  * \param[in] filename Name of the file to open.
  * \param[in] mpiComm MPI communicator for which to open the file.
  */
-LogFile::LogFile(const std::string& filename, MPI_Comm mpiComm, bool rootOnlyHardwired) : m_isOpen(false) {
+LogFile::LogFile(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwired) : m_isOpen(false) {
   open(filename, rootOnlyHardwired, 0, nullptr, mpiComm);
 }
 
@@ -459,7 +459,7 @@ LogFile::~LogFile() { close(); }
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-void LogFile::open(const std::string& filename, bool rootOnlyHardwired, int argc, char** argv, MPI_Comm mpiComm) {
+void LogFile::open(const GString& filename, GBool rootOnlyHardwired, GInt argc, GChar** argv, MPI_Comm mpiComm) {
   // Only open file if it was not yet opened
   if(!m_isOpen) {
     // Open a simple file
@@ -479,7 +479,7 @@ void LogFile::open(const std::string& filename, bool rootOnlyHardwired, int argc
  * \date June 2012
  * \details All attempts to write to the stream after closing it will be discarded.
  */
-void LogFile::close(bool forceClose) {
+void LogFile::close(GBool forceClose) {
   // Only close file if was already opened
   if(m_isOpen) {
     static_cast<Log_simpleFileBuffer*>(m_buffer)->close(forceClose);
@@ -500,7 +500,7 @@ void LogFile::close(bool forceClose) {
  * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
  * \return The previous internal state (may be stored to return to the previous behavior).
  */
-auto LogFile::setRootOnly(bool rootOnly) -> bool { return m_buffer->setRootOnly(rootOnly); }
+auto LogFile::setRootOnly(GBool rootOnly) -> GBool { return m_buffer->setRootOnly(rootOnly); }
 
 /**
  * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
@@ -512,7 +512,7 @@ auto LogFile::setRootOnly(bool rootOnly) -> bool { return m_buffer->setRootOnly(
  * \params[in] minFlushSize Minimum buffer length.
  * \return The previous value of the minimum flush size.
  */
-auto LogFile::setMinFlushSize(int minFlushSize) -> int {
+auto LogFile::setMinFlushSize(GInt minFlushSize) -> GInt {
   if(m_isOpen) {
     return m_buffer->setMinFlushSize(minFlushSize);
   }

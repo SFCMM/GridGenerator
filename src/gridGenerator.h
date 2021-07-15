@@ -3,6 +3,8 @@
 
 #include <ostream>
 #include "global.h"
+#include "types.h"
+
 
 extern std::ostream cerr0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
@@ -12,7 +14,7 @@ class NullBuffer : public std::streambuf {
   auto overflow(int c) -> int override { return c; }
 };
 
-template <int DEBUG_LEVEL>
+template <GInt DEBUG_LEVEL>
 class GridGenerator {
  public:
   GridGenerator()                     = default;
@@ -23,7 +25,7 @@ class GridGenerator {
   auto operator=(GridGenerator&&) -> GridGenerator& = delete;
 
 
-  auto run(int argc, char** argv) -> int;
+  auto run(int argc, GChar** argv) -> GInt;
 
  private:
   NullBuffer nullBuffer;

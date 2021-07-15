@@ -23,7 +23,7 @@
 
 #define AT_ std::string(FUN_) + " (" + LOC_ + ")"
 
-[[noreturn]] inline void term(const int errorCode, const std::string& location, const std::string& message = "") {
+[[noreturn]] inline void term(const GInt errorCode, const GString& location, const GString& message = "") {
   if(errorCode != 0) {
     std::stringstream s;
     s << "\n";

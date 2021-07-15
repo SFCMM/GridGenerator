@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "mpi.h"
+#include "types.h"
 
 namespace MPI {
 /// Print all information of given MPI_Info object
@@ -14,7 +15,7 @@ void printMpiInfo(MPI_Info& mpiInfo);
 /// Class to store global MPI information and to prevent accidental changes
 class Information {
  public:
-  void init(const int domainId, const int noDomains) {
+  void init(const GInt domainId, const GInt noDomains) {
     m_globalDomainId  = domainId;
     m_globalNoDomains = noDomains;
 
@@ -42,21 +43,21 @@ class Information {
 #endif
   }
 
-  friend auto globalDomainId() -> int;
-  friend auto globalNoDomains() -> int;
+  friend auto globalDomainId() -> GInt;
+  friend auto globalNoDomains() -> GInt;
   friend auto globalMpiInfo() -> const MPI_Info&;
 
-  int      m_globalDomainId  = 0;
-  int      m_globalNoDomains = 1;
+  GInt     m_globalDomainId  = 0;
+  GInt     m_globalNoDomains = 1;
   MPI_Info m_mpiInfo         = MPI_INFO_NULL;
 };
 
 extern Information g_mpiInformation; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 /// Return global domain id
-inline auto globalDomainId() -> int { return g_mpiInformation.m_globalDomainId; }
+inline auto globalDomainId() -> GInt { return g_mpiInformation.m_globalDomainId; }
 /// Return global number of domains
-inline auto globalNoDomains() -> int { return g_mpiInformation.m_globalNoDomains; }
+inline auto globalNoDomains() -> GInt { return g_mpiInformation.m_globalNoDomains; }
 /// Return global MPI information
 inline auto globalMpiInfo() -> const MPI_Info& { return g_mpiInformation.m_mpiInfo; }
 } // namespace MPI
