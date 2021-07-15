@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "globalmpi.h"
 #include "gridGenerator.h"
+#include "sys.h"
 //#include "macros.h"
 
 #ifdef _OPENMP
@@ -61,8 +62,22 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
 }
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::showLogo() {
-
-
+  cout <<  R"(    __  _______  __  _________     _     __)"<< endl;
+  cout <<  R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)"<< endl;
+  cout <<  R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )"<< endl;
+  cout <<  R"( / /  / / /_/ / /  / / /_/ / /  / / /_/ /  )"<< endl;
+  cout <<  R"(/_/  /_/\____/_/  /_/\____/_/  /_/\__,_/   )"<< endl;
+  cout <<  R"(                                           )"<< endl;
+  cout << "Start time:            " << dateString() << "\n"
+       << "Number of ranks:       " << MPI::globalNoDomains() << "\n"
+       #ifdef _OPENMP
+       << "Number of OMP threads: " << omp_get_max_threads() << "\n"
+       #endif
+      // << "Host (of rank 0):      " << host << "\n"
+     //  << "Working directory:     " << dir << "\n"
+      // << "User:                  " << user << "\n"
+      // << "Executable:            " << executable << "\n"
+       << endl;
 }
 
 template <GInt DEBUG_LEVEL>
