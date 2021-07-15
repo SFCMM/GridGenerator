@@ -12,6 +12,7 @@
 #endif
 
 using namespace GRIDGEN;
+using namespace std;
 
 std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
@@ -47,7 +48,24 @@ auto GridGenerator<DEBUG_LEVEL>::run(int argc, GChar** argv) -> GInt {
   }
 #endif
 
+  gridgen_log << "Grid generator started"<<endl;
+  loadConfiguration();
+  generateGrid();
+  gridgen_log << "Grid generator finished"<<endl;
+
   return 0;
+}
+
+template <GInt DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
+  gridgen_log << "Loading configuration file..." << endl;
+
+}
+
+template <GInt DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::generateGrid() {
+  gridgen_log << "Generating a grid..." << endl;
+
 }
 
 template class GRIDGEN::GridGenerator<0>;

@@ -8822,7 +8822,7 @@ private:
     case 0x9B: // array (eight-byte uint64_t for n follow)
     {
       std::uint64_t len{};
-      return get_number(input_format_t::cbor, len) && get_cbor_array(static_cast<std::size_t>(len), tag_handler);
+      return get_number(input_format_t::cbor, len) && get_cbor_array(len, tag_handler);
     }
 
     case 0x9F: // array (indefinite length)
@@ -8876,7 +8876,7 @@ private:
     case 0xBB: // map (eight-byte uint64_t for n follow)
     {
       std::uint64_t len{};
-      return get_number(input_format_t::cbor, len) && get_cbor_object(static_cast<std::size_t>(len), tag_handler);
+      return get_number(input_format_t::cbor, len) && get_cbor_object(len, tag_handler);
     }
 
     case 0xBF: // map (indefinite length)
@@ -14777,7 +14777,11 @@ private:
   {
     if (static_cast<double>(n) >= static_cast<double>(std::numeric_limits<float>::lowest()) &&
         static_cast<double>(n) <= static_cast<double>((std::numeric_limits<float>::max)()) &&
-        static_cast<double>(static_cast<float>(n)) == static_cast<double>(n))
+        (static_cast<double>(static_cast<float>(n)) +
+                 std::numeric_limits<float>::epsilon() >= static_cast<double>(n)
+         && static_cast<double>(static_cast<float>(n))-
+            std::numeric_limits<float>::epsilon() <= static_cast<double>
+                (n)))
     {
       oa->write_character(format == detail::input_format_t::cbor
                           ? get_cbor_float_prefix(static_cast<float>(n))

@@ -2,9 +2,12 @@
 #define GRIDGENERATOR_GRIDGENERATOR_H
 
 #include <ostream>
+#include <json.h>
+
 #include "global.h"
 #include "types.h"
 
+using json = nlohmann::json;
 
 extern std::ostream cerr0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
@@ -27,11 +30,16 @@ class GridGenerator {
 
   auto run(int argc, GChar** argv) -> GInt;
 
+  void loadConfiguration();
+  void generateGrid();
+
  private:
   NullBuffer nullBuffer;
 
   int m_domainId  = -1;
   int m_noDomains = -1;
+
+  json config;
 };
 
 } // namespace GRIDGEN
