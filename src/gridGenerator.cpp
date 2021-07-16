@@ -6,6 +6,7 @@
 #include "globalmpi.h"
 #include "gridGenerator.h"
 #include "sys.h"
+#include "timer.h"
 //#include "macros.h"
 
 #ifdef _OPENMP
@@ -49,6 +50,8 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
   }
 #endif
   gridgen_log.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
+
+  RESET_TIMERS();
 }
 
 template <GInt DEBUG_LEVEL>

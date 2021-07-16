@@ -258,11 +258,11 @@ inline void TimerManager::startTimer(const GInt timerId, const GString& pos) {
 
 /// Returns the timer Value.
 inline auto TimerManager::returnTimer(const GInt timerId) -> GDouble {
-#if TIMER_RANK_AVG
-  const GDouble t       = m_timers[timerId].cpuTime;
+#ifdef TIMER_RANK_AVG
+  const GDouble t       = m_timers[timerId].cpuTime.time_since_epoch().count();
   GDouble       tmp_rcv = 0.0;
   MPI_Reduce(&t, &tmp_rcv, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  return tmp_rcv / globalNoDomains();
+  return tmp_rcv / MPI::globalNoDomains();
 #else
   return m_timers[timerId].cpuTime.time_since_epoch().count();
 #endif
