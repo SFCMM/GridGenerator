@@ -48,6 +48,7 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
     gridgen_log.open("gridgen_log", false, argc, argv, MPI_COMM_WORLD);
   }
 #endif
+  gridgen_log.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 }
 
 template <GInt DEBUG_LEVEL>

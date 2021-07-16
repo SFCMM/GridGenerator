@@ -7,6 +7,22 @@
 /// Print global MPI information at startup
 // #define MPI_IO_PRINT_INFO
 
+
+/*
+* If you set this to zero, each message (i.e. after each "endl") the buffer is written to the file.
+* A good starting value is 256 kB (256*1024 = 262144).
+*/
+#define LOG_MIN_FLUSH_SIZE 0
+
+// activate asserts (will reduce performance)
+//#define USE_ASSERTS
+
+// average timer results over all ranks
+#define TIMER_RANK_AVG
+
+// synchronize timers
+//#define TIMER_SYNC
+
 // clang-format off
 #define PROJECT_VER @PROJECT_VERSION@
 #define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@

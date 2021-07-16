@@ -2,8 +2,10 @@
 #define GRIDGENERATOR_CONSTANTS_H
 
 #include <array>
+#include <limits>
 #include "types.h"
 
+static constexpr GDouble GDoubleEps = std::numeric_limits<GDouble>::epsilon();
 
 static constexpr GInt NO_DEBUG   = 0;
 static constexpr GInt MIN_DEBUG  = 1;
