@@ -108,7 +108,6 @@ class TimerManager {
   inline void resetTimers();
   inline void resetRecord(const GInt timerId);
   inline void resetRecords();
-  inline void setTimer(const GDouble timeValue, const GInt timerId);
 
   // delete: copy construction, and copy assignment
   TimerManager(TimerManager&) = delete;
