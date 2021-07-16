@@ -23,6 +23,9 @@
 // synchronize timers
 //#define TIMER_SYNC
 
+// enable backtracing using LLVMSupport library
+//#define ENABLE_BACKTRACE
+
 // clang-format off
 #define PROJECT_VER @PROJECT_VERSION@
 #define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@
