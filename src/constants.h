@@ -5,6 +5,7 @@
 #include <limits>
 #include "types.h"
 
+static constexpr GFloat GFloatEps = std::numeric_limits<GFloat>::epsilon();
 static constexpr GDouble GDoubleEps = std::numeric_limits<GDouble>::epsilon();
 
 static constexpr GInt NO_DEBUG   = 0;

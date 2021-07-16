@@ -10,7 +10,7 @@ void printMpiInfo(MPI_Info& mpiInfo) {
 
   MPI_Info_get_nkeys(mpiInfo, &nkeys);
   std::cerr << "MPI Info: nkeys = " << nkeys << std::endl;
-  for(GInt i = 0; i < nkeys; i++) {
+  for(int i = 0; i < nkeys; i++) {
     std::array<GChar, MPI_MAX_INFO_KEY> key{};
     std::array<GChar, MPI_MAX_INFO_VAL> value{};
     int                                 valuelen = 0;

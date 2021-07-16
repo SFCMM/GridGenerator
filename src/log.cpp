@@ -1,6 +1,7 @@
 #include "log.h"
 #include "config.h"
 #include "macros.h"
+#include "sys.h"
 
 #include <array>
 #include <pwd.h>
@@ -21,7 +22,7 @@ using namespace std;
 auto Log::addAttribute(const pair<GString, GString>& att) -> GInt {
   m_buffer->m_prefixAttributes.push_back(att);
   m_buffer->createPrefixMessage();
-  return m_buffer->m_prefixAttributes.size() - 1;
+  return static_cast<GInt>(m_buffer->m_prefixAttributes.size() - 1);
 }
 
 /** \brief Erases an attribute from the prefix of the XML string.
@@ -59,13 +60,12 @@ void Log::modifyAttribute(GInt attId, const pair<GString, GString>& att) {
  * \return Modified string with XML entities escaped.
  */
 auto Log_buffer::encodeXml(const GString& inputStr) -> GString {
-  GChar         c = 0;           // Contains the current character
   ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
 
   // Create a for loop that uses an iterator to traverse the complete string
   for(GString::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
     // Get current character
-    c = static_cast<GChar>(*iter);
+    auto c = static_cast<GChar>(*iter);
 
     // Use a switch/case statement for the five XML entities
     switch(c) {
@@ -174,8 +174,7 @@ auto Log_buffer::getXmlHeader() -> GString {
   // Gets the current username
   GString user;
 
-  passwd* p = nullptr;
-  p         = getpwuid(getuid());
+  passwd* p = getpwuid(getuid());
   if(p != nullptr) {
     user = GString(p->pw_name);
   } else {
@@ -197,37 +196,21 @@ auto Log_buffer::getXmlHeader() -> GString {
     executionCommand << " " << m_argv[n];
   }
 
-
-  // Create start timestamp
-  static constexpr GInt          date_length = 128;
-  std::array<GChar, date_length> tmpDateTime{};
-  tm*                            timeInfo = nullptr;
-  time_t                         rawTime  = 0;
-
-  // Get the current time and write it to rawTime
-  time(&rawTime);
-
-  // Convert to time struct
-  timeInfo = localtime(&rawTime);
-
-  // Format time to string and save to buffer
-  strftime(&tmpDateTime[0], date_length, "%Y-%m-%d %H:%M:%S", timeInfo);
-
   // Create temporary buffer
   ostringstream tmpBuffer;
 
   // Write XML header information to buffer
-  tmpBuffer << "<?xml version=\"1.0\" standalone=\"yes\" ?>\n";
-  tmpBuffer << "<root>\n";
-  tmpBuffer << "<meta name=\"noDomains\" content=\"" << m_noDomains << "\" />\n";
-  tmpBuffer << "<meta name=\"dateCreation\" content=\"" << tmpDateTime.data() << "\" />\n";
-  tmpBuffer << "<meta name=\"fileFormatVersion\" content=\"" << m_fileFormatVersion << "\" />\n";
-  tmpBuffer << "<meta name=\"user\" content=\"" << user << "\" />\n";
-  tmpBuffer << "<meta name=\"host\" content=\"" << host.data() << "\" />\n";
-  tmpBuffer << "<meta name=\"dir\" content=\"" << dir.data() << "\" />\n";
-  tmpBuffer << "<meta name=\"executionCommand\" content=\"" << executionCommand.str() << "\" />\n";
-  tmpBuffer << "<meta name=\"revision\" content=\"" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
-  tmpBuffer << "<meta name=\"build\" content=\"" << XSTRINGIFY(COMPILER_NAME) << " " << XSTRINGIFY(BUILD_TYPE) << " ("
+  tmpBuffer << R"(<?xml version="1.0" standalone="yes" ?>\n)";
+  tmpBuffer << R"(<root>\n)";
+  tmpBuffer << R"(<meta name="noDomains" content=")" << m_noDomains << "\" />\n";
+  tmpBuffer << R"(<meta name="dateCreation" content=")" << dateString() << "\" />\n";
+  tmpBuffer << R"(<meta name="fileFormatVersion" content=")" << m_fileFormatVersion << "\" />\n";
+  tmpBuffer << R"(<meta name="user" content=")" << user << "\" />\n";
+  tmpBuffer << R"(<meta name="host" content=")" << host.data() << "\" />\n";
+  tmpBuffer << R"(<meta name="dir" content=")" << dir.data() << "\" />\n";
+  tmpBuffer << R"(<meta name="executionCommand" content=")" << executionCommand.str() << "\" />\n";
+  tmpBuffer << R"(<meta name="revision" content=")" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
+  tmpBuffer << R"(<meta name="build" content=")" << XSTRINGIFY(COMPILER_NAME) << " " << XSTRINGIFY(BUILD_TYPE) << " ("
             << GString(XSTRINGIFY(COMPILER_VER)) << ")"
             << "\" />\n";
 
@@ -238,33 +221,17 @@ auto Log_buffer::getXmlHeader() -> GString {
 
 /**
  * \brief Return an XML footer that should written at the end of each log file.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
+ * \author Sven Berger
+ * \date July 2021
  *
  * \return The XML footer.
  */
 auto Log_buffer::getXmlFooter() -> GString {
-  static constexpr GInt date_length = 128;
-
-  // Create timestamp
-  std::array<GChar, date_length> tmpDateTime{};
-  tm*                            timeInfo = nullptr;
-  time_t                         rawTime  = 0;
-
-  // Get the current time and write it to rawTime
-  time(&rawTime);
-
-  // Convert to time struct
-  timeInfo = localtime(&rawTime);
-
-  // Format time to string and save to buffer
-  strftime(&tmpDateTime[0], date_length, "%Y-%m-%d %H:%M:%S", timeInfo);
-
   // Create temporary buffer
   ostringstream tmpBuffer;
 
   // Write XML footer to buffer
-  tmpBuffer << "<meta name=\"dateClosing\" content=\"" << tmpDateTime.data() << "\" />\n";
+  tmpBuffer << R"(<meta name="dateClosing" content=")" << dateString() << "\" />\n";
   tmpBuffer << "</root>\n";
 
   // Return XML footer
@@ -284,16 +251,9 @@ auto Log_buffer::getXmlFooter() -> GString {
  */
 Log_simpleFileBuffer::Log_simpleFileBuffer(const GString& filename, GInt argc, GChar** argv, MPI_Comm mpiComm,
                                            GBool rootOnlyHardwired)
-  : Log_buffer(argc, argv), m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm() {
+  : Log_buffer(argc, argv), m_filename(), m_file() {
   open(filename, mpiComm, rootOnlyHardwired);
 }
-
-/**
- * \brief Destructor calls close() to close the file.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
- */
-Log_simpleFileBuffer::~Log_simpleFileBuffer() { close(); }
 
 /**
  * \brief Initialization of the file I/O environment.
@@ -437,16 +397,9 @@ inline void Log_simpleFileBuffer::flushBuffer() {
  * \param[in] filename Name of the file to open.
  * \param[in] mpiComm MPI communicator for which to open the file.
  */
-LogFile::LogFile(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwired) : m_isOpen(false) {
+LogFile::LogFile(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwired) {
   open(filename, rootOnlyHardwired, 0, nullptr, mpiComm);
 }
-
-/**
- * \brief Destructor closes the stream.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
- */
-LogFile::~LogFile() { close(); }
 
 /**
  * \brief Opens a file by passing the parameters to Log_<xyz>FileBuffer::open(...).
@@ -482,7 +435,7 @@ void LogFile::open(const GString& filename, GBool rootOnlyHardwired, GInt argc, 
 void LogFile::close(GBool forceClose) {
   // Only close file if was already opened
   if(m_isOpen) {
-    static_cast<Log_simpleFileBuffer*>(m_buffer)->close(forceClose);
+    static_cast<Log_simpleFileBuffer*>(m_buffer)->close(forceClose); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
     // Delete internal buffer to prevent memory leaks
     delete m_buffer;

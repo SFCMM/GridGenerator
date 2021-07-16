@@ -98,21 +98,22 @@ class Log : public std::ostream {
  */
 class Log_simpleFileBuffer : public Log_buffer {
  private:
-  GBool         m_isOpen;            //!< Stores whether the file(s) were already opened
-  GBool         m_rootOnlyHardwired; //!< If true, only domain 0 opens and uses a file
+  GBool         m_isOpen{false};            //!< Stores whether the file(s) were already opened
+  GBool         m_rootOnlyHardwired{false}; //!< If true, only domain 0 opens and uses a file
   GString       m_filename;          //!< Filename on disk
   std::ofstream m_file;              //!< File stream tied to physical file on disk
-  MPI_Comm      m_mpiComm;           //!< MPI communicator group
+  MPI_Comm      m_mpiComm{};           //!< MPI communicator group
 
  protected:
   auto sync() -> int override;
   void flushBuffer() override;
 
  public:
-  Log_simpleFileBuffer() : m_isOpen(false), m_rootOnlyHardwired(false), m_filename(), m_file(), m_mpiComm(){};
+  Log_simpleFileBuffer() : m_filename(), m_file() {};
   Log_simpleFileBuffer(const GString& filename, GInt m_argc, GChar** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
                        GBool rootOnlyHardwired = false);
-  ~Log_simpleFileBuffer() override;
+  ~Log_simpleFileBuffer() override{close();};
+
   Log_simpleFileBuffer(const Log_simpleFileBuffer&) = delete;
   Log_simpleFileBuffer(Log_simpleFileBuffer&&)      = delete;
   auto operator=(const Log_simpleFileBuffer&) -> Log_simpleFileBuffer& = delete;
@@ -140,7 +141,8 @@ class LogFile : public Log {
  public:
   LogFile() = default;
   LogFile(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false);
-  ~LogFile() override;
+  ~LogFile() override{close();};
+
   LogFile(const LogFile&) = delete;
   LogFile(LogFile&&)      = delete;
   auto operator=(const LogFile&) -> LogFile& = delete;
