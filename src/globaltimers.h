@@ -13,7 +13,10 @@ struct Timers_ {
     timertotal,
     IO,
     Init,
+
     GridGeneration,
+    GridUniform,
+    GridRefinement,
 
     // counter
     _count

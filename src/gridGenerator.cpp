@@ -1,5 +1,6 @@
 #include <iostream>
 #include <mpi.h>
+#include <gcem.hpp>
 
 #include "config.h.in"
 #include "constants.h"
@@ -65,6 +66,8 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 
   NEW_SUB_TIMER_NOCREATE(m_timers[Timers::Init], "Init", m_timers[Timers::timertotal]);
   NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridGeneration], "Create the grid.", m_timers[Timers::timertotal]);
+  NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridUniform], "Uniform grid generation.", m_timers[Timers::GridGeneration]);
+  NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridRefinement], "Grid refinement.", m_timers[Timers::GridGeneration]);
   NEW_TIMER_NOCREATE(m_timers[Timers::IO], "IO", m_timers[Timers::timertotal]);
 }
 
@@ -122,10 +125,21 @@ template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid..." << endl;
 
+  RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt x = 1;
-  for(int i = 0; i < 10000000; i++){
-    x+=exp(x*x);
+  static constexpr GDouble pi = 3.1415;
+  for(int i = 0; i < 10000; i++){
+    x+=gcem::lgamma(2*pi);
   }
+  RECORD_TIMER_STOP(m_timers[Timers::GridUniform]);
+
+
+  RECORD_TIMER_START(m_timers[Timers::GridRefinement]);
+  GInt y = 1;
+  for(int i = 0; i < 10000; i++){
+    y+=gamma(2*pi);
+  }
+  RECORD_TIMER_STOP(m_timers[Timers::GridRefinement]);
 
 }
 
