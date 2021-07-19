@@ -92,6 +92,10 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_STOP(m_timers[Timers::timertotal]);
   STOP_ALL_RECORD_TIMERS();
   DISPLAY_ALL_TIMERS();
+
+  gridgen_log.close();
+  MPI_Finalize();
+
   return 0;
 }
 template <GInt DEBUG_LEVEL>
