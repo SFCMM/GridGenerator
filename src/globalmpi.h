@@ -47,6 +47,7 @@ class Information {
   friend auto globalNoDomains() -> GInt;
   friend auto globalMpiInfo() -> const MPI_Info&;
   friend auto isRoot() -> GBool;
+  friend auto isSerial() -> GBool;
 
   GInt     m_globalDomainId  = 0;
   GInt     m_globalNoDomains = 1;
@@ -63,6 +64,8 @@ inline auto globalNoDomains() -> GInt { return g_mpiInformation.m_globalNoDomain
 inline auto globalMpiInfo() -> const MPI_Info& { return g_mpiInformation.m_mpiInfo; }
 /// Return is root process
 inline auto isRoot()-> GBool { return g_mpiInformation.m_globalDomainId==0;}
+/// Return if we running serial
+inline auto isSerial()-> GBool { return g_mpiInformation.m_globalNoDomains==1;}
 } // namespace MPI
 
 #endif // GRIDGENERATOR_GLOBALMPI_H

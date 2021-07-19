@@ -20,10 +20,12 @@ using namespace std;
 std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 template <GInt DEBUG_LEVEL>
-void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
+void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
+  m_exe        = argv[0];
+  m_configurationFileName = config_file;
+
 #ifdef _OPENMP
   int provided = 0;
-  m_exe        = argv[0];
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
 #else
   MPI_Init(&argc, &argv);
@@ -86,7 +88,6 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_STOP(m_timers[Timers::Init]);
   RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
-  GInt m_dim = 2;
   if(m_dim == 2) {
     generateGrid<2>();
   } else if(m_dim == 3) {
@@ -98,6 +99,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   }
   gridgen_log << "Grid generator finished <||" << endl;
 
+  unusedConfigValues();
   RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
   RECORD_TIMER_STOP(m_timers[Timers::timertotal]);
   STOP_ALL_RECORD_TIMERS();
@@ -131,7 +133,29 @@ void GridGenerator<DEBUG_LEVEL>::startupInfo() {
 
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
-  gridgen_log << "Loading configuration file..." << endl;
+  gridgen_log << "Loading configuration file ["<< m_configurationFileName << "]"<< endl;
+
+  // 1. open configuration file on root process
+  if(MPI::isRoot()){
+    std::ifstream configFileStream(m_configurationFileName);
+    configFileStream >> m_config;
+    // range-based for
+    for (auto& element : m_config.items()) {
+      m_configKeys.emplace(element.key(), false);
+    }
+    configFileStream.close();
+  }
+
+  // 2. communicate configuration file to all other processes
+  if(!MPI::isSerial()){
+    TERMM(-1, "Not implemented!");
+  }
+
+  // 3. load&check configuration values
+  m_dim = required_config_value<GInt>("dim");
+  m_uniformLvl = required_config_value<GInt>("uniformLevel");
+
+  m_dryRun = opt_config_value<GBool>("dry-run", m_dryRun);
 }
 
 template <GInt DEBUG_LEVEL>
@@ -142,7 +166,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt                     x  = 1;
   static constexpr GDouble pi = 3.1415;
-  for(int i = 0; i < 10000; i++) {
+  for(int i = 0; i < 10000; ++i) {
     x += gcem::lgamma(2 * pi * NDIM);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridUniform]);
@@ -150,12 +174,42 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 
   RECORD_TIMER_START(m_timers[Timers::GridRefinement]);
   GInt y = 1;
-  for(int i = 0; i < 10000; i++) {
+  for(int i = 0; i < 10000; ++i) {
     y += gamma(2 * pi * NDIM);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridRefinement]);
 }
 
+template <GInt DEBUG_LEVEL>
+template <typename T>
+auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T {
+  if(m_config.template contains(key)){
+    m_configKeys[key]=true;
+    return static_cast<T>(m_config[key]);
+  }
+  TERMM(-1, "The required configuration value is missing: "+key);
+}
+
+template <GInt DEBUG_LEVEL>
+template <typename T>
+auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& defaultValue) -> T {
+  if(m_config.template contains(key)){
+    m_configKeys[key]=true;
+    return static_cast<T>(m_config[key]);
+  }
+  return defaultValue;
+}
+template <GInt DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
+  GInt i = 0;
+  gridgen_log << "The following values in the configuration file are unused:"<<endl;
+  for (const auto & configKey : m_configKeys) {
+    if(!configKey.second){
+      gridgen_log <<"["<< ++i <<"] " << configKey.first << "\n";
+    }
+  }
+  gridgen_log <<endl;
+}
 
 template class GRIDGEN::GridGenerator<0>;
 template class GRIDGEN::GridGenerator<1>;

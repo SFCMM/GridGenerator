@@ -1,0 +1,6 @@
+{
+  "dry-run": true,
+  "dim": 4,
+  "uniformLevel": 1,
+  "unused-value": "unused dummy"
+}

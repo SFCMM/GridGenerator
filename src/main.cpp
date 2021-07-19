@@ -3,6 +3,7 @@
 #include "config.h.in"
 #include "constants.h"
 #include "gridGenerator.h"
+#include "sys.h"
 
 class AppConfiguration{
  public:
@@ -26,7 +27,7 @@ class AppConfiguration{
   template<int DEBUG>
   auto run() -> int{
     GRIDGEN::GridGenerator<DEBUG> gridGen{};
-    gridGen.init(m_argc, m_argv);
+    gridGen.init(m_argc, m_argv, m_configurationFile);
     return gridGen.run();
   }
 
@@ -76,7 +77,9 @@ auto main(int argc, GChar** argv) -> int {
   //first positional argument should be the configuration file
   GString config_file = result["config"].as<GString>();
   //check if the file actually exists
-
+  if(!isFile(config_file)){
+    TERMM(-1, "Configuration file not found: "+ config_file);
+  }
 
 
   return gridGenRunner.run(debug);

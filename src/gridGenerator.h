@@ -29,16 +29,12 @@ class GridGenerator {
   auto operator=(GridGenerator&&) -> GridGenerator& = delete;
 
 
-  void init(int argc, GChar** argv);
+  void init(int argc, GChar** argv, GString config_file);
   auto run() -> int;
-
-  void startupInfo();
-  void loadConfiguration();
-  template <GInt nDim> void generateGrid();
 
  private:
   using Timers = gridgenerator::Timers_;
-  std::array<GInt, Timers::_count> m_timers;
+  std::array<GInt, Timers::_count> m_timers{};
 
   NullBuffer nullBuffer;
 
@@ -48,8 +44,23 @@ class GridGenerator {
   GString m_configurationFileName="grid.json";
   GString m_exe;
 
-  json config;
+  json m_config;
+  std::unordered_map<GString, GBool> m_configKeys{};
+
   void initTimers();
+  void startupInfo();
+  void loadConfiguration();
+  template <GInt nDim> void generateGrid();
+  void  unusedConfigValues();
+
+
+  template<typename  T> auto required_config_value(const GString& key) -> T;
+  template<typename  T> auto opt_config_value(const GString& key, const T& defaultValue) -> T;
+
+
+  GInt m_dim = -1;
+  GInt m_uniformLvl = -1;
+  GBool m_dryRun = false;
 };
 
 } // namespace GRIDGEN

@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <pwd.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "macros.h"
 #include "types.h"
@@ -37,4 +38,8 @@ inline auto getCWD() -> GString {
   return static_cast<GString> (&dir_[0]);
 }
 
+inline auto isFile (const std::string& name) -> GBool {
+  struct stat buffer{};
+  return (stat (name.c_str(), &buffer) == 0);
+}
 #endif // GRIDGENERATOR_SYS_H
