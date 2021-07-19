@@ -86,7 +86,16 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_STOP(m_timers[Timers::Init]);
   RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
-  generateGrid();
+  GInt m_dim = 2;
+  if(m_dim == 2) {
+    generateGrid<2>();
+  } else if(m_dim == 3) {
+    generateGrid<3>();
+  } else if(m_dim == 4) {
+    generateGrid<4>();
+  } else if(m_dim == 1) {
+    generateGrid<1>();
+  }
   gridgen_log << "Grid generator finished <||" << endl;
 
   RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
@@ -126,14 +135,15 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
 }
 
 template <GInt DEBUG_LEVEL>
+template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
-  gridgen_log << "Generating a grid..." << endl;
+  gridgen_log << "Generating a grid[" << NDIM << "D]..." << endl;
 
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt                     x  = 1;
   static constexpr GDouble pi = 3.1415;
   for(int i = 0; i < 10000; i++) {
-    x += gcem::lgamma(2 * pi);
+    x += gcem::lgamma(2 * pi * NDIM);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridUniform]);
 
@@ -141,7 +151,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_START(m_timers[Timers::GridRefinement]);
   GInt y = 1;
   for(int i = 0; i < 10000; i++) {
-    y += gamma(2 * pi);
+    y += gamma(2 * pi * NDIM);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridRefinement]);
 }

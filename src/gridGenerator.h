@@ -34,7 +34,7 @@ class GridGenerator {
 
   void startupInfo();
   void loadConfiguration();
-  void generateGrid();
+  template <GInt nDim> void generateGrid();
 
  private:
   using Timers = gridgenerator::Timers_;
