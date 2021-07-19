@@ -4,7 +4,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic push
-#pragma ide diagnostic ignored "cppcoreguidelines-macro-usage"
+#pragma ide diagnostic   ignored "cppcoreguidelines-macro-usage"
 
 #include <iostream>
 #include <mpi.h>
@@ -35,7 +35,7 @@
     if(!(condition)) {                                                                                                 \
       std::cerr << "Assertion `" #condition "` failed in " << __FILE__ << " line " << __LINE__ << ": " << message      \
                 << std::endl;                                                                                          \
-      TERMM(1, "ASSERTION FAILED");                                                                            \
+      TERMM(1, "ASSERTION FAILED");                                                                                    \
     }                                                                                                                  \
   } while(false)
 #else
@@ -86,4 +86,3 @@
 #pragma clang diagnostic pop
 #pragma clang diagnostic pop
 #endif // GRIDGENERATOR_MACROS_H
-

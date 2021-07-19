@@ -1,31 +1,31 @@
 #ifndef GRIDGENERATOR_GLOBALMPI_H
 #define GRIDGENERATOR_GLOBALMPI_H
 
+#include <array>
 #include <iostream>
 #include "mpi.h"
 #include "types.h"
-#include <array>
 
 namespace MPI {
 
 /// Print all information of given MPI_Info object
-inline void printMpiInfo(MPI_Info& mpiInfo){
-    int nkeys = 0;
+inline void printMpiInfo(MPI_Info& mpiInfo) {
+  int nkeys = 0;
 
-    MPI_Info_get_nkeys(mpiInfo, &nkeys);
-    std::cerr << "MPI Info: nkeys = " << nkeys << std::endl;
-    for(int i = 0; i < nkeys; i++) {
-      std::array<GChar, MPI_MAX_INFO_KEY> key{};
-      std::array<GChar, MPI_MAX_INFO_VAL> value{};
-      int                                 valuelen = 0;
-      int                                 flag     = 0;
+  MPI_Info_get_nkeys(mpiInfo, &nkeys);
+  std::cerr << "MPI Info: nkeys = " << nkeys << std::endl;
+  for(int i = 0; i < nkeys; i++) {
+    std::array<GChar, MPI_MAX_INFO_KEY> key{};
+    std::array<GChar, MPI_MAX_INFO_VAL> value{};
+    int                                 valuelen = 0;
+    int                                 flag     = 0;
 
-      MPI_Info_get_nthkey(mpiInfo, i, &key[0]);
-      MPI_Info_get_valuelen(mpiInfo, &key[0], &valuelen, &flag);
-      MPI_Info_get(mpiInfo, &key[0], valuelen + 1, &value[0], &flag);
-      std::cerr << "MPI Info: [" << i << "] key = " << key.data() << ", value = " << value.data() << std::endl;
-    }
+    MPI_Info_get_nthkey(mpiInfo, i, &key[0]);
+    MPI_Info_get_valuelen(mpiInfo, &key[0], &valuelen, &flag);
+    MPI_Info_get(mpiInfo, &key[0], valuelen + 1, &value[0], &flag);
+    std::cerr << "MPI Info: [" << i << "] key = " << key.data() << ", value = " << value.data() << std::endl;
   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessors and storage for global MPI information
@@ -81,9 +81,9 @@ inline auto globalNoDomains() -> GInt { return g_mpiInformation.m_globalNoDomain
 /// Return global MPI information
 inline auto globalMpiInfo() -> const MPI_Info& { return g_mpiInformation.m_mpiInfo; }
 /// Return is root process
-inline auto isRoot()-> GBool { return g_mpiInformation.m_globalDomainId==0;}
+inline auto isRoot() -> GBool { return g_mpiInformation.m_globalDomainId == 0; }
 /// Return if we running serial
-inline auto isSerial()-> GBool { return g_mpiInformation.m_globalNoDomains==1;}
+inline auto isSerial() -> GBool { return g_mpiInformation.m_globalNoDomains == 1; }
 } // namespace MPI
 
 #endif // GRIDGENERATOR_GLOBALMPI_H

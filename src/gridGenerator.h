@@ -1,8 +1,8 @@
 #ifndef GRIDGENERATOR_GRIDGENERATOR_H
 #define GRIDGENERATOR_GRIDGENERATOR_H
 
-#include <ostream>
 #include <json.h>
+#include <ostream>
 
 #include "cartesiangrid.h"
 #include "global.h"
@@ -42,30 +42,34 @@ class GridGenerator {
   int m_domainId  = -1;
   int m_noDomains = -1;
 
-  GString m_configurationFileName="grid.json";
+  GString m_configurationFileName = "grid.json";
   GString m_exe;
 
-  json m_config;
+  json                               m_config;
   std::unordered_map<GString, GBool> m_configKeys{};
 
   void initTimers();
   void startupInfo();
   void loadConfiguration();
-  template <GInt nDim> void loadGridDefinition();
-  template <GInt nDim> void generateGrid();
-  void  unusedConfigValues();
+  template <GInt nDim>
+  void loadGridDefinition();
+  template <GInt nDim>
+  void generateGrid();
+  void unusedConfigValues();
 
 
-  template<typename  T> auto required_config_value(const GString& key) -> T;
-  template<typename  T> auto opt_config_value(const GString& key, const T& defaultValue) -> T;
+  template <typename T>
+  auto required_config_value(const GString& key) -> T;
+  template <typename T>
+  auto opt_config_value(const GString& key, const T& defaultValue) -> T;
 
 
-  GInt m_dim = -1;
-  GInt m_uniformLvl = -1;
-  GInt m_maxNoCells = -1;
-  GInt m_maxRefinementLvl = -1;
-  GBool m_dryRun = false;
-  GString m_outputDir = "out";
+  GInt    m_dim              = -1;
+  GInt    m_uniformLvl       = -1;
+  GInt    m_maxNoCells       = -1;
+  GInt    m_maxRefinementLvl = -1;
+  GBool   m_dryRun           = false;
+  GString m_outputDir        = "out";
 
   std::unique_ptr<GridInterface> m_grid;
 };

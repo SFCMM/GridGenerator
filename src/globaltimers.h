@@ -6,7 +6,7 @@ namespace gridgenerator {
 struct Timers_ {
   // Enum to store timer "names"
   enum {
-    //Timer groups
+    // Timer groups
     AppGroup,
 
 

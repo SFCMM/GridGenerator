@@ -114,7 +114,7 @@ class TimerManager {
   TimerManager& operator=(const TimerManager&) = delete;
 
  private:
-  TimerManager() = default;
+  TimerManager()  = default;
   ~TimerManager() = default;
 
 
@@ -128,14 +128,14 @@ class TimerManager {
         status(Timer::Uninitialized),
         subTimers(0),
         displayed(false) {}
-    std::string name;  ///< Timer Name
-    GInt        group; ///< Group Id
-    GInt        timerId = -1;
-    GInt        parent  = -1; ///< Parent timer id
-    chronoTimePoint    cpuTime;      ///< CPU time
-    chronoTimePoint     oldCpuTime;   ///< Old CPU time (for timer restart)
-    GDouble     recordedTime; ///< Time recorded on the timer.
-    GInt        status;       ///< Timer's status, see enum:
+    std::string     name;  ///< Timer Name
+    GInt            group; ///< Group Id
+    GInt            timerId = -1;
+    GInt            parent  = -1; ///< Parent timer id
+    chronoTimePoint cpuTime;      ///< CPU time
+    chronoTimePoint oldCpuTime;   ///< Old CPU time (for timer restart)
+    GDouble         recordedTime; ///< Time recorded on the timer.
+    GInt            status;       ///< Timer's status, see enum:
     enum { Uninitialized = 0, Running = 1, Stopped = 0 };
     std::vector<GInt> subTimers{};
     GBool             displayed;
@@ -146,7 +146,7 @@ class TimerManager {
   using TIt = std::vector<Timer>::iterator;
 
 
-  static inline auto               time() -> chronoTimePoint;
+  static inline auto        time() -> chronoTimePoint;
   inline void               displayTimer_(const GInt    timerId,
                                           const GBool   toggleDisplayed = true,
                                           const GInt    tIndent         = 0,
@@ -190,9 +190,7 @@ inline void TimerManager::recordTimers() {
   }
 }
 
-inline void TimerManager::resetTimer(const GInt timerId) {
-  m_timers[timerId].status  = Timer::Stopped;
-}
+inline void TimerManager::resetTimer(const GInt timerId) { m_timers[timerId].status = Timer::Stopped; }
 
 inline void TimerManager::resetTimers() {
   for(std::size_t timerId = 0, e = m_timers.size(); timerId != e; ++timerId) {
@@ -249,7 +247,7 @@ inline void TimerManager::startTimer(const GInt timerId, const GString& pos) {
              + " can't be started because it is already running! " + std::to_string(pos));
   std::ignore = pos;
 
-  chronoTimePoint   t         = time();
+  chronoTimePoint t            = time();
   m_timers[timerId].oldCpuTime = m_timers[timerId].cpuTime;
   m_timers[timerId].cpuTime    = t;
   m_timers[timerId].status     = Timer::Running;
@@ -278,7 +276,7 @@ inline void TimerManager::stopTimer(const GInt timerId, const GString& pos) {
   }
 
   if(m_timers[timerId].status == Timer::Running) {
-    const chronoTimePoint t           = time();
+    const chronoTimePoint t   = time();
     m_timers[timerId].cpuTime = t - m_timers[timerId].cpuTime + m_timers[timerId].oldCpuTime;
     m_timers[timerId].status  = Timer::Stopped;
 
@@ -457,7 +455,7 @@ class TimerProfiling {
   static auto getCpuTimeSecs(clock_t cput) -> GDouble {
     return (static_cast<GDouble>(cput) / static_cast<GDouble>(CLOCKS_PER_SEC));
   }
-  static auto                            printTime(GDouble secs) -> GString;
+  static auto                        printTime(GDouble secs) -> GString;
   static std::vector<FunctionTiming> s_functionTimings;
 
  private:

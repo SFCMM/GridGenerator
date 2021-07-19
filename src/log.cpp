@@ -435,7 +435,8 @@ void LogFile::open(const GString& filename, GBool rootOnlyHardwired, GInt argc, 
 void LogFile::close(GBool forceClose) {
   // Only close file if was already opened
   if(m_isOpen) {
-    static_cast<Log_simpleFileBuffer*>(m_buffer)->close(forceClose); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+    static_cast<Log_simpleFileBuffer*>(m_buffer)->close(
+        forceClose); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
     // Delete internal buffer to prevent memory leaks
     delete m_buffer;

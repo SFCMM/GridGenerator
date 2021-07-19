@@ -1,9 +1,9 @@
 #ifndef GRIDGENERATOR_BACKTRACE_H
 #define GRIDGENERATOR_BACKTRACE_H
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
-#include <cmath>
 #include "compiler_config.h"
 
 #ifdef GCC_COMPILER

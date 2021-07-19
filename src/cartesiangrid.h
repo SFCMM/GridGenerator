@@ -3,22 +3,23 @@
 
 #include "macros.h"
 
-class GridInterface{
+class GridInterface {
  public:
   virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
 };
 
-template<Debug_Level DebugLevel, GInt NDIM>
-class CartesianGrid: public GridInterface {
+template <Debug_Level DebugLevel, GInt NDIM>
+class CartesianGrid : public GridInterface {
  public:
-  void setBoundingBox(std::vector<GDouble> bbox) override{
-    if(bbox.size() != 2*NDIM){
+  void setBoundingBox(std::vector<GDouble> bbox) override {
+    if(bbox.size() != 2 * NDIM) {
       TERMM(-1, "Invalid boundary box definition.");
     }
-    std::copy_n(bbox.begin(), 2*NDIM, m_boundingBox.begin());
+    std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
   }
+
  private:
-  std::array<GDouble, 2*NDIM>  m_boundingBox{NAN};
+  std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H
