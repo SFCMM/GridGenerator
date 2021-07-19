@@ -8,7 +8,7 @@ class GridInterface{
   virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
 };
 
-template<GInt DebugLevel, GInt NDIM>
+template<Debug_Level DebugLevel, GInt NDIM>
 class CartesianGrid: public GridInterface {
  public:
   void setBoundingBox(std::vector<GDouble> bbox) override{

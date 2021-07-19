@@ -1,12 +1,18 @@
 #ifndef GRIDGENERATOR_MACROS_H
 #define GRIDGENERATOR_MACROS_H
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-macro-usage"
+
 #include <iostream>
 #include <mpi.h>
 #include <sstream>
 #include "backtrace.h"
 #include "global.h"
 #include "globalmpi.h"
+
 
 /// Define macros to stringify literal and expanded macro arguments
 ///
@@ -19,7 +25,7 @@
 /// Define a short-hand macros for the location in the code (<file>:<line>)
 #define LOC_ __FILE__ ":" XSTRINGIFY(__LINE__)
 
-#define FUN_ __PRETTY_FUNCTION__
+#define FUN_ static_cast<const char*>(__PRETTY_FUNCTION__)
 
 #define AT_ std::string(FUN_) + " (" + LOC_ + ")"
 
@@ -55,7 +61,7 @@
     // Close the log file to make sure that no MPI error occurs from the
     // unclosed file, and that a proper XML footer is written
     gridgen_log.close(true);
-    MPI_Abort(MPI_COMM_WORLD, errorCode);
+    MPI_Abort(MPI_COMM_WORLD, static_cast<int>(errorCode));
   } else {
     // memDealloc();
 
@@ -68,7 +74,7 @@
     // Exit the program
     exit(0);
   }
-  exit(errorCode);
+  exit(static_cast<int>(errorCode));
 }
 
 #define TERMM(exitval, msg)                                                                                            \
@@ -76,4 +82,8 @@
     term(exitval, AT_, msg);                                                                                           \
   } while(false)
 
+
+#pragma clang diagnostic pop
+#pragma clang diagnostic pop
 #endif // GRIDGENERATOR_MACROS_H
+

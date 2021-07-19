@@ -19,7 +19,7 @@ class NullBuffer : public std::streambuf {
   auto overflow(int c) -> int override { return c; }
 };
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 class GridGenerator {
  public:
   GridGenerator()                     = default;

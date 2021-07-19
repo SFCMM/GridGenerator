@@ -19,7 +19,7 @@ using namespace std;
 
 std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
   m_exe        = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   m_configurationFileName = std::move(config_file);
@@ -47,7 +47,7 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_fil
 #ifndef GRIDGEN_SINGLE_FILE_LOG
   gridgen_log.open("gridgen_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
-  if(DEBUG_LEVEL < MORE_DEBUG) {
+  if(DEBUG_LEVEL < Debug_Level::more_debug) {
     gridgen_log.open("gridgen_log", true, argc, argv, MPI_COMM_WORLD);
   } else {
     gridgen_log.open("gridgen_log", false, argc, argv, MPI_COMM_WORLD);
@@ -58,7 +58,7 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_fil
   initTimers();
 }
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::initTimers() {
   RESET_TIMERS();
 
@@ -73,7 +73,7 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
   NEW_TIMER_NOCREATE(m_timers[Timers::IO], "IO", m_timers[Timers::timertotal]);
 }
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_START(m_timers[Timers::Init]);
 
@@ -88,6 +88,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_STOP(m_timers[Timers::Init]);
   RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
+  //todo: replace with switch
   if(m_dim == 2) {
     generateGrid<2>();
   } else if(m_dim == 3) {
@@ -110,7 +111,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
 
   return 0;
 }
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::startupInfo() {
   if(MPI::isRoot()) {
     cout << R"(    __  _______  __  _________     _     __)" << endl;
@@ -131,7 +132,7 @@ void GridGenerator<DEBUG_LEVEL>::startupInfo() {
   }
 }
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   gridgen_log << "Loading configuration file ["<< m_configurationFileName << "]"<< endl;
 
@@ -160,7 +161,7 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   m_outputDir = opt_config_value<GString>("outputDir", m_outputDir);
 }
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid[" << NDIM << "D]..." << endl;
@@ -184,7 +185,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_STOP(m_timers[Timers::GridRefinement]);
 }
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 template <typename T>
 auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T {
   if(m_config.template contains(key)){
@@ -194,7 +195,7 @@ auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T 
   TERMM(-1, "The required configuration value is missing: "+key);
 }
 
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 template <typename T>
 auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& defaultValue) -> T {
   if(m_config.template contains(key)){
@@ -203,7 +204,7 @@ auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& d
   }
   return defaultValue;
 }
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
   GInt i = 0;
   gridgen_log << "The following values in the configuration file are unused:"<<endl;
@@ -214,7 +215,7 @@ void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
   }
   gridgen_log <<endl;
 }
-template <GInt DEBUG_LEVEL>
+template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   m_grid->setBoundingBox(required_config_value<vector<GDouble>>("boundingBox"));
@@ -224,8 +225,8 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
 }
 
-template class GRIDGEN::GridGenerator<0>;
-template class GRIDGEN::GridGenerator<1>;
-template class GRIDGEN::GridGenerator<2>;
-template class GRIDGEN::GridGenerator<3>;
-template class GRIDGEN::GridGenerator<4>;
+template class GRIDGEN::GridGenerator<Debug_Level::no_debug>;
+template class GRIDGEN::GridGenerator<Debug_Level::min_debug>;
+template class GRIDGEN::GridGenerator<Debug_Level::debug>;
+template class GRIDGEN::GridGenerator<Debug_Level::more_debug>;
+template class GRIDGEN::GridGenerator<Debug_Level::max_debug>;

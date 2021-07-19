@@ -9,22 +9,23 @@ class AppConfiguration{
  public:
 
   auto run(GInt debug) -> int{
-    if(debug == NO_DEBUG) {
-      return run<NO_DEBUG>();
+    //todo: replace with switch
+    if(debug == static_cast<GInt>(Debug_Level::no_debug)) {
+      return run<Debug_Level::no_debug>();
     }
-    if(debug == MIN_DEBUG) {
-      return run<MIN_DEBUG>();
+    if(debug == static_cast<GInt>(Debug_Level::min_debug)) {
+      return run<Debug_Level::min_debug>();
     }
-    if(debug == DEBUG) {
-      return run<DEBUG>();
+    if(debug == static_cast<GInt>(Debug_Level::debug)) {
+      return run<Debug_Level::debug>();
     }
-    if(debug == MORE_DEBUG) {
-      return run<MORE_DEBUG>();
+    if(debug == static_cast<GInt>(Debug_Level::more_debug)) {
+      return run<Debug_Level::more_debug>();
     }
-    return run<MAX_DEBUG>();
+    return run<Debug_Level::max_debug>();
   }
 
-  template<int DEBUG>
+  template<Debug_Level DEBUG>
   auto run() -> int{
     GRIDGEN::GridGenerator<DEBUG> gridGen{};
     gridGen.init(m_argc, m_argv, m_configurationFile);
@@ -75,8 +76,8 @@ auto main(int argc, GChar** argv) -> int {
 
   GInt debug = result["debug"].as<GInt>();
   if(debug > 0) {
-    if(debug > MAX_DEBUG) {
-      debug = MAX_DEBUG;
+    if(debug > static_cast<GInt>(Debug_Level::max_debug)) {
+      debug = static_cast<GInt>(Debug_Level::max_debug);
     }
     std::cout << "Activated debug level " << DEBUG_LEVEL.at(debug) << std::endl;
   }
