@@ -154,14 +154,18 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   // 3. load&check configuration values
   m_dim = required_config_value<GInt>("dim");
   m_uniformLvl = required_config_value<GInt>("uniformLevel");
+  m_maxNoCells = required_config_value<GInt>("maxNoCells");
 
   m_dryRun = opt_config_value<GBool>("dry-run", m_dryRun);
+  m_outputDir = opt_config_value<GString>("outputDir", m_outputDir);
 }
 
 template <GInt DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid[" << NDIM << "D]..." << endl;
+  m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, NDIM>>();
+  loadGridDefinition<NDIM>();
 
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt                     x  = 1;
@@ -209,6 +213,15 @@ void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
     }
   }
   gridgen_log <<endl;
+}
+template <GInt DEBUG_LEVEL>
+template <GInt NDIM>
+void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
+  m_grid->setBoundingBox(required_config_value<vector<GDouble>>("boundingBox"));
+
+  m_maxRefinementLvl = m_uniformLvl;
+  m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
+
 }
 
 template class GRIDGEN::GridGenerator<0>;

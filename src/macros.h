@@ -47,6 +47,7 @@
     s << "\n"
       << "Program is aborting!!\n";
     std::cerr << s.str() << std::flush;
+    gridgen_log << s.str() << std::endl;
 
     // Print backtrace (if enabled)
     BACKTRACE();

@@ -4,6 +4,7 @@
 #include <ostream>
 #include <json.h>
 
+#include "cartesiangrid.h"
 #include "global.h"
 #include "globaltimers.h"
 #include "types.h"
@@ -50,6 +51,7 @@ class GridGenerator {
   void initTimers();
   void startupInfo();
   void loadConfiguration();
+  template <GInt nDim> void loadGridDefinition();
   template <GInt nDim> void generateGrid();
   void  unusedConfigValues();
 
@@ -60,7 +62,12 @@ class GridGenerator {
 
   GInt m_dim = -1;
   GInt m_uniformLvl = -1;
+  GInt m_maxNoCells = -1;
+  GInt m_maxRefinementLvl = -1;
   GBool m_dryRun = false;
+  GString m_outputDir = "out";
+
+  std::unique_ptr<GridInterface> m_grid;
 };
 
 } // namespace GRIDGEN
