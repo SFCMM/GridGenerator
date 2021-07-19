@@ -5,6 +5,7 @@
 #include <json.h>
 
 #include "global.h"
+#include "globaltimers.h"
 #include "types.h"
 
 using json = nlohmann::json;
@@ -31,11 +32,14 @@ class GridGenerator {
   void init(int argc, GChar** argv);
   auto run() -> int;
 
-  void showLogo();
+  void startupInfo();
   void loadConfiguration();
   void generateGrid();
 
  private:
+  using Timers = gridgenerator::Timers_;
+  std::array<GInt, Timers::_count> m_timers;
+
   NullBuffer nullBuffer;
 
   int m_domainId  = -1;
@@ -44,6 +48,7 @@ class GridGenerator {
   GString configurationFileName="grid.json";
 
   json config;
+  void initTimers();
 };
 
 } // namespace GRIDGEN

@@ -13,7 +13,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_executable(gridgenerator
         src/main.cpp src/gridGenerator.cpp src/gridGenerator.h src/config.h.in src/log.cpp src/log.h src/macros.h
         src/globalmpi.h src/globalmpi.cpp src/backtrace.h src/global.cpp src/global.h src/types.h src/sys.h src/timer.h
-        src/timer.cpp src/gmath.h src/compiler_config.h)
+        src/timer.cpp src/gmath.h src/compiler_config.h src/globaltimers.h)
 
 
 #todo: move to aux/host file

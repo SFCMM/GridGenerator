@@ -52,20 +52,48 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
   gridgen_log.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 
   RESET_TIMERS();
+  // Start timer for the total program execution
+  initTimers();
+
+}
+
+template <GInt DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::initTimers() {
+  NEW_TIMER_GROUP_NOCREATE(m_timers[Timers::AppGroup], "Application");
+  NEW_TIMER_NOCREATE(m_timers[Timers::timertotal], "Total", m_timers[Timers::AppGroup]);
+  RECORD_TIMER_START(m_timers[Timers::timertotal]);
+
+  NEW_SUB_TIMER_NOCREATE(m_timers[Timers::Init], "Init", m_timers[Timers::timertotal]);
+  NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridGeneration], "Create the grid.", m_timers[Timers::timertotal]);
+  NEW_TIMER_NOCREATE(m_timers[Timers::IO], "IO", m_timers[Timers::timertotal]);
 }
 
 template <GInt DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
-  gridgen_log << "Grid generator started"<<endl;
-  showLogo();
-  loadConfiguration();
-  generateGrid();
-  gridgen_log << "Grid generator finished"<<endl;
+  RECORD_TIMER_START(m_timers[Timers::Init]);
 
+  gridgen_log << "Grid generator started ||>"<<endl;
+  startupInfo();
+
+  RECORD_TIMER_START(m_timers[Timers::IO]);
+
+  loadConfiguration();
+
+  RECORD_TIMER_STOP(m_timers[Timers::IO]);
+  RECORD_TIMER_STOP(m_timers[Timers::Init]);
+  RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
+
+  generateGrid();
+  gridgen_log << "Grid generator finished <||"<<endl;
+
+  RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
+  RECORD_TIMER_STOP(m_timers[Timers::timertotal]);
+  STOP_ALL_RECORD_TIMERS();
+  DISPLAY_ALL_TIMERS();
   return 0;
 }
 template <GInt DEBUG_LEVEL>
-void GridGenerator<DEBUG_LEVEL>::showLogo() {
+void GridGenerator<DEBUG_LEVEL>::startupInfo() {
   cout <<  R"(    __  _______  __  _________     _     __)"<< endl;
   cout <<  R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)"<< endl;
   cout <<  R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )"<< endl;
@@ -93,6 +121,11 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid..." << endl;
+
+  GInt x = 1;
+  for(int i = 0; i < 10000000; i++){
+    x+=exp(x*x);
+  }
 
 }
 
