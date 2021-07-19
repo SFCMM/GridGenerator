@@ -52,14 +52,13 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 #endif
   gridgen_log.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 
-  RESET_TIMERS();
-  // Start timer for the total program execution
   initTimers();
-
 }
 
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::initTimers() {
+  RESET_TIMERS();
+
   NEW_TIMER_GROUP_NOCREATE(m_timers[Timers::AppGroup], "Application");
   NEW_TIMER_NOCREATE(m_timers[Timers::timertotal], "Total", m_timers[Timers::AppGroup]);
   RECORD_TIMER_START(m_timers[Timers::timertotal]);
