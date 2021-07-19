@@ -1,7 +1,7 @@
 #include <gcem.hpp>
 #include <iostream>
-#include <utility>
 #include <mpi.h>
+#include <utility>
 
 #include "config.h"
 #include "constants.h"
@@ -21,7 +21,7 @@ std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
-  m_exe        = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  m_exe                   = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   m_configurationFileName = std::move(config_file);
 
 #ifdef _OPENMP
@@ -88,7 +88,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_STOP(m_timers[Timers::Init]);
   RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
-  //todo: replace with switch
+  // todo: replace with switch
   if(m_dim == 2) {
     generateGrid<2>();
   } else if(m_dim == 3) {
@@ -134,30 +134,30 @@ void GridGenerator<DEBUG_LEVEL>::startupInfo() {
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
-  gridgen_log << "Loading configuration file ["<< m_configurationFileName << "]"<< endl;
+  gridgen_log << "Loading configuration file [" << m_configurationFileName << "]" << endl;
 
   // 1. open configuration file on root process
-  if(MPI::isRoot()){
+  if(MPI::isRoot()) {
     std::ifstream configFileStream(m_configurationFileName);
     configFileStream >> m_config;
     // range-based for
-    for (auto& element : m_config.items()) {
+    for(auto& element : m_config.items()) {
       m_configKeys.emplace(element.key(), false);
     }
     configFileStream.close();
   }
 
   // 2. communicate configuration file to all other processes
-  if(!MPI::isSerial()){
+  if(!MPI::isSerial()) {
     TERMM(-1, "Not implemented!");
   }
 
   // 3. load&check configuration values
-  m_dim = required_config_value<GInt>("dim");
+  m_dim        = required_config_value<GInt>("dim");
   m_uniformLvl = required_config_value<GInt>("uniformLevel");
   m_maxNoCells = required_config_value<GInt>("maxNoCells");
 
-  m_dryRun = opt_config_value<GBool>("dry-run", m_dryRun);
+  m_dryRun    = opt_config_value<GBool>("dry-run", m_dryRun);
   m_outputDir = opt_config_value<GString>("outputDir", m_outputDir);
 }
 
@@ -188,18 +188,18 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 template <Debug_Level DEBUG_LEVEL>
 template <typename T>
 auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T {
-  if(m_config.template contains(key)){
-    m_configKeys[key]=true;
+  if(m_config.template contains(key)) {
+    m_configKeys[key] = true;
     return static_cast<T>(m_config[key]);
   }
-  TERMM(-1, "The required configuration value is missing: "+key);
+  TERMM(-1, "The required configuration value is missing: " + key);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 template <typename T>
 auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& defaultValue) -> T {
-  if(m_config.template contains(key)){
-    m_configKeys[key]=true;
+  if(m_config.template contains(key)) {
+    m_configKeys[key] = true;
     return static_cast<T>(m_config[key]);
   }
   return defaultValue;
@@ -207,13 +207,13 @@ auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& d
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
   GInt i = 0;
-  gridgen_log << "The following values in the configuration file are unused:"<<endl;
-  for (const auto & configKey : m_configKeys) {
-    if(!configKey.second){
-      gridgen_log <<"["<< ++i <<"] " << configKey.first << "\n";
+  gridgen_log << "The following values in the configuration file are unused:" << endl;
+  for(const auto& configKey : m_configKeys) {
+    if(!configKey.second) {
+      gridgen_log << "[" << ++i << "] " << configKey.first << "\n";
     }
   }
-  gridgen_log <<endl;
+  gridgen_log << endl;
 }
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
@@ -222,7 +222,6 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
   m_maxRefinementLvl = m_uniformLvl;
   m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
-
 }
 
 template class GRIDGEN::GridGenerator<Debug_Level::no_debug>;
