@@ -7929,7 +7929,8 @@ public:
     }
     while (current == ' ' || current == '\t' || current == '\n' || current == '\r');
   }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
   token_type scan()
   {
     // initially, skip the BOM
@@ -8017,6 +8018,7 @@ public:
       return token_type::parse_error;
     }
   }
+#pragma GCC diagnostic pop
 
 private:
   /// input adapter

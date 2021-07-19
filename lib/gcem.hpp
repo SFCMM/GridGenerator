@@ -22,6 +22,10 @@
 #define _gcem_HPP
 
 #include "gcem_incl/gcem_options.hpp"
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
 
 namespace gcem
 {
@@ -98,4 +102,7 @@ namespace gcem
     #include "gcem_incl/incomplete_gamma_inv.hpp"
 }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 #endif
