@@ -1,6 +1,6 @@
 #include <cxxopts.hpp>
 
-#include "config.h.in"
+#include "config.h"
 #include "constants.h"
 #include "gridGenerator.h"
 #include "sys.h"
@@ -48,10 +48,13 @@ class AppConfiguration{
 };
 
 auto main(int argc, GChar** argv) -> int {
-  cxxopts::Options options("GridGenerator", "A highly parallel grid generator.");
+  std::ostringstream tmpBuffer;
+  tmpBuffer << "GridGenerator v"<< XSTRINGIFY(PROJECT_VER);
+  cxxopts::Options options(tmpBuffer.str(), "A highly parallel grid generator.");
 
   options.add_options()("d,debug", "Enable debugging with given level.", cxxopts::value<GInt>()->default_value("0"));
   options.add_options()("h,help", "Print usage");
+  options.add_options()("version", "Get version information");
   options.add_options()("c,config", "Configuration file (default=grid.json)", cxxopts::value<std::string>()
       ->default_value("grid.json"));
 
@@ -60,6 +63,10 @@ auto main(int argc, GChar** argv) -> int {
 
   if(result.count("help") > 0) {
     std::cout << options.help() << std::endl;
+    exit(0);
+  }
+  if(result.count("version") > 0) {
+    std::cout << XSTRINGIFY(PROJECT_VER) <<" build " << XSTRINGIFY(BUILD_NUM) << std::endl;
     exit(0);
   }
 

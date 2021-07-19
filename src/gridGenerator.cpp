@@ -1,14 +1,14 @@
 #include <gcem.hpp>
 #include <iostream>
+#include <utility>
 #include <mpi.h>
 
-#include "config.h.in"
+#include "config.h"
 #include "constants.h"
 #include "globalmpi.h"
 #include "gridGenerator.h"
 #include "sys.h"
 #include "timer.h"
-//#include "macros.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -21,8 +21,8 @@ std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-
 
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
-  m_exe        = argv[0];
-  m_configurationFileName = config_file;
+  m_exe        = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  m_configurationFileName = std::move(config_file);
 
 #ifdef _OPENMP
   int provided = 0;
