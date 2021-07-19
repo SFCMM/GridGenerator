@@ -45,7 +45,8 @@ class GridGenerator {
   int m_domainId  = -1;
   int m_noDomains = -1;
 
-  GString configurationFileName="grid.json";
+  GString m_configurationFileName="grid.json";
+  GString m_exe;
 
   json config;
   void initTimers();

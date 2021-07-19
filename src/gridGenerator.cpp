@@ -1,6 +1,6 @@
+#include <gcem.hpp>
 #include <iostream>
 #include <mpi.h>
-#include <gcem.hpp>
 
 #include "config.h.in"
 #include "constants.h"
@@ -23,6 +23,7 @@ template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 #ifdef _OPENMP
   int provided = 0;
+  m_exe        = argv[0];
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
 #else
   MPI_Init(&argc, &argv);
@@ -35,7 +36,7 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
   MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
   // Open cerr0 on MPI root
-  if(m_domainId == 0) {
+  if(MPI::isRoot()) {
     cerr0.rdbuf(std::cerr.rdbuf());
   } else {
     cerr0.rdbuf(&nullBuffer);
@@ -74,7 +75,7 @@ template <GInt DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_START(m_timers[Timers::Init]);
 
-  gridgen_log << "Grid generator started ||>"<<endl;
+  gridgen_log << "Grid generator started ||>" << endl;
   startupInfo();
 
   RECORD_TIMER_START(m_timers[Timers::IO]);
@@ -86,7 +87,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
   generateGrid();
-  gridgen_log << "Grid generator finished <||"<<endl;
+  gridgen_log << "Grid generator finished <||" << endl;
 
   RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
   RECORD_TIMER_STOP(m_timers[Timers::timertotal]);
@@ -100,28 +101,28 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
 }
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::startupInfo() {
-  cout <<  R"(    __  _______  __  _________     _     __)"<< endl;
-  cout <<  R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)"<< endl;
-  cout <<  R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )"<< endl;
-  cout <<  R"( / /  / / /_/ / /  / / /_/ / /  / / /_/ /  )"<< endl;
-  cout <<  R"(/_/  /_/\____/_/  /_/\____/_/  /_/\__,_/   )"<< endl;
-  cout <<  R"(                                           )"<< endl;
-  cout << "Start time:            " << dateString() << "\n"
-       << "Number of ranks:       " << MPI::globalNoDomains() << "\n"
-       #ifdef _OPENMP
-       << "Number of OMP threads: " << omp_get_max_threads() << "\n"
-       #endif
-      // << "Host (of rank 0):      " << host << "\n"
-     //  << "Working directory:     " << dir << "\n"
-      // << "User:                  " << user << "\n"
-      // << "Executable:            " << executable << "\n"
-       << endl;
+  if(MPI::isRoot()) {
+    cout << R"(    __  _______  __  _________     _     __)" << endl;
+    cout << R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)" << endl;
+    cout << R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )" << endl;
+    cout << R"( / /  / / /_/ / /  / / /_/ / /  / / /_/ /  )" << endl;
+    cout << R"(/_/  /_/\____/_/  /_/\____/_/  /_/\__,_/   )" << endl;
+    cout << R"(                                           )" << endl;
+    cout << "Start time:            " << dateString() << "\n"
+         << "Number of ranks:       " << MPI::globalNoDomains() << "\n"
+#ifdef _OPENMP
+         << "Number of OMP threads: " << omp_get_max_threads() << "\n"
+#endif
+         << "Host (of rank 0):      " << hostString() << "\n"
+         << "Working directory:     " << getCWD() << "\n"
+         << "Executable:            " << m_exe << "\n"
+         << endl;
+  }
 }
 
 template <GInt DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   gridgen_log << "Loading configuration file..." << endl;
-
 }
 
 template <GInt DEBUG_LEVEL>
@@ -129,23 +130,21 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid..." << endl;
 
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
-  GInt x = 1;
+  GInt                     x  = 1;
   static constexpr GDouble pi = 3.1415;
-  for(int i = 0; i < 10000; i++){
-    x+=gcem::lgamma(2*pi);
+  for(int i = 0; i < 10000; i++) {
+    x += gcem::lgamma(2 * pi);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridUniform]);
 
 
   RECORD_TIMER_START(m_timers[Timers::GridRefinement]);
   GInt y = 1;
-  for(int i = 0; i < 10000; i++){
-    y+=gamma(2*pi);
+  for(int i = 0; i < 10000; i++) {
+    y += gamma(2 * pi);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridRefinement]);
-
 }
-
 
 
 template class GRIDGEN::GridGenerator<0>;
