@@ -5,7 +5,6 @@
 #include <ostream>
 
 #include "cartesiangrid.h"
-#include "global.h"
 #include "globaltimers.h"
 #include "types.h"
 

@@ -8,8 +8,8 @@
 #include <mpi.h>
 #include <sstream>
 #include "backtrace.h"
-#include "global.h"
 #include "globalmpi.h"
+#include "log.h"
 
 
 /// Define macros to stringify literal and expanded macro arguments

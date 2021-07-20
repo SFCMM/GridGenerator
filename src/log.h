@@ -154,5 +154,7 @@ class LogFile : public Log {
   auto setRootOnly(GBool rootOnly = true) -> GBool override;
   auto setMinFlushSize(GInt minFlushSize) -> GInt;
 };
+inline LogFile gridgen_log; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
 
 #endif // GRIDGENERATOR_LOG_H

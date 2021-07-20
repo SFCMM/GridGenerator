@@ -71,8 +71,7 @@ class Information {
   GInt     m_globalNoDomains = 1;
   MPI_Info m_mpiInfo         = MPI_INFO_NULL;
 };
-
-extern Information g_mpiInformation; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+inline Information g_mpiInformation; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 /// Return global domain id
 inline auto globalDomainId() -> GInt { return g_mpiInformation.m_globalDomainId; }
