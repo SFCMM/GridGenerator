@@ -7,6 +7,11 @@ configure_file(src/config.h.in config.h @ONLY)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#todo: move to aux/host file
+include_directories(/home/svenb/build/omp411/include)
+link_directories(/home/svenb/build/omp411/lib)
+find_package(MPI REQUIRED)
+
 include_directories(lib)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -16,7 +21,5 @@ add_executable(gridgenerator
         src/timer.cpp src/gmath.h src/compiler_config.h src/globaltimers.h src/cartesiangrid.h)
 
 
-#todo: move to aux/host file
-include_directories(/home/svenb/build/omp411/include)
-link_directories(/home/svenb/build/omp411/lib)
 TARGET_LINK_LIBRARIES(gridgenerator mpi)
+
