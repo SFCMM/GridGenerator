@@ -22,5 +22,6 @@ add_executable(gridgenerator
         src/timer.cpp src/gmath.h src/compiler_config.h src/globaltimers.h src/cartesiangrid.h)
 
 
-TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
+#TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
+target_link_libraries(gridgenerator PUBLIC MPI::MPI_CXX)
 
