@@ -7,5 +7,5 @@ build:
     - sudo apt update && apt -y install make autoconf cmake openmpi-devel
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_CXX_FLAGS='-I\ /usr/lib/x86_64-linux-gnu/openmpi/include/ -L\ /usr/lib/x86_64-linux-gnu/openmpi/lib/'
+    - cmake ..
     - make -j 2
