@@ -1,8 +1,11 @@
 #ifndef GRIDGENERATOR_MACROS_H
 #define GRIDGENERATOR_MACROS_H
+#include "compiler_config.h"
 
+#ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma ide diagnostic   ignored "cppcoreguidelines-macro-usage"
+#endif
 
 #include <iostream>
 #include <mpi.h>
@@ -80,6 +83,7 @@
     term(exitval, AT_, msg);                                                                                           \
   } while(false)
 
-
+#ifdef CLANG_COMPILER
 #pragma clang diagnostic pop
+#endif
 #endif // GRIDGENERATOR_MACROS_H

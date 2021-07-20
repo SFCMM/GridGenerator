@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include <sstream>
 #include <vector>
+#include "compiler_config.h"
 #include "types.h"
 
 class Log_buffer : public std::stringbuf {
@@ -71,12 +72,12 @@ class Log : public std::ostream {
   Log_buffer* m_buffer = nullptr;
 
  public:
-#if defined(CLANG_COMPILER)
+#ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
 #endif
   Log() : std::ostream(m_buffer){};
-#if defined(CLANG_COMPILER)
+#ifdef CLANG_COMPILER
 #pragma clang diagnostic pop
 #endif
   virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;

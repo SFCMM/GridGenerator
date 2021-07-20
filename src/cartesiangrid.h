@@ -5,12 +5,18 @@
 
 class GridInterface {
  public:
+  virtual ~GridInterface() = default;
+
   virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
+
+ private:
 };
 
 template <Debug_Level DebugLevel, GInt NDIM>
 class CartesianGrid : public GridInterface {
  public:
+  ~CartesianGrid() override = default;
+
   void setBoundingBox(std::vector<GDouble> bbox) override {
     if(bbox.size() != 2 * NDIM) {
       TERMM(-1, "Invalid boundary box definition.");
