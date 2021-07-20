@@ -7,6 +7,8 @@
 #include "compiler_config.h"
 #include "types.h"
 
+inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
 class Log_buffer : public std::stringbuf {
   friend class Log;
 

@@ -17,8 +17,6 @@
 using namespace GRIDGEN;
 using namespace std;
 
-std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
   m_exe                   = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)

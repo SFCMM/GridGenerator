@@ -10,8 +10,6 @@
 
 using json = nlohmann::json;
 
-extern std::ostream cerr0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-
 namespace GRIDGEN {
 class NullBuffer : public std::streambuf {
  public:
