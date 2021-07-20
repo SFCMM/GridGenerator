@@ -1,0 +1,10 @@
+image: gcc:10.3
+
+build:
+  stage: build
+  script:
+    - apt update && apt -y install make autoconf cmake
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make -j 2

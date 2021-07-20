@@ -2,8 +2,6 @@
 #define GRIDGENERATOR_MACROS_H
 
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-#pragma clang diagnostic push
 #pragma ide diagnostic   ignored "cppcoreguidelines-macro-usage"
 
 #include <iostream>
@@ -83,6 +81,5 @@
   } while(false)
 
 
-#pragma clang diagnostic pop
 #pragma clang diagnostic pop
 #endif // GRIDGENERATOR_MACROS_H
