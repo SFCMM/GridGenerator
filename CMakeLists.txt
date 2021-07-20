@@ -11,6 +11,8 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(/home/svenb/build/omp411/include)
 link_directories(/home/svenb/build/omp411/lib)
 find_package(MPI REQUIRED)
+set_property(TARGET MPI::MPI_CXX
+        PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_PATH}")
 
 include_directories(lib)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -21,5 +23,5 @@ add_executable(gridgenerator
         src/timer.cpp src/gmath.h src/compiler_config.h src/globaltimers.h src/cartesiangrid.h)
 
 
-TARGET_LINK_LIBRARIES(gridgenerator mpi)
+TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
 
