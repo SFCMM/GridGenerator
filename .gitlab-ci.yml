@@ -1,4 +1,5 @@
-image: gcc:10.3.0
+#todo: get docker stuff working...
+#image: gcc:10.3.0
 
 build:
   stage: build
@@ -6,5 +7,5 @@ build:
     - sudo apt update && apt -y install make autoconf cmake openmpi-devel
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake .. -DCMAKE_CXX_FLAGS=-I\ /usr/lib/x86_64-linux-gnu/openmpi/include/
     - make -j 2
