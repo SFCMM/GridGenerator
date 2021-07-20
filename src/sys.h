@@ -4,8 +4,8 @@
 #include <array>
 #include <date.h>
 #include <dirent.h>
+#include <filesystem>
 #include <pwd.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include "macros.h"
@@ -24,20 +24,7 @@ inline auto hostString() -> GString {
   return static_cast<GString>(&host_[0]);
 }
 
-inline auto getCWD() -> GString {
-  static constexpr GInt bufferSize = 1024;
+inline auto getCWD() -> GString { return std::filesystem::current_path(); }
 
-  // Get current directory
-  std::array<char, bufferSize> dir_{};
-  if(getcwd(&dir_[0], bufferSize - 1) == nullptr) {
-    TERMM(-1, "No valid directory!");
-  }
-  dir_[bufferSize - 1] = '\0';
-  return static_cast<GString>(&dir_[0]);
-}
-
-inline auto isFile(const std::string& name) -> GBool {
-  struct stat buffer {};
-  return (stat(name.c_str(), &buffer) == 0);
-}
+inline auto isFile(const std::string& name) -> GBool { return std::filesystem::exists(name); }
 #endif // GRIDGENERATOR_SYS_H
