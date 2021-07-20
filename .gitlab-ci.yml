@@ -1,4 +1,4 @@
-image: gcc:10.3
+image: gcc:10.3.0
 
 build:
   stage: build
