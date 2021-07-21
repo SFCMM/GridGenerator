@@ -1,5 +1,6 @@
 #ifndef GRIDGENERATOR_FUNCTIONS_H
 #define GRIDGENERATOR_FUNCTIONS_H
+#include <sstream>
 
 template <GInt LENGTH, class T>
 inline auto strStreamify(std::vector<T> in) -> std::stringstream {
