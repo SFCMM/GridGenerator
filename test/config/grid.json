@@ -1,8 +1,14 @@
 {
   "dry-run": true,
   "dim": 2,
+  "minLevel": 1,
   "uniformLevel": 1,
   "maxNoCells": 1000,
-  "boundingBox": [0, 1.0, 0.0, 1.0],
+  "boundingBox": [
+    0,
+    1.0,
+    0.0,
+    1.0
+  ],
   "unused-value": "unused dummy"
 }

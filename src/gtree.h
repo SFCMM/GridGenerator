@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include "gridcell.h"
+#include "macros.h"
 
 
 namespace cartesian {

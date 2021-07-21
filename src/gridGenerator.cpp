@@ -5,6 +5,8 @@
 
 #include "config.h"
 #include "constants.h"
+#include "functions.h"
+#include "geometry.h"
 #include "globalmpi.h"
 #include "gridGenerator.h"
 #include "sys.h"
@@ -74,12 +76,12 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 template <Debug_Level DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_START(m_timers[Timers::Init]);
-  gridgen_log << "Grid generator started ||>" << endl;
   startupInfo();
+  gridgen_log << "Grid generator started ||>" << endl;
+  cout << "Grid generator started ||>" << endl;
   loadConfiguration();
   RECORD_TIMER_STOP(m_timers[Timers::Init]);
 
-  RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
   // todo: replace with switch
   if(m_dim == 2) {
     generateGrid<2>();
@@ -91,9 +93,9 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
     generateGrid<1>();
   }
   gridgen_log << "Grid generator finished <||" << endl;
+  cout << "Grid generator finished <||" << endl;
 
   unusedConfigValues();
-  RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
 
   RECORD_TIMER_STOP(m_timers[Timers::timertotal]);
   STOP_ALL_RECORD_TIMERS();
@@ -149,22 +151,47 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
 
   // 3. load&check configuration values
   m_dim        = required_config_value<GInt>("dim");
-  m_uniformLvl = required_config_value<GInt>("uniformLevel");
   m_maxNoCells = required_config_value<GInt>("maxNoCells");
 
   m_dryRun    = opt_config_value<GBool>("dry-run", m_dryRun);
-  m_outputDir = opt_config_value<GString>("outputDir", m_outputDir);
+  m_outputDir       = opt_config_value<GString>("outputDir", m_outputDir);
+  m_maxNoOffsprings = opt_config_value<GInt>("maxNoOffsprings", m_maxNoOffsprings);
   RECORD_TIMER_STOP(m_timers[Timers::IO]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
+  RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
+
   gridgen_log << "Generating a grid[" << NDIM << "D]" << endl;
   m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, NDIM>>();
+
+  cout << SP1 << "(1) Reading Grid definition" << endl;
   loadGridDefinition<NDIM>();
   m_grid->setCapacity(m_maxNoCells);
+  // todo: allow setting the weighting method
+  m_weightMethod = std::make_unique<WeightUniform>();
   gridgen_log << "Grid with maximum capacity: " << m_maxNoCells << endl;
+
+  cout << SP1 << "(2) Reading Geometry" << endl;
+  m_geometry = std::make_unique<Geometry<NDIM>>(MPI_COMM_WORLD);
+  // todo: implement
+  //  m_noBndIdsPerSolver.reserve(m_geometry->noNodes());
+  //  for(MInt solver = 0; solver < m_geometry->noNodes(); solver++) {
+  //    m_noBndIdsPerSolver[solver] = m_geometry->noSegmentsOfNode(solver);
+  //  }
+  //  m_bndCutInfo.reserve(m_geometry->noNodes());
+  //  if(!has_config_value("has_config_value")){
+  //    m_grid->setBoundingBox(m_geometry->boundingBox());
+  //  }
+
+
+  gridgen_log << "\n";
+  gridgen_log << SP2 << "+ center of gravity: " << strStreamify<NDIM>(m_grid->cog()).str() << "\n";
+  gridgen_log << SP2 << "+ decisive direction: " << m_grid->decisiveDirection() << "\n";
+  gridgen_log << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->geomExtent()).str() << "\n";
+  gridgen_log << SP2 << "+ bounding box: " << strStreamify<NDIM>(m_grid->boundingBox()).str() << endl;
 
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt                     x  = 1;
@@ -181,6 +208,25 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     y += gamma(2 * pi * NDIM);
   }
   RECORD_TIMER_STOP(m_timers[Timers::GridRefinement]);
+
+  RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
+}
+
+template <Debug_Level DEBUG_LEVEL>
+template <GInt NDIM>
+void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
+  RECORD_TIMER_START(m_timers[Timers::IO]);
+
+  m_minLvl     = required_config_value<GInt>("minLevel");
+  m_uniformLvl = required_config_value<GInt>("uniformLevel");
+
+  m_grid->setBoundingBox(opt_config_value<vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim)));
+
+  m_maxRefinementLvl = m_uniformLvl;
+  m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
+
+  m_outGridFilename = opt_config_value<GString>("gridFileName", m_outGridFilename);
+  RECORD_TIMER_STOP(m_timers[Timers::IO]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
@@ -202,6 +248,16 @@ auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& d
   }
   return defaultValue;
 }
+
+template <Debug_Level DEBUG_LEVEL>
+auto GridGenerator<DEBUG_LEVEL>::has_config_value(const GString& key) -> GBool {
+  if(m_config.template contains(key)) {
+    return true;
+  }
+  TERMM(-1, "The required configuration value is missing: " + key);
+}
+
+
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
   GInt i = 0;
@@ -213,17 +269,7 @@ void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
   }
   gridgen_log << endl;
 }
-template <Debug_Level DEBUG_LEVEL>
-template <GInt NDIM>
-void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
-  RECORD_TIMER_START(m_timers[Timers::IO]);
 
-  m_grid->setBoundingBox(required_config_value<vector<GDouble>>("boundingBox"));
-
-  m_maxRefinementLvl = m_uniformLvl;
-  m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
-  RECORD_TIMER_STOP(m_timers[Timers::IO]);
-}
 
 template class gridgen::GridGenerator<Debug_Level::no_debug>;
 template class gridgen::GridGenerator<Debug_Level::min_debug>;
