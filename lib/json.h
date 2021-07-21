@@ -4539,7 +4539,7 @@ struct external_constructor<value_t::binary>
   static void construct(BasicJsonType& j, typename BasicJsonType::binary_t&& b)
   {
     j.m_type = value_t::binary;
-    j.m_value = typename BasicJsonType::binary_t(std::move(b));;
+    j.m_value = typename BasicJsonType::binary_t(std::move(b));
     j.assert_invariant();
   }
 };
@@ -13311,7 +13311,7 @@ public:
 
     default:
     {
-      JSON_THROW(type_error::create(317, "to serialize to BSON, top-level type must be object, but is " + std::string(j.type_name()), j));;
+      JSON_THROW(type_error::create(317, "to serialize to BSON, top-level type must be object, but is " + std::string(j.type_name()), j));
     }
     }
   }

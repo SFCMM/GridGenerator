@@ -4,6 +4,7 @@
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma ide diagnostic   ignored "cppcoreguidelines-macro-usage"
 #endif
 
