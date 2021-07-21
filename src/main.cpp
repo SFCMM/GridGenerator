@@ -26,7 +26,7 @@ class AppConfiguration {
 
   template <Debug_Level DEBUG>
   auto run() -> int {
-    GRIDGEN::GridGenerator<DEBUG> gridGen{};
+    gridgen::GridGenerator<DEBUG> gridGen{};
     gridGen.init(m_argc, m_argv, m_configurationFile);
     return gridGen.run();
   }

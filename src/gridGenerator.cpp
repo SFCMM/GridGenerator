@@ -14,7 +14,7 @@
 #include <omp.h>
 #endif
 
-using namespace GRIDGEN;
+using namespace gridgen;
 using namespace std;
 
 template <Debug_Level DEBUG_LEVEL>
@@ -74,18 +74,12 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 template <Debug_Level DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_START(m_timers[Timers::Init]);
-
   gridgen_log << "Grid generator started ||>" << endl;
   startupInfo();
-
-  RECORD_TIMER_START(m_timers[Timers::IO]);
-
   loadConfiguration();
-
-  RECORD_TIMER_STOP(m_timers[Timers::IO]);
   RECORD_TIMER_STOP(m_timers[Timers::Init]);
-  RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
+  RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
   // todo: replace with switch
   if(m_dim == 2) {
     generateGrid<2>();
@@ -100,6 +94,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
 
   unusedConfigValues();
   RECORD_TIMER_STOP(m_timers[Timers::GridGeneration]);
+
   RECORD_TIMER_STOP(m_timers[Timers::timertotal]);
   STOP_ALL_RECORD_TIMERS();
   DISPLAY_ALL_TIMERS();
@@ -132,6 +127,8 @@ void GridGenerator<DEBUG_LEVEL>::startupInfo() {
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
+  RECORD_TIMER_START(m_timers[Timers::IO]);
+
   gridgen_log << "Loading configuration file [" << m_configurationFileName << "]" << endl;
 
   // 1. open configuration file on root process
@@ -157,14 +154,17 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
 
   m_dryRun    = opt_config_value<GBool>("dry-run", m_dryRun);
   m_outputDir = opt_config_value<GString>("outputDir", m_outputDir);
+  RECORD_TIMER_STOP(m_timers[Timers::IO]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
-  gridgen_log << "Generating a grid[" << NDIM << "D]..." << endl;
+  gridgen_log << "Generating a grid[" << NDIM << "D]" << endl;
   m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, NDIM>>();
   loadGridDefinition<NDIM>();
+  m_grid->setCapacity(m_maxNoCells);
+  gridgen_log << "Grid with maximum capacity: " << m_maxNoCells << endl;
 
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt                     x  = 1;
@@ -216,14 +216,17 @@ void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
+  RECORD_TIMER_START(m_timers[Timers::IO]);
+
   m_grid->setBoundingBox(required_config_value<vector<GDouble>>("boundingBox"));
 
   m_maxRefinementLvl = m_uniformLvl;
   m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
+  RECORD_TIMER_STOP(m_timers[Timers::IO]);
 }
 
-template class GRIDGEN::GridGenerator<Debug_Level::no_debug>;
-template class GRIDGEN::GridGenerator<Debug_Level::min_debug>;
-template class GRIDGEN::GridGenerator<Debug_Level::debug>;
-template class GRIDGEN::GridGenerator<Debug_Level::more_debug>;
-template class GRIDGEN::GridGenerator<Debug_Level::max_debug>;
+template class gridgen::GridGenerator<Debug_Level::no_debug>;
+template class gridgen::GridGenerator<Debug_Level::min_debug>;
+template class gridgen::GridGenerator<Debug_Level::debug>;
+template class gridgen::GridGenerator<Debug_Level::more_debug>;
+template class gridgen::GridGenerator<Debug_Level::max_debug>;

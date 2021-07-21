@@ -1,6 +1,7 @@
 #ifndef GRIDGENERATOR_CARTESIANGRID_H
 #define GRIDGENERATOR_CARTESIANGRID_H
 
+#include "gtree.h"
 #include "macros.h"
 
 class GridInterface {
@@ -13,11 +14,12 @@ class GridInterface {
   auto operator=(GridInterface&&) -> GridInterface& = delete;
 
   virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
+  virtual void setCapacity(GInt capacity)                = 0;
 
  private:
 };
 
-template <Debug_Level DebugLevel, GInt NDIM>
+template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGrid : public GridInterface {
  public:
   CartesianGrid()                     = default;
@@ -33,9 +35,16 @@ class CartesianGrid : public GridInterface {
     }
     std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
   }
+  void setCapacity(GInt capacity) {
+    if(m_tree.size() > 0) {
+      TERMM(-1, "Invalid operation tree already allocated.");
+    }
+    m_tree.reset(capacity);
+  }
 
  private:
-  std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
+  std::array<GDouble, 2 * NDIM>      m_boundingBox{NAN};
+  cartesian::Tree<DEBUG_LEVEL, NDIM> m_tree;
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

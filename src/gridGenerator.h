@@ -6,11 +6,12 @@
 
 #include "cartesiangrid.h"
 #include "globaltimers.h"
+#include "gridcell.h"
 #include "types.h"
 
 using json = nlohmann::json;
 
-namespace GRIDGEN {
+namespace gridgen {
 class NullBuffer : public std::streambuf {
  public:
   auto overflow(int c) -> int override { return c; }
@@ -71,6 +72,6 @@ class GridGenerator {
   std::unique_ptr<GridInterface> m_grid;
 };
 
-} // namespace GRIDGEN
+} // namespace gridgen
 
 #endif // GRIDGENERATOR_GRIDGENERATOR_H
