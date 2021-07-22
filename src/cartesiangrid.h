@@ -41,11 +41,11 @@ class CartesianGrid : public GridInterface {
       TERMM(-1, "Invalid boundary box definition.");
     }
     std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
-    for(GInt dir = 0; dir < NDIM; dir++) {
-      m_geometryExtents[dir] = m_boundingBox[dir + NDIM] - m_boundingBox[dir];
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      m_geometryExtents[dir] = m_boundingBox[2 * dir + 1] - m_boundingBox[2 * dir];
       // direction of largest extent will be = 0 if all extents are equal
       m_decisiveDirection = m_geometryExtents[dir] > m_geometryExtents[m_decisiveDirection] ? dir : m_decisiveDirection;
-      m_centerOfGravity[dir] = m_boundingBox[dir] + HALF * (m_boundingBox[dir + NDIM] - m_boundingBox[dir]);
+      m_centerOfGravity[dir] = m_boundingBox[2 * dir] + HALF * (m_boundingBox[2 * dir + 1] - m_boundingBox[2 * dir]);
     }
     m_lengthOnLevel[0] = (1.0 + 1.0 / gcem::pow(static_cast<GDouble>(BASE2), static_cast<GDouble>(MAX_LVL)))
                          * m_geometryExtents[m_decisiveDirection];
