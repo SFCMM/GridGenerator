@@ -1,11 +1,25 @@
 #todo: get docker stuff working...
 #image: gcc:10.3.0
 
-build:
+.buildTemplate:
   stage: build
+  tags:
+    -build
   script:
-    - sudo apt update && apt -y install make autoconf cmake openmpi-devel
-    - mkdir build
-    - cd build
-    - cmake ..
+    - mkdir build-$ccompiler
+    - cd build-$ccompiler
+    - cmake --DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" ..
     - make -j 2
+
+
+GNU:
+  extends: .buildTemplate
+  variables:
+    ccompiler: gcc-10
+    cxxcompiler: g++-10
+
+CLANG:
+  extends: .buildTemplate
+  variables:
+    ccompiler: clang-10
+    cxxcompiler: clang++-10
