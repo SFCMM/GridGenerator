@@ -6,7 +6,7 @@
   script:
     - mkdir build-$ccompiler
     - cd build-$ccompiler
-    - cmake --DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" ..
+    - cmake -DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" ..
     - make -j 2
 
 
