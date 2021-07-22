@@ -44,7 +44,7 @@ class Log_buffer : public std::stringbuf {
       m_suffixMessage(),
       m_tmpBuffer() {}
 
-  Log_buffer(GInt argc, GChar** argv)
+  Log_buffer(const GInt argc, GChar** argv)
     : m_rootOnly(false),
       m_domainId(0),
       m_noDomains(1),
@@ -83,7 +83,7 @@ class Log : public std::ostream {
 #pragma clang diagnostic pop
 #endif
   virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;
-  auto         addAttribute(const std::pair<GString, GString>&) -> GInt;
+  auto         addAttribute(const std::pair<GString, const GString>&) -> GInt;
   void         eraseAttribute(GInt);
   void         modifyAttribute(GInt, const std::pair<GString, GString>&);
 };
@@ -113,7 +113,7 @@ class Log_simpleFileBuffer : public Log_buffer {
 
  public:
   Log_simpleFileBuffer() : m_filename(), m_file(){};
-  Log_simpleFileBuffer(const GString& filename, GInt m_argc, GChar** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
+  Log_simpleFileBuffer(const GString& filename, const GInt m_argc, GChar** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
                        GBool rootOnlyHardwired = false);
   ~Log_simpleFileBuffer() override { close(); };
 
@@ -143,7 +143,18 @@ class LogFile : public Log {
 
  public:
   LogFile() = default;
-  LogFile(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false);
+  /**
+   * \brief Constructor creates LogFile and calls ostream constructor with reference to it.
+   * \author Sven Berger
+   * \details When this constructor is used, the stream is immediately ready to use. For information about the
+   * parameters, please have a look at Log*Buffer::open.
+   *
+   * \param[in] filename Name of the file to open.
+   * \param[in] mpiComm MPI communicator for which to open the file.
+   */
+  LogFile(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false) {
+    open(filename, rootOnlyHardwired, 0, nullptr, mpiComm);
+  }
   ~LogFile() override { close(); };
 
   LogFile(const LogFile&) = delete;
@@ -151,7 +162,7 @@ class LogFile : public Log {
   auto operator=(const LogFile&) -> LogFile& = delete;
   auto operator=(LogFile&&) -> LogFile& = delete;
 
-  void open(const GString& filename, GBool rootOnlyHardwired, GInt argc, GChar** argv,
+  void open(const GString& filename, const GBool rootOnlyHardwired, const GInt argc, GChar** argv,
             MPI_Comm mpiComm = MPI_COMM_WORLD);
   void close(GBool forceClose = false);
   auto setRootOnly(GBool rootOnly = true) -> GBool override;

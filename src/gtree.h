@@ -394,7 +394,7 @@ class Tree {
     // 1) Loop over moved nodes and check all tree connections (parents/children/neighbors)
     // 2) If a given connection is to a node that was moved: apply offset to current node
     // 3) If a given connection is to a node that was not moved: change connectivity in other node
-    for(GInt from = begin; from < end; from++) {
+    for(GInt from = begin; from < end; ++from) {
       const GInt distance    = to - begin;
       const GInt destination = from + distance;
 
@@ -404,7 +404,7 @@ class Tree {
         if(inMovedRange(p)) {
           parent(destination) += distance;
         } else {
-          for(GInt j = 0; j < noChildrenPerNode(); j++) {
+          for(GInt j = 0; j < noChildrenPerNode(); ++j) {
             if(child(p, j) == from) {
               child(p, j) = destination;
             }
@@ -413,7 +413,7 @@ class Tree {
       }
 
       // Children
-      for(GInt j = 0; j < noChildrenPerNode(); j++) {
+      for(GInt j = 0; j < noChildrenPerNode(); ++j) {
         if(hasChild(destination, j)) {
           const GInt c = child(destination, j);
           if(inMovedRange(c)) {
@@ -425,7 +425,7 @@ class Tree {
       }
 
       // Neighbors
-      for(GInt j = 0; j < noNeighborsPerNode(); j++) {
+      for(GInt j = 0; j < noNeighborsPerNode(); ++j) {
         if(hasNeighbor(destination, j)) {
           const GInt n = neighbor(destination, j);
           if(inMovedRange(n)) {

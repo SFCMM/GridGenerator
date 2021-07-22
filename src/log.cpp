@@ -19,8 +19,8 @@ using namespace std;
  * \param[in] att The attribute to add, consists of a pair of MStrings.
  * \return The location of the attribute in the vector of pairs.
  */
-auto Log::addAttribute(const pair<GString, GString>& att) -> GInt {
-  m_buffer->m_prefixAttributes.push_back(att);
+auto Log::addAttribute(const pair<GString, const GString>& att) -> GInt {
+  m_buffer->m_prefixAttributes.emplace_back(att);
   m_buffer->createPrefixMessage();
   return static_cast<GInt>(m_buffer->m_prefixAttributes.size() - 1);
 }
@@ -31,7 +31,7 @@ auto Log::addAttribute(const pair<GString, GString>& att) -> GInt {
  *
  *  \param[in] attId The ID of the attribute to delete.
  */
-void Log::eraseAttribute(GInt attId) {
+void Log::eraseAttribute(const GInt attId) {
   m_buffer->m_prefixAttributes.erase(m_buffer->m_prefixAttributes.begin() + attId);
   m_buffer->createPrefixMessage();
 }
@@ -43,7 +43,7 @@ void Log::eraseAttribute(GInt attId) {
  *  \param[in] attId The ID of the attribute to modify.
  *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
  */
-void Log::modifyAttribute(GInt attId, const pair<GString, GString>& att) {
+void Log::modifyAttribute(const GInt attId, const pair<GString, GString>& att) {
   m_buffer->m_prefixAttributes[attId] = att;
   m_buffer->createPrefixMessage();
 }
@@ -137,7 +137,7 @@ inline void Log_buffer::createSuffixMessage() { m_suffixMessage = "</m>\n"; }
  * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
  * \return The previous internal state (may be stored to return to the previous behavior).
  */
-inline auto Log_buffer::setRootOnly(GBool rootOnly) -> GBool {
+inline auto Log_buffer::setRootOnly(const GBool rootOnly) -> GBool {
   GBool previousValue = m_rootOnly;
   m_rootOnly          = rootOnly;
   return previousValue;
@@ -151,7 +151,7 @@ inline auto Log_buffer::setRootOnly(GBool rootOnly) -> GBool {
  * \params[in] minFlushSize Minimum buffer length.
  * \return The previous value of the minimum flush size.
  */
-inline auto Log_buffer::setMinFlushSize(GInt minFlushSize) -> GInt {
+inline auto Log_buffer::setMinFlushSize(const GInt minFlushSize) -> GInt {
   GInt previousValue = m_minFlushSize;
   m_minFlushSize     = minFlushSize;
   return previousValue;
@@ -249,7 +249,7 @@ auto Log_buffer::getXmlFooter() -> GString {
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-Log_simpleFileBuffer::Log_simpleFileBuffer(const GString& filename, GInt argc, GChar** argv, MPI_Comm mpiComm,
+Log_simpleFileBuffer::Log_simpleFileBuffer(const GString& filename, const GInt argc, GChar** argv, MPI_Comm mpiComm,
                                            GBool rootOnlyHardwired)
   : Log_buffer(argc, argv), m_filename(), m_file() {
   open(filename, mpiComm, rootOnlyHardwired);
@@ -269,7 +269,7 @@ Log_simpleFileBuffer::Log_simpleFileBuffer(const GString& filename, GInt argc, G
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-void Log_simpleFileBuffer::open(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwired) {
+void Log_simpleFileBuffer::open(const GString& filename, MPI_Comm mpiComm, const GBool rootOnlyHardwired) {
   // Open file only if it was not yet done
   if(!m_isOpen) {
     // Set MPI communicator group
@@ -313,7 +313,7 @@ void Log_simpleFileBuffer::open(const GString& filename, MPI_Comm mpiComm, GBool
  * \details Any subsequent write statements to the file stream are discarded after this method is called. After
  *          close() is called, an XML footer is written to the file. Then the file is closed.
  */
-void Log_simpleFileBuffer::close(GBool forceClose) {
+void Log_simpleFileBuffer::close(const GBool forceClose) {
   // forceClose is not needed here (only kept for interface consistency reasons)
   static_cast<void>(forceClose);
 
@@ -387,19 +387,6 @@ inline void Log_simpleFileBuffer::flushBuffer() {
   }
 }
 
-/**
- * \brief Constructor creates LogFile and calls ostream constructor with reference to it.
- * \author Michael Schlottke, Sven Berger
- * \date April 2012
- * \details When this constructor is used, the stream is immediately ready to use. For information about the paramters,
- *          please have a look at Log*Buffer::open.
- *
- * \param[in] filename Name of the file to open.
- * \param[in] mpiComm MPI communicator for which to open the file.
- */
-LogFile::LogFile(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwired) {
-  open(filename, rootOnlyHardwired, 0, nullptr, mpiComm);
-}
 
 /**
  * \brief Opens a file by passing the parameters to Log_<xyz>FileBuffer::open(...).
@@ -412,7 +399,8 @@ LogFile::LogFile(const GString& filename, MPI_Comm mpiComm, GBool rootOnlyHardwi
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-void LogFile::open(const GString& filename, GBool rootOnlyHardwired, GInt argc, GChar** argv, MPI_Comm mpiComm) {
+void LogFile::open(const GString& filename, const GBool rootOnlyHardwired, const GInt argc, GChar** argv,
+                   MPI_Comm mpiComm) {
   // Only open file if it was not yet opened
   if(!m_isOpen) {
     // Open a simple file
@@ -432,7 +420,7 @@ void LogFile::open(const GString& filename, GBool rootOnlyHardwired, GInt argc, 
  * \date June 2012
  * \details All attempts to write to the stream after closing it will be discarded.
  */
-void LogFile::close(GBool forceClose) {
+void LogFile::close(const GBool forceClose) {
   // Only close file if was already opened
   if(m_isOpen) {
     static_cast<Log_simpleFileBuffer*>(m_buffer)->close(
@@ -454,7 +442,7 @@ void LogFile::close(GBool forceClose) {
  * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
  * \return The previous internal state (may be stored to return to the previous behavior).
  */
-auto LogFile::setRootOnly(GBool rootOnly) -> GBool { return m_buffer->setRootOnly(rootOnly); }
+auto LogFile::setRootOnly(const GBool rootOnly) -> GBool { return m_buffer->setRootOnly(rootOnly); }
 
 /**
  * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
@@ -466,7 +454,7 @@ auto LogFile::setRootOnly(GBool rootOnly) -> GBool { return m_buffer->setRootOnl
  * \params[in] minFlushSize Minimum buffer length.
  * \return The previous value of the minimum flush size.
  */
-auto LogFile::setMinFlushSize(GInt minFlushSize) -> GInt {
+auto LogFile::setMinFlushSize(const GInt minFlushSize) -> GInt {
   if(m_isOpen) {
     return m_buffer->setMinFlushSize(minFlushSize);
   }

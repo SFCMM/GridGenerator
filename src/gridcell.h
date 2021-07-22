@@ -17,7 +17,7 @@ enum class GridCell {
 
 namespace grid::cell {
 /// Converts property name to underlying integer value
-constexpr std::underlying_type<GridCell>::type p(const GridCell property) {
+constexpr auto p(const GridCell property) -> std::underlying_type<GridCell>::type {
   return static_cast<std::underlying_type<GridCell>::type>(property);
 }
 
