@@ -15,11 +15,11 @@
 GNU:
   extends: .buildTemplate
   variables:
-    ccompiler: gcc-10
-    cxxcompiler: g++-10
+    ccompiler: "gcc-10"
+    cxxcompiler: "g++-10"
 
 CLANG:
   extends: .buildTemplate
   variables:
-    ccompiler: clang-10
-    cxxcompiler: clang++-10
+    ccompiler: "clang-10"
+    cxxcompiler: "clang++-10"
