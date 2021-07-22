@@ -172,7 +172,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   m_grid->setCapacity(m_maxNoCells);
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
-  gridgen_log << "Grid with maximum capacity: " << m_maxNoCells << endl;
+  gridgen_log << "Grid with maximum number of cells: " << m_maxNoCells << endl;
 
   cout << SP1 << "(2) Reading Geometry" << endl;
   m_geometry = std::make_unique<Geometry<NDIM>>(MPI_COMM_WORLD);
