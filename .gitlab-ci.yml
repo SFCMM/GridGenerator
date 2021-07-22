@@ -3,8 +3,6 @@
 
 .buildTemplate:
   stage: build
-  tags:
-    -build
   script:
     - mkdir build-$ccompiler
     - cd build-$ccompiler
