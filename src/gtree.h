@@ -126,7 +126,6 @@ class Tree {
       checkDir(dir);
     }
     return hasNeighbor(id, dir) || (hasParent(id) && hasNeighbor(parent(id), dir));
-    ;
   }
 
   // Other data fields
