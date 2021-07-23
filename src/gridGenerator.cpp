@@ -172,10 +172,26 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   cout << SP1 << "(1) Reading Grid definition" << endl;
   loadGridDefinition<NDIM>();
   m_grid->setCapacity(m_maxNoCells);
+  gridgen_log << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
+  cout << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
+
+  // todo: add function to define memory to be allocated
+  // todo: add function to convert to appropriate memory size
+  const GDouble memoryConsumptionKB = CartesianGridGen<DEBUG_LEVEL, NDIM>::memorySizePerCell() * m_maxNoCells / DKBIT;
+  if(MPI::isSerial()) {
+    gridgen_log << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+    cout << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+  } else {
+    gridgen_log << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+    cout << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+    const GDouble globalMemory = memoryConsumptionKB * static_cast<GDouble>(MPI::globalNoDomains());
+    gridgen_log << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
+    cout << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
+  }
+
   m_grid->setMinLvl(m_minLvl);
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
-  gridgen_log << "Grid with maximum number of cells: " << m_maxNoCells << endl;
 
   cout << SP1 << "(2) Reading Geometry" << endl;
   m_geometry = std::make_unique<Geometry<NDIM>>(MPI_COMM_WORLD);

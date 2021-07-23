@@ -192,21 +192,19 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Invalid grid capacity.");
     }
 
-    gridgen_log << SP2 << "(3) create minLevel grid with level " << minLvl() << std::endl;
-    std::cout << SP2 << "(3) create minLevel grid with level " << minLvl() << std::endl;
+    gridgen_log << SP1 << "(3) create minLevel grid with level " << minLvl() << std::endl;
+    std::cout << SP1 << "(3) create minLevel grid with level " << minLvl() << std::endl;
 
-    gridgen_log << SP3 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
-    std::cout << SP3 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
+    gridgen_log << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
+    std::cout << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
 
     // use lazy initialization for grid generation and make sure final minLevel grid starts in the beginning
     if(isEven(minLvl())) {
       // initial cell placed in the beginning
-      cerr0 << "even" << std::endl;
       m_levelOffsets[0] = {0, 1};
       m_levelOffsets[1] = {m_capacity - maxNoChildren<NDIM>(), m_capacity};
     } else {
       // initial cell placed at the end
-      cerr0 << "odd" << std::endl;
       m_levelOffsets[0] = {m_capacity - 1, m_capacity};
       m_levelOffsets[1] = {0, maxNoChildren<NDIM>()};
     }
@@ -215,6 +213,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_center[begin]  = cog();
 
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridMin]);
+  }
+
+  static constexpr auto memorySizePerCell() -> GInt {
+    return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) + sizeof(Point<NDIM>) + sizeof(NeighborList<NDIM>)
+           + sizeof(ChildList<NDIM>);
   }
 
 
