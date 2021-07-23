@@ -158,6 +158,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::lengthOnLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::cog;
 
+  using PropertyBitsetType = gridgen::cell::BitsetType;
+  using CellProperties     = GridGenCellProperties;
+
   CartesianGridGen()                        = default;
   ~CartesianGridGen() override              = default;
   CartesianGridGen(const CartesianGridGen&) = delete;
@@ -176,11 +179,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_nghbrIds.resize(capacity);
     m_childIds.resize(capacity);
     m_rfnDistance.resize(capacity);
+    m_properties.resize(capacity);
     m_capacity = capacity;
   }
 
   void setMinLvl(const GInt _minLvl) override {
-    m_levelOffsets.reserve(_minLvl);
+    m_levelOffsets.resize(_minLvl);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
   }
 
@@ -210,29 +214,53 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_levelOffsets[1] = {0, maxNoChildren<NDIM>()};
     }
 
-    const GInt begin = m_levelOffsets[0].begin;
-    m_center[begin]  = cog();
+    const GInt begin                         = m_levelOffsets[0].begin;
+    m_center[begin]                          = cog();
+    m_globalId[begin]                        = begin;
+    property(begin, CellProperties::IsBndry) = 1;
+    m_size                                   = 1;
+
+    //  Refine to min level
+    for(GInt l = 0; l < minLvl(); l++) {
+      const GInt prevLevelNoCells = m_levelOffsets[l].end - m_levelOffsets[l].begin;
+      if(m_levelOffsets[l].begin == 0) {
+        // m_capacity - (prevLevelNoCells) * maxNoChildren<NDIM>()
+        // from the end - maximum number of cells at the current level
+        m_levelOffsets[l + 1] = {m_capacity - (prevLevelNoCells)*maxNoChildren<NDIM>(), m_capacity};
+      } else {
+        // from the start to the maximum number of cells at the current level
+        m_levelOffsets[l + 1] = {0, (prevLevelNoCells)*maxNoChildren<NDIM>()};
+      }
+    }
+
 
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridMin]);
   }
 
   static constexpr auto memorySizePerCell() -> GInt {
     return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) + sizeof(Point<NDIM>) + sizeof(NeighborList<NDIM>)
-           + sizeof(ChildList<NDIM>);
+           + sizeof(ChildList<NDIM>) + sizeof(PropertyBitsetType) + 1;
   }
 
 
  private:
+  inline auto property(const GInt id, CellProperties p) -> auto { return m_properties[id][static_cast<GInt>(p)]; }
+  [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool {
+    return m_properties[id][static_cast<GInt>(p)];
+  }
   std::vector<LevelOffsetType>    m_levelOffsets{};
   std::vector<Point<NDIM>>        m_center{};
   std::vector<GInt>               m_parentId{INVALID_CELLID};
   std::vector<GInt>               m_globalId{INVALID_CELLID};
   std::vector<GInt>               m_noChildren{};
+  std::vector<std::byte>          m_level{};
   std::vector<NeighborList<NDIM>> m_nghbrIds{};
   std::vector<ChildList<NDIM>>    m_childIds{};
   std::vector<GInt>               m_rfnDistance{};
+  std::vector<PropertyBitsetType> m_properties{};
 
   GInt m_capacity{0};
+  GInt m_size{0};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

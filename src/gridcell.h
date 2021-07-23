@@ -1,7 +1,8 @@
 #ifndef GRIDGENERATOR_GRIDCELL_H
 #define GRIDGENERATOR_GRIDCELL_H
-/// Grid cell Property Labels.
-enum class GridCell {
+/// Grid cell properties. (Until 63 bits are used this does not increase memory!)
+// bitsets are initialized to 0!
+enum class GridCellProperties {
   IsPeriodic,
   IsHalo,
   IsWindow,
@@ -17,11 +18,35 @@ enum class GridCell {
 
 namespace grid::cell {
 /// Converts property name to underlying integer value
-constexpr auto p(const GridCell property) -> std::underlying_type<GridCell>::type {
-  return static_cast<std::underlying_type<GridCell>::type>(property);
+constexpr auto p(const GridCellProperties property) -> std::underlying_type<GridCellProperties>::type {
+  return static_cast<std::underlying_type<GridCellProperties>::type>(property);
 }
 
-using BitsetType = std::bitset<p(GridCell::NumProperties)>;
+using BitsetType = std::bitset<p(GridCellProperties::NumProperties)>;
 } // namespace grid::cell
+
+/// GridGenerator cell properties. (Until 63 bits are used this does not increase memory!)
+// bitsets are initialized to 0!
+enum class GridGenCellProperties {
+  IsInside,
+  IsBndry,
+  IsPeriodic,
+  IsWindow,
+  IsHalo,
+  IsRefine,
+  TmpMarker,
+  Del,
+  // <<< add new properties here
+  NumProperties
+};
+
+namespace gridgen::cell {
+/// Converts property name to underlying integer value
+constexpr auto p(const GridGenCellProperties property) -> std::underlying_type<GridGenCellProperties>::type {
+  return static_cast<std::underlying_type<GridGenCellProperties>::type>(property);
+}
+
+using BitsetType = std::bitset<p(GridGenCellProperties::NumProperties)>;
+} // namespace gridgen::cell
 
 #endif // GRIDGENERATOR_GRIDCELL_H
