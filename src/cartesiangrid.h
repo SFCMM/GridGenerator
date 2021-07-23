@@ -3,8 +3,40 @@
 
 #include <gcem.hpp>
 
+#include "globaltimers.h"
 #include "gtree.h"
 #include "macros.h"
+#include "timer.h"
+
+struct LevelOffsetType {
+ public:
+  GInt begin;
+  GInt end;
+};
+
+template <GInt NDIM>
+class Point {
+ public:
+  auto operator=(const std::vector<GDouble>& rhs) -> Point& {
+    for(int i = 0; i < NDIM; i++) {
+      m_coordinates[i] = rhs[i];
+    }
+    return *this;
+  }
+
+  // private:
+  std::array<GDouble, NDIM> m_coordinates{NAN};
+};
+
+template <GInt NDIM>
+struct NeighborList {
+  std::array<GInt, maxNoNghbrs<NDIM>()> n{INVALID_CELLID};
+};
+
+template <GInt NDIM>
+struct ChildList {
+  std::array<GInt, maxNoChildren<NDIM>()> n{INVALID_CELLID};
+};
 
 class GridInterface {
  public:
@@ -19,11 +51,18 @@ class GridInterface {
   virtual void setCapacity(GInt capacity)                = 0;
   virtual void setMinLvl(const GInt minLvl)              = 0;
 
-  [[nodiscard]] virtual auto cog() const -> std::vector<GDouble>          = 0;
-  [[nodiscard]] virtual auto geomExtent() const -> std::vector<GDouble>   = 0;
-  [[nodiscard]] virtual auto boundingBox() const -> std::vector<GDouble>  = 0;
-  [[nodiscard]] virtual auto decisiveDirection() const -> GDouble         = 0;
-  [[nodiscard]] virtual auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
+  [[nodiscard]] virtual inline auto cog() const -> std::vector<GDouble>          = 0;
+  [[nodiscard]] virtual inline auto geomExtent() const -> std::vector<GDouble>   = 0;
+  [[nodiscard]] virtual inline auto boundingBox() const -> std::vector<GDouble>  = 0;
+  [[nodiscard]] virtual inline auto decisiveDirection() const -> GDouble         = 0;
+  [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
+  [[nodiscard]] virtual inline auto minLvl() const -> GInt                       = 0;
+  //  virtual auto                      levelOffset(GInt level) -> LevelOffsetType&  = 0;
+  //  virtual auto                      center(const GInt id) -> GDouble&            = 0;
+  //  virtual auto                      nghbrId(const GInt id) -> GInt&              = 0;
+
+  //// Grid Generation specific
+  virtual void createMinLvlGrid() = 0;
 
  private:
 };
@@ -67,6 +106,7 @@ class BaseCartesianGrid : public GridInterface {
     return std::vector<GDouble>(m_boundingBox.begin(), m_boundingBox.end());
   };
   [[nodiscard]] inline auto decisiveDirection() const -> GDouble override { return m_decisiveDirection; };
+  [[nodiscard]] inline auto minLvl() const -> GInt override { return m_minLvl; };
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       return m_lengthOnLevel.at(lvl);
@@ -81,7 +121,7 @@ class BaseCartesianGrid : public GridInterface {
   std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
   // extent of the geometry
   std::array<GDouble, NDIM> m_geometryExtents{NAN};
-  // center of gravity of the geometry
+  // m_center of gravity of the geometry
   std::array<GDouble, NDIM> m_centerOfGravity{NAN};
   // direction of largest extent
   GDouble m_decisiveDirection{};
@@ -113,6 +153,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
  public:
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::minLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::lengthOnLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::cog;
+
   CartesianGridGen()                        = default;
   ~CartesianGridGen() override              = default;
   CartesianGridGen(const CartesianGridGen&) = delete;
@@ -121,34 +165,70 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   auto operator=(CartesianGridGen&&) -> CartesianGridGen& = delete;
 
   void setCapacity(const GInt capacity) override {
-    if(!m_coordinates.empty()) {
+    if(!m_center.empty()) {
       TERMM(-1, "Invalid operation tree already allocated.");
     }
-    m_coordinates.reserve(NDIM * capacity);
-    m_parentId.reserve(capacity);
-    m_globalId.reserve(capacity);
-
-
-    m_noChildIds.reserve(2 * capacity);
-    m_nghbrIds.reserve(2 * NDIM * capacity);
-    m_childIds.reserve(maxNoChildren<NDIM>() * capacity);
-    m_rfnDistance.reserve(capacity);
+    m_center.resize(capacity);
+    m_parentId.resize(capacity);
+    m_globalId.resize(capacity);
+    m_noChildren.resize(capacity);
+    m_nghbrIds.resize(capacity);
+    m_childIds.resize(capacity);
+    m_rfnDistance.resize(capacity);
+    m_capacity = capacity;
   }
 
-  void setMinLvl(const GInt minLvl) {
-    m_levelOffsets.reserve(2 * minLvl);
-    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(minLvl);
+  void setMinLvl(const GInt _minLvl) {
+    m_levelOffsets.reserve(_minLvl);
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
   }
+
+  //  auto levelOffset(const GInt level) -> LevelOffsetType& override { return m_levelOffsets[level]; }
+  //  auto center(const GInt id) -> GDouble& override { return &m_center[id]; }
+
+  void createMinLvlGrid() override {
+    RECORD_TIMER_START(TimeKeeper[Timers::GridMin]);
+    if(m_capacity < 1) {
+      TERMM(-1, "Invalid grid capacity.");
+    }
+
+    gridgen_log << SP2 << "(3) create minLevel grid with level " << minLvl() << std::endl;
+    std::cout << SP2 << "(3) create minLevel grid with level " << minLvl() << std::endl;
+
+    gridgen_log << SP3 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
+    std::cout << SP3 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
+
+    // use lazy initialization for grid generation and make sure final minLevel grid starts in the beginning
+    if(isEven(minLvl())) {
+      // initial cell placed in the beginning
+      cerr0 << "even" << std::endl;
+      m_levelOffsets[0] = {0, 1};
+      m_levelOffsets[1] = {m_capacity - maxNoChildren<NDIM>(), m_capacity};
+    } else {
+      // initial cell placed at the end
+      cerr0 << "odd" << std::endl;
+      m_levelOffsets[0] = {m_capacity - 1, m_capacity};
+      m_levelOffsets[1] = {0, maxNoChildren<NDIM>()};
+    }
+
+    const GInt begin = m_levelOffsets[0].begin;
+    m_center[begin]  = cog();
+
+    RECORD_TIMER_STOP(TimeKeeper[Timers::GridMin]);
+  }
+
 
  private:
-  std::vector<GInt>    m_levelOffsets{};
-  std::vector<GDouble> m_coordinates{};
-  std::vector<GInt>    m_parentId{};
-  std::vector<GInt>    m_globalId{};
-  std::vector<GInt>    m_noChildIds{};
-  std::vector<GInt>    m_nghbrIds{};
-  std::vector<GInt>    m_childIds{};
-  std::vector<GInt>    m_rfnDistance{};
+  std::vector<LevelOffsetType>    m_levelOffsets{};
+  std::vector<Point<NDIM>>        m_center{};
+  std::vector<GInt>               m_parentId{INVALID_CELLID};
+  std::vector<GInt>               m_globalId{INVALID_CELLID};
+  std::vector<GInt>               m_noChildren{};
+  std::vector<NeighborList<NDIM>> m_nghbrIds{};
+  std::vector<ChildList<NDIM>>    m_childIds{};
+  std::vector<GInt>               m_rfnDistance{};
+
+  GInt m_capacity{0};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

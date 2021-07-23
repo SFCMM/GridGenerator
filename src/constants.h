@@ -12,6 +12,7 @@ static constexpr GDouble GDoubleEps = std::numeric_limits<GDouble>::epsilon();
 static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
 static constexpr GInt    BASE2                   = 2;
 static constexpr GDouble HALF                    = 0.5;
+static constexpr GInt    INVALID_CELLID          = -1;
 
 // arbitrary maximum cell level
 static constexpr GInt MAX_LVL = 100;

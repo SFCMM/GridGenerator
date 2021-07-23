@@ -34,9 +34,6 @@ class GridGenerator {
   auto run() -> int;
 
  private:
-  using Timers = gridgenerator::Timers_;
-  std::array<GInt, Timers::_count> m_timers{};
-
   NullBuffer nullBuffer;
 
   int m_domainId  = -1;
@@ -55,8 +52,6 @@ class GridGenerator {
   void loadGridDefinition();
   template <GInt nDim>
   void generateGrid();
-  template <GInt nDim>
-  void createMinLevelGrid();
 
 
   template <typename T>
