@@ -12,5 +12,11 @@ inline auto strStreamify(std::vector<T> in) -> std::stringstream {
   return str;
 }
 
+/// Return maximum number of children per cell
+template <GInt NDIM>
+inline auto maxNoChildren() -> GInt {
+  return gcem::pow(2, NDIM);
+}
+
 
 #endif // GRIDGENERATOR_FUNCTIONS_H

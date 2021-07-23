@@ -2,6 +2,7 @@
 #define GRIDGENERATOR_GTREE_H
 
 #include <bitset>
+#include "functions.h"
 #include "gridcell.h"
 #include "macros.h"
 
@@ -50,30 +51,30 @@ class Tree {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkChildPos(pos);
       checkBounds(id);
-      return m_childIds.at(id * noChildrenPerNode() + pos);
+      return m_childIds.at(id * maxNoChildren<NDIM>() + pos);
     }
     // no bound checking
-    return m_childIds[id * noChildrenPerNode() + pos];
+    return m_childIds[id * maxNoChildren<NDIM>() + pos];
   }
 
   [[nodiscard]] inline auto child(const GInt id, const GInt pos) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkChildPos(pos);
       checkBounds(id);
-      return m_childIds.at(id * noChildrenPerNode() + pos);
+      return m_childIds.at(id * maxNoChildren<NDIM>() + pos);
     }
     // no bound checking
-    return m_childIds[id * noChildrenPerNode() + pos];
+    return m_childIds[id * maxNoChildren<NDIM>() + pos];
   }
 
   [[nodiscard]] inline auto hasChild(const GInt id, const GInt pos) const -> GBool {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkChildPos(pos);
       checkBounds(id);
-      return m_childIds.at(id * noChildrenPerNode() + pos) > -1;
+      return m_childIds.at(id * maxNoChildren<NDIM>() + pos) > -1;
     }
     // no bound checking
-    return m_childIds[id * noChildrenPerNode() + pos] > -1;
+    return m_childIds[id * maxNoChildren<NDIM>() + pos] > -1;
   }
 
   [[nodiscard]] inline auto hasChildren(const GInt id) const -> GBool {
@@ -87,8 +88,8 @@ class Tree {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
     }
-    return std::count_if(&m_childIds[id * noChildrenPerNode() + 0],
-                         &m_childIds[id * noChildrenPerNode() + noChildrenPerNode()],
+    return std::count_if(&m_childIds[id * maxNoChildren<NDIM>() + 0],
+                         &m_childIds[id * maxNoChildren<NDIM>() + maxNoChildren<NDIM>()],
                          [](const GInt childId) { return childId > -1; });
   }
 
@@ -298,8 +299,6 @@ class Tree {
   }
 
   // Entries per tree node
-  /// Return maximum number of children per node
-  static constexpr auto noChildrenPerNode() -> GInt { return 4 * NDIM - 4; }
   /// Return maximum number of same-level neighbors per node
   static constexpr auto noNeighborsPerNode() -> GInt { return 2 * NDIM; }
 
@@ -311,6 +310,7 @@ class Tree {
 
   [[nodiscard]] inline auto capacity() const -> GInt { return m_parentIds.capacity(); }
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
+  [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
   void reset(const GInt capacity) {
     m_parentIds.reserve(capacity);
@@ -364,7 +364,7 @@ class Tree {
       // Parent
       if(hasParent(i)) {
         const GInt p = parent(i);
-        for(GInt j = 0; j < noChildrenPerNode(); j++) {
+        for(GInt j = 0; j < maxNoChildren<NDIM>(); j++) {
           if(child(p, j) == i) {
             child(p, j) = -1;
           }
@@ -372,7 +372,7 @@ class Tree {
       }
 
       // Children
-      for(GInt j = 0; j < noChildrenPerNode(); j++) {
+      for(GInt j = 0; j < maxNoChildren<NDIM>(); j++) {
         if(hasChild(i, j)) {
           parent(child(i, j)) = -1;
         }
@@ -404,7 +404,7 @@ class Tree {
         if(inMovedRange(p)) {
           parent(destination) += distance;
         } else {
-          for(GInt j = 0; j < noChildrenPerNode(); ++j) {
+          for(GInt j = 0; j < maxNoChildren<NDIM>(); ++j) {
             if(child(p, j) == from) {
               child(p, j) = destination;
             }
@@ -413,7 +413,7 @@ class Tree {
       }
 
       // Children
-      for(GInt j = 0; j < noChildrenPerNode(); ++j) {
+      for(GInt j = 0; j < maxNoChildren<NDIM>(); ++j) {
         if(hasChild(destination, j)) {
           const GInt c = child(destination, j);
           if(inMovedRange(c)) {
@@ -445,7 +445,7 @@ class Tree {
   }
 
   void checkChildPos(const GInt pos) const {
-    if(pos > noChildrenPerNode() || pos < 0) {
+    if(pos > maxNoChildren<NDIM>() || pos < 0) {
       TERMM(-1, "Invalid child position");
     }
   }

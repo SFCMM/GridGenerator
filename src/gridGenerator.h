@@ -55,6 +55,8 @@ class GridGenerator {
   void loadGridDefinition();
   template <GInt nDim>
   void generateGrid();
+  template <GInt nDim>
+  void createMinLevelGrid();
 
 
   template <typename T>

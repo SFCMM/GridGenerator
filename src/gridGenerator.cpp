@@ -68,6 +68,7 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 
   NEW_SUB_TIMER_NOCREATE(m_timers[Timers::Init], "Init", m_timers[Timers::timertotal]);
   NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridGeneration], "Create the grid.", m_timers[Timers::timertotal]);
+  NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridMin], "Minlevel grid generation.", m_timers[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridUniform], "Uniform grid generation.", m_timers[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(m_timers[Timers::GridRefinement], "Grid refinement.", m_timers[Timers::GridGeneration]);
   NEW_TIMER_NOCREATE(m_timers[Timers::IO], "IO", m_timers[Timers::timertotal]);
@@ -165,7 +166,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_START(m_timers[Timers::GridGeneration]);
 
   gridgen_log << "Generating a grid[" << NDIM << "D]" << endl;
-  m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, NDIM>>();
+  m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>();
 
   cout << SP1 << "(1) Reading Grid definition" << endl;
   loadGridDefinition<NDIM>();
@@ -192,6 +193,8 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << SP2 << "+ decisive direction: " << m_grid->decisiveDirection() << "\n";
   gridgen_log << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->geomExtent()).str() << "\n";
   gridgen_log << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
+
+  createMinLevelGrid<NDIM>();
 
   RECORD_TIMER_START(m_timers[Timers::GridUniform]);
   GInt                     x  = 1;
@@ -227,6 +230,19 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
   m_outGridFilename = opt_config_value<GString>("gridFileName", m_outGridFilename);
   RECORD_TIMER_STOP(m_timers[Timers::IO]);
+}
+
+template <Debug_Level DEBUG_LEVEL>
+template <GInt NDIM>
+void GridGenerator<DEBUG_LEVEL>::createMinLevelGrid() {
+  RECORD_TIMER_START(m_timers[Timers::GridMin]);
+  gridgen_log << SP2 << "(3) create minLevel grid with level " << m_minLvl << endl;
+  cout << SP2 << "(3) create minLevel grid with level " << m_minLvl << endl;
+
+  gridgen_log << SP3 << "+ initial cube length: " << m_grid->lengthOnLvl(0) << endl;
+  cout << SP3 << "+ initial cube length: " << m_grid->lengthOnLvl(0) << endl;
+
+  RECORD_TIMER_STOP(m_timers[Timers::GridMin]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
