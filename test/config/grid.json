@@ -1,6 +1,6 @@
 {
   "dry-run": true,
-  "dim": 3,
+  "dim": 4,
   "minLevel": 3,
   "uniformLevel": 4,
   "maxNoCells": 1000,
@@ -10,6 +10,8 @@
     0.0,
     1.0,
     0.0,
+    1.0,
+    0,
     1.0
   ],
   "unused-value": "unused dummy"

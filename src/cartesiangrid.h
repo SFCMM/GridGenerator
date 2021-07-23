@@ -24,7 +24,8 @@ class Point {
     return *this;
   }
 
-  // private:
+
+ private:
   std::array<GDouble, NDIM> m_coordinates{NAN};
 };
 

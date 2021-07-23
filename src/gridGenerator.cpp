@@ -241,7 +241,7 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   m_minLvl     = required_config_value<GInt>("minLevel");
   m_uniformLvl = required_config_value<GInt>("uniformLevel");
 
-  m_grid->setBoundingBox(opt_config_value<vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim)));
+  m_grid->setBoundingBox(opt_config_value<vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim - 1)));
 
   m_maxRefinementLvl = m_uniformLvl;
   m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
