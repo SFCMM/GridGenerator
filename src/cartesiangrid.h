@@ -178,7 +178,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_capacity = capacity;
   }
 
-  void setMinLvl(const GInt _minLvl) {
+  void setMinLvl(const GInt _minLvl) override {
     m_levelOffsets.reserve(_minLvl);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
   }
