@@ -243,7 +243,7 @@ EIGEN_DONT_INLINE void sparselu_gemm(Index m, Index n, Index d, const Scalar *A,
   }                                                                            \
   pstore(C0 + i + (I)*PacketSize, c0);
 
-        // aggressive vectorization and peeling
+        // agressive vectorization and peeling
         for (Index i = 0; i < actual_b_end1; i += PacketSize * 8) {
           EIGEN_ASM_COMMENT("SPARSELU_GEMML_KERNEL2");
           WORK(0);

@@ -3,6 +3,7 @@
 #include <gcem.hpp>
 #include <sstream>
 #include "constants.h"
+#include "types.h"
 
 
 template <GInt LENGTH, class T>
@@ -30,6 +31,31 @@ template <GInt NDIM>
 static constexpr inline auto maxNoChildren() -> GInt {
   return gcem::pow(2, NDIM);
 }
+
+// todo: implement this...
+// static constexpr inline auto nghbrInside(const GInt childId, const GInt dir) -> GInt{
+//
+//   switch (childId){
+//     case 0:// -x,-y,-z,-zz
+//       //2D
+//       //dir = 1 neighbor right +x 1
+//       //dir = 3 neighbor up +y 2
+//       //3D
+//       //dir = 5 neighbor up chilId + 2^(NDIM-1) = 4
+//       //4D
+//       //dir = 7 childId + 2^NDIM = 8
+//     case 1: //+x -y -z -zz
+//       //2D
+//       //dir = 0 neighbor left +x 0
+//       //dir = 3 neighbor up +y 3
+//       //3D
+//       //dir = 5 neighbor up chilId + 2^(NDIM-1) = 5
+//       //4D
+//       //dir = 8 childId + 2^NDIM = 9
+//       default:
+//       return -1;
+//     }
+// }
 
 /// Return maximum number of Neighbors per cell
 template <GInt NDIM>

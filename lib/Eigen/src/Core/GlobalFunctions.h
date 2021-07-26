@@ -78,16 +78,6 @@ EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(cosh, scalar_cosh_op,
                                  hyperbolic cosine,\sa ArrayBase::cosh)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(tanh, scalar_tanh_op,
                                  hyperbolic tangent,\sa ArrayBase::tanh)
-#if EIGEN_HAS_CXX11_MATH
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(asinh, scalar_asinh_op,
-                                 inverse hyperbolic sine,\sa ArrayBase::asinh)
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(acosh, scalar_acosh_op,
-                                 inverse hyperbolic cosine,\sa ArrayBase::acosh)
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
-    atanh, scalar_atanh_op, inverse hyperbolic tangent,\sa ArrayBase::atanh)
-#endif
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(logistic, scalar_logistic_op,
-                                 logistic function,\sa ArrayBase::logistic)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
     lgamma, scalar_lgamma_op,
     natural logarithm of the gamma function,\sa ArrayBase::lgamma)
@@ -97,13 +87,8 @@ EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(erf, scalar_erf_op,
                                  error function,\sa ArrayBase::erf)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(erfc, scalar_erfc_op,
                                  complement error function,\sa ArrayBase::erfc)
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
-    ndtri, scalar_ndtri_op,
-    inverse normal distribution function,\sa ArrayBase::ndtri)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(exp, scalar_exp_op,
                                  exponential,\sa ArrayBase::exp)
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
-    expm1, scalar_expm1_op, exponential of a value minus 1,\sa ArrayBase::expm1)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(log, scalar_log_op,
                                  natural logarithm,\sa Eigen::log10 DOXCOMMA
                                      ArrayBase::log)
@@ -112,10 +97,7 @@ EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
     natural logarithm of 1 plus the value,\sa ArrayBase::log1p)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(log10, scalar_log10_op,
                                  base 10 logarithm,\sa Eigen::log DOXCOMMA
-                                     ArrayBase::log10)
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(log2, scalar_log2_op,
-                                 base 2 logarithm,\sa Eigen::log DOXCOMMA
-                                     ArrayBase::log2)
+                                     ArrayBase::log)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(abs, scalar_abs_op,
                                  absolute value,\sa ArrayBase::abs DOXCOMMA
                                      MatrixBase::cwiseAbs)
@@ -123,8 +105,7 @@ EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
     abs2, scalar_abs2_op,
     squared absolute value,\sa ArrayBase::abs2 DOXCOMMA MatrixBase::cwiseAbs2)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(arg, scalar_arg_op,
-                                 complex argument,\sa ArrayBase::arg DOXCOMMA
-                                     MatrixBase::cwiseArg)
+                                 complex argument,\sa ArrayBase::arg)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(sqrt, scalar_sqrt_op,
                                  square root,\sa ArrayBase::sqrt DOXCOMMA
                                      MatrixBase::cwiseSqrt)
@@ -135,9 +116,6 @@ EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(square, scalar_square_op,
                                      Eigen::pow DOXCOMMA ArrayBase::square)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(
     cube, scalar_cube_op, cube(power 3),\sa Eigen::pow DOXCOMMA ArrayBase::cube)
-EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(rint, scalar_rint_op,
-                                 nearest integer,\sa Eigen::floor DOXCOMMA
-                                     Eigen::ceil DOXCOMMA ArrayBase::round)
 EIGEN_ARRAY_DECLARE_GLOBAL_UNARY(round, scalar_round_op,
                                  nearest integer,\sa Eigen::floor DOXCOMMA
                                      Eigen::ceil DOXCOMMA ArrayBase::round)
@@ -179,24 +157,23 @@ inline const CwiseBinaryOp<
 pow(const Eigen::ArrayBase<Derived> &x, const ScalarExponent &exponent);
 #else
 template <typename Derived, typename ScalarExponent>
-EIGEN_DEVICE_FUNC inline EIGEN_MSVC10_WORKAROUND_BINARYOP_RETURN_TYPE(
-    const EIGEN_EXPR_BINARYOP_SCALAR_RETURN_TYPE(
-        Derived,
-        typename internal::promote_scalar_arg<
-            typename Derived::Scalar EIGEN_COMMA ScalarExponent EIGEN_COMMA
-                EIGEN_SCALAR_BINARY_SUPPORTED(pow, typename Derived::Scalar,
-                                              ScalarExponent)>::type,
-        pow))
-    pow(const Eigen::ArrayBase<Derived> &x, const ScalarExponent &exponent) {
-  typedef typename internal::promote_scalar_arg<
-      typename Derived::Scalar, ScalarExponent,
-      EIGEN_SCALAR_BINARY_SUPPORTED(pow, typename Derived::Scalar,
-                                    ScalarExponent)>::type PromotedExponent;
-  return EIGEN_EXPR_BINARYOP_SCALAR_RETURN_TYPE(Derived, PromotedExponent, pow)(
-      x.derived(),
-      typename internal::plain_constant_type<Derived, PromotedExponent>::type(
-          x.derived().rows(), x.derived().cols(),
-          internal::scalar_constant_op<PromotedExponent>(exponent)));
+inline typename internal::enable_if<
+    !(internal::is_same<typename Derived::Scalar, ScalarExponent>::value) &&
+        EIGEN_SCALAR_BINARY_SUPPORTED(pow, typename Derived::Scalar,
+                                      ScalarExponent),
+    const EIGEN_EXPR_BINARYOP_SCALAR_RETURN_TYPE(Derived, ScalarExponent,
+                                                 pow)>::type
+pow(const Eigen::ArrayBase<Derived> &x, const ScalarExponent &exponent) {
+  return x.derived().pow(exponent);
+}
+
+template <typename Derived>
+inline const EIGEN_EXPR_BINARYOP_SCALAR_RETURN_TYPE(Derived,
+                                                    typename Derived::Scalar,
+                                                    pow)
+    pow(const Eigen::ArrayBase<Derived> &x,
+        const typename Derived::Scalar &exponent) {
+  return x.derived().pow(exponent);
 }
 #endif
 
@@ -248,22 +225,27 @@ inline const CwiseBinaryOp<internal::scalar_pow_op<Scalar, Derived::Scalar>,
 pow(const Scalar &x, const Eigen::ArrayBase<Derived> &x);
 #else
 template <typename Scalar, typename Derived>
-EIGEN_DEVICE_FUNC inline EIGEN_MSVC10_WORKAROUND_BINARYOP_RETURN_TYPE(
-    const EIGEN_SCALAR_BINARYOP_EXPR_RETURN_TYPE(
-        typename internal::promote_scalar_arg<
-            typename Derived::Scalar EIGEN_COMMA Scalar EIGEN_COMMA
-                EIGEN_SCALAR_BINARY_SUPPORTED(pow, Scalar,
-                                              typename Derived::Scalar)>::type,
-        Derived, pow))
-    pow(const Scalar &x, const Eigen::ArrayBase<Derived> &exponents) {
-  typedef typename internal::promote_scalar_arg<
-      typename Derived::Scalar, Scalar,
-      EIGEN_SCALAR_BINARY_SUPPORTED(
-          pow, Scalar, typename Derived::Scalar)>::type PromotedScalar;
-  return EIGEN_SCALAR_BINARYOP_EXPR_RETURN_TYPE(PromotedScalar, Derived, pow)(
-      typename internal::plain_constant_type<Derived, PromotedScalar>::type(
-          exponents.derived().rows(), exponents.derived().cols(),
-          internal::scalar_constant_op<PromotedScalar>(x)),
+inline typename internal::enable_if<
+    !(internal::is_same<typename Derived::Scalar, Scalar>::value) &&
+        EIGEN_SCALAR_BINARY_SUPPORTED(pow, Scalar, typename Derived::Scalar),
+    const EIGEN_SCALAR_BINARYOP_EXPR_RETURN_TYPE(Scalar, Derived, pow)>::type
+pow(const Scalar &x, const Eigen::ArrayBase<Derived> &exponents) {
+  return EIGEN_SCALAR_BINARYOP_EXPR_RETURN_TYPE(Scalar, Derived, pow)(
+      typename internal::plain_constant_type<Derived, Scalar>::type(
+          exponents.rows(), exponents.cols(), x),
+      exponents.derived());
+}
+
+template <typename Derived>
+inline const EIGEN_SCALAR_BINARYOP_EXPR_RETURN_TYPE(typename Derived::Scalar,
+                                                    Derived, pow)
+    pow(const typename Derived::Scalar &x,
+        const Eigen::ArrayBase<Derived> &exponents) {
+  return EIGEN_SCALAR_BINARYOP_EXPR_RETURN_TYPE(typename Derived::Scalar,
+                                                Derived, pow)(
+      typename internal::plain_constant_type<
+          Derived, typename Derived::Scalar>::type(exponents.rows(),
+                                                   exponents.cols(), x),
       exponents.derived());
 }
 #endif

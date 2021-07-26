@@ -46,7 +46,7 @@ template <typename Scalar> inline Index LUTempSpace(Index &m, Index &w) {
 }
 
 /**
- * Expand the existing storage to accommodate more fill-ins
+ * Expand the existing storage to accomodate more fill-ins
  * \param vec Valid pointer to the vector to allocate or expand
  * \param[in,out] length  At input, contain the current length of the vector
  * that is to be increased. At output, length of the newly allocated vector

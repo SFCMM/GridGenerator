@@ -13,37 +13,36 @@
 namespace Eigen {
 
 /** \class Stride
-  * \ingroup Core_Module
-  *
-  * \brief Holds strides information for Map
-  *
-  * This class holds the strides information for mapping arrays with strides with class Map.
-  *
-  * It holds two values: the inner stride and the outer stride.
-  *
-  * The inner stride is the pointer increment between two consecutive entries within a given row of a
-  * row-major matrix or within a given column of a column-major matrix.
-  *
-  * The outer stride is the pointer increment between two consecutive rows of a row-major matrix or
-  * between two consecutive columns of a column-major matrix.
-  *
-  * These two values can be passed either at compile-time as template parameters, or at runtime as
-  * arguments to the constructor.
-  *
-  * Indeed, this class takes two template parameters:
-  *  \tparam _OuterStrideAtCompileTime the outer stride, or Dynamic if you want to specify it at runtime.
-  *  \tparam _InnerStrideAtCompileTime the inner stride, or Dynamic if you want to specify it at runtime.
-  *
-  * Here is an example:
-  * \include Map_general_stride.cpp
-  * Output: \verbinclude Map_general_stride.out
-  *
-  * Both strides can be negative, however, a negative stride of -1 cannot be specified at compiletime
-  * because of the ambiguity with Dynamic which is defined to -1 (historically, negative strides were
-  * not allowed).
-  *
-  * \sa class InnerStride, class OuterStride, \ref TopicStorageOrders
-  */
+ * \ingroup Core_Module
+ *
+ * \brief Holds strides information for Map
+ *
+ * This class holds the strides information for mapping arrays with strides with
+ * class Map.
+ *
+ * It holds two values: the inner stride and the outer stride.
+ *
+ * The inner stride is the pointer increment between two consecutive entries
+ * within a given row of a row-major matrix or within a given column of a
+ * column-major matrix.
+ *
+ * The outer stride is the pointer increment between two consecutive rows of a
+ * row-major matrix or between two consecutive columns of a column-major matrix.
+ *
+ * These two values can be passed either at compile-time as template parameters,
+ * or at runtime as arguments to the constructor.
+ *
+ * Indeed, this class takes two template parameters:
+ *  \tparam _OuterStrideAtCompileTime the outer stride, or Dynamic if you want
+ * to specify it at runtime. \tparam _InnerStrideAtCompileTime the inner stride,
+ * or Dynamic if you want to specify it at runtime.
+ *
+ * Here is an example:
+ * \include Map_general_stride.cpp
+ * Output: \verbinclude Map_general_stride.out
+ *
+ * \sa class InnerStride, class OuterStride, \ref TopicStorageOrders
+ */
 template<int _OuterStrideAtCompileTime, int _InnerStrideAtCompileTime>
 class Stride
 {
@@ -59,8 +58,6 @@ class Stride
     Stride()
       : m_outer(OuterStrideAtCompileTime), m_inner(InnerStrideAtCompileTime)
     {
-      // FIXME: for Eigen 4 we should use DynamicIndex instead of Dynamic.
-      // FIXME: for Eigen 4 we should also unify this API with fix<>
       eigen_assert(InnerStrideAtCompileTime != Dynamic && OuterStrideAtCompileTime != Dynamic);
     }
 
@@ -69,6 +66,7 @@ class Stride
     Stride(Index outerStride, Index innerStride)
       : m_outer(outerStride), m_inner(innerStride)
     {
+      eigen_assert(innerStride >= 0 && outerStride >= 0);
     }
 
     /** Copy constructor */
@@ -78,10 +76,10 @@ class Stride
     {}
 
     /** \returns the outer stride */
-    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+    EIGEN_DEVICE_FUNC
     inline Index outer() const { return m_outer.value(); }
     /** \returns the inner stride */
-    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+    EIGEN_DEVICE_FUNC
     inline Index inner() const { return m_inner.value(); }
 
   protected:

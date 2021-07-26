@@ -53,15 +53,6 @@ template <typename T> struct is_valid_index_type {
   };
 };
 
-// true if both types are not valid index types
-template <typename RowIndices, typename ColIndices>
-struct valid_indexed_view_overload {
-  enum {
-    value = !(internal::is_valid_index_type<RowIndices>::value &&
-              internal::is_valid_index_type<ColIndices>::value)
-  };
-};
-
 // promote_scalar_arg is an helper used in operation between an expression and a
 // scalar, like:
 //    expression * scalar
@@ -144,31 +135,23 @@ template <typename I1, typename I2> struct promote_index_type {
  */
 template <typename T, int Value> class variable_if_dynamic {
 public:
-  EIGEN_DEFAULT_EMPTY_CONSTRUCTOR_AND_DESTRUCTOR(variable_if_dynamic)
+  EIGEN_EMPTY_STRUCT_CTOR(variable_if_dynamic)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE explicit variable_if_dynamic(T v) {
     EIGEN_ONLY_USED_FOR_DEBUG(v);
     eigen_assert(v == T(Value));
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE EIGEN_CONSTEXPR T value() {
-    return T(Value);
-  }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR operator T() const {
-    return T(Value);
-  }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void setValue(T v) const {
-    EIGEN_ONLY_USED_FOR_DEBUG(v);
-    eigen_assert(v == T(Value));
-  }
+  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE T value() { return T(Value); }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void setValue(T) {}
 };
 
 template <typename T> class variable_if_dynamic<T, Dynamic> {
   T m_value;
+  EIGEN_DEVICE_FUNC variable_if_dynamic() { eigen_assert(false); }
 
 public:
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE explicit variable_if_dynamic(
-      T value = 0) EIGEN_NO_THROW : m_value(value) {}
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE explicit variable_if_dynamic(T value)
+      : m_value(value) {}
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T value() const { return m_value; }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE operator T() const { return m_value; }
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void setValue(T value) {
     m_value = value;
   }
@@ -183,9 +166,7 @@ public:
     EIGEN_ONLY_USED_FOR_DEBUG(v);
     eigen_assert(v == T(Value));
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE EIGEN_CONSTEXPR T value() {
-    return T(Value);
-  }
+  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE T value() { return T(Value); }
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void setValue(T) {}
 };
 
@@ -212,13 +193,7 @@ template <typename T> struct packet_traits;
 template <typename T> struct unpacket_traits {
   typedef T type;
   typedef T half;
-  enum {
-    size = 1,
-    alignment = 1,
-    vectorizable = false,
-    masked_load_available = false,
-    masked_store_available = false
-  };
+  enum { size = 1, alignment = 1 };
 };
 
 template <
@@ -450,7 +425,7 @@ template <typename T> struct plain_matrix_type_row_major {
     MaxCols = traits<T>::MaxColsAtCompileTime
   };
   typedef Matrix<typename traits<T>::Scalar, Rows, Cols,
-                 (MaxCols == 1 && MaxRows != 1) ? ColMajor : RowMajor, MaxRows,
+                 (MaxCols == 1 && MaxRows != 1) ? RowMajor : ColMajor, MaxRows,
                  MaxCols>
       type;
 };
@@ -501,7 +476,7 @@ struct nested_eval {
     ScalarReadCost = NumTraits<typename traits<T>::Scalar>::ReadCost,
     CoeffReadCost = evaluator<T>::
         CoeffReadCost, // NOTE What if an evaluator evaluate itself into a
-                       // temporary?
+                       // tempory?
                        //      Then CoeffReadCost will be small (e.g., 1) but we
                        //      still have to evaluate, especially if n>1. This
                        //      situation is already taken care by the
@@ -791,48 +766,33 @@ template <typename T, int S> struct is_diagonal<DiagonalMatrix<T, S>> {
   enum { ret = true };
 };
 
-template <typename T> struct is_identity {
-  enum { value = false };
-};
-
-template <typename T>
-struct is_identity<
-    CwiseNullaryOp<internal::scalar_identity_op<typename T::Scalar>, T>> {
-  enum { value = true };
-};
-
 template <typename S1, typename S2> struct glue_shapes;
 template <> struct glue_shapes<DenseShape, TriangularShape> {
   typedef TriangularShape type;
 };
 
-template <typename T1, typename T2> struct possibly_same_dense {
-  enum {
-    value = has_direct_access<T1>::ret && has_direct_access<T2>::ret &&
-            is_same<typename T1::Scalar, typename T2::Scalar>::value
-  };
-};
-
 template <typename T1, typename T2>
-EIGEN_DEVICE_FUNC bool is_same_dense(
+bool is_same_dense(
     const T1 &mat1, const T2 &mat2,
-    typename enable_if<possibly_same_dense<T1, T2>::value>::type * = 0) {
+    typename enable_if<has_direct_access<T1>::ret && has_direct_access<T2>::ret,
+                       T1>::type * = 0) {
   return (mat1.data() == mat2.data()) &&
          (mat1.innerStride() == mat2.innerStride()) &&
          (mat1.outerStride() == mat2.outerStride());
 }
 
 template <typename T1, typename T2>
-EIGEN_DEVICE_FUNC bool is_same_dense(
-    const T1 &, const T2 &,
-    typename enable_if<!possibly_same_dense<T1, T2>::value>::type * = 0) {
+bool is_same_dense(const T1 &, const T2 &,
+                   typename enable_if<!(has_direct_access<T1>::ret &&
+                                        has_direct_access<T2>::ret),
+                                      T1>::type * = 0) {
   return false;
 }
 
 // Internal helper defining the cost of a scalar division for the type T.
 // The default heuristic can be specialized for each scalar type and
 // architecture.
-template <typename T, bool Vectorized = false, typename EnableIf = void>
+template <typename T, bool Vectorized = false, typename EnaleIf = void>
 struct scalar_div_cost {
   enum { value = 8 * NumTraits<T>::MulCost };
 };

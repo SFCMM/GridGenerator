@@ -28,26 +28,26 @@ void ordering_helper_at_plus_a(const MatrixType& A, MatrixType& symmat)
 {
   MatrixType C;
   C = A.transpose(); // NOTE: Could be  costly
-  for (int i = 0; i < C.rows(); i++) 
-  {
-      for (typename MatrixType::InnerIterator it(C, i); it; ++it)
-        it.valueRef() = typename MatrixType::Scalar(0);
+  for (int i = 0; i < C.rows(); i++) {
+    for (typename MatrixType::InnerIterator it(C, i); it; ++it)
+      it.valueRef() = 0.0;
   }
   symmat = C + A;
 }
-    
-}
+
+} // namespace internal
+
+#ifndef EIGEN_MPL2_ONLY
 
 /** \ingroup OrderingMethods_Module
-  * \class AMDOrdering
-  *
-  * Functor computing the \em approximate \em minimum \em degree ordering
-  * If the matrix is not structurally symmetric, an ordering of A^T+A is computed
-  * \tparam  StorageIndex The type of indices of the matrix 
-  * \sa COLAMDOrdering
-  */
-template <typename StorageIndex>
-class AMDOrdering
+ * \class AMDOrdering
+ *
+ * Functor computing the \em approximate \em minimum \em degree ordering
+ * If the matrix is not structurally symmetric, an ordering of A^T+A is computed
+ * \tparam  StorageIndex The type of indices of the matrix
+ * \sa COLAMDOrdering
+ */
+template <typename StorageIndex> class AMDOrdering
 {
   public:
     typedef PermutationMatrix<Dynamic, Dynamic, StorageIndex> PermutationType;
@@ -68,27 +68,29 @@ class AMDOrdering
     }
     
     /** Compute the permutation with a selfadjoint matrix */
-    template <typename SrcType, unsigned int SrcUpLo> 
-    void operator()(const SparseSelfAdjointView<SrcType, SrcUpLo>& mat, PermutationType& perm)
-    { 
-      SparseMatrix<typename SrcType::Scalar, ColMajor, StorageIndex> C; C = mat;
-      
-      // Call the AMD routine 
-      // m_mat.prune(keep_diag()); //Remove the diagonal elements 
+    template <typename SrcType, unsigned int SrcUpLo>
+    void operator()(const SparseSelfAdjointView<SrcType, SrcUpLo> &mat,
+                    PermutationType &perm) {
+      SparseMatrix<typename SrcType::Scalar, ColMajor, StorageIndex> C;
+      C = mat;
+
+      // Call the AMD routine
+      // m_mat.prune(keep_diag()); //Remove the diagonal elements
       internal::minimum_degree_ordering(C, perm);
     }
 };
 
+#endif // EIGEN_MPL2_ONLY
+
 /** \ingroup OrderingMethods_Module
-  * \class NaturalOrdering
-  *
-  * Functor computing the natural ordering (identity)
-  * 
-  * \note Returns an empty permutation matrix
-  * \tparam  StorageIndex The type of indices of the matrix 
-  */
-template <typename StorageIndex>
-class NaturalOrdering
+ * \class NaturalOrdering
+ *
+ * Functor computing the natural ordering (identity)
+ *
+ * \note Returns an empty permutation matrix
+ * \tparam  StorageIndex The type of indices of the matrix
+ */
+template <typename StorageIndex> class NaturalOrdering
 {
   public:
     typedef PermutationMatrix<Dynamic, Dynamic, StorageIndex> PermutationType;
@@ -121,30 +123,36 @@ class COLAMDOrdering
       * \warning The input sparse matrix \a mat must be in compressed mode (see SparseMatrix::makeCompressed()).
       */
     template <typename MatrixType>
-    void operator() (const MatrixType& mat, PermutationType& perm)
-    {
-      eigen_assert(mat.isCompressed() && "COLAMDOrdering requires a sparse matrix in compressed mode. Call .makeCompressed() before passing it to COLAMDOrdering");
-      
+    void operator() (const MatrixType& mat, PermutationType& perm) {
+      eigen_assert(
+          mat.isCompressed() &&
+          "COLAMDOrdering requires a sparse matrix in compressed mode. Call "
+          ".makeCompressed() before passing it to COLAMDOrdering");
+
       StorageIndex m = StorageIndex(mat.rows());
       StorageIndex n = StorageIndex(mat.cols());
       StorageIndex nnz = StorageIndex(mat.nonZeros());
       // Get the recommended value of Alen to be used by colamd
-      StorageIndex Alen = internal::Colamd::recommended(nnz, m, n); 
+      StorageIndex Alen = internal::colamd_recommended(nnz, m, n);
       // Set the default parameters
-      double knobs [internal::Colamd::NKnobs]; 
-      StorageIndex stats [internal::Colamd::NStats];
-      internal::Colamd::set_defaults(knobs);
-      
-      IndexVector p(n+1), A(Alen); 
-      for(StorageIndex i=0; i <= n; i++)   p(i) = mat.outerIndexPtr()[i];
-      for(StorageIndex i=0; i < nnz; i++)  A(i) = mat.innerIndexPtr()[i];
-      // Call Colamd routine to compute the ordering 
-      StorageIndex info = internal::Colamd::compute_ordering(m, n, Alen, A.data(), p.data(), knobs, stats); 
+      double knobs[COLAMD_KNOBS];
+      StorageIndex stats[COLAMD_STATS];
+      internal::colamd_set_defaults(knobs);
+
+      IndexVector p(n + 1), A(Alen);
+      for (StorageIndex i = 0; i <= n; i++)
+        p(i) = mat.outerIndexPtr()[i];
+      for (StorageIndex i = 0; i < nnz; i++)
+        A(i) = mat.innerIndexPtr()[i];
+      // Call Colamd routine to compute the ordering
+      StorageIndex info =
+          internal::colamd(m, n, Alen, A.data(), p.data(), knobs, stats);
       EIGEN_UNUSED_VARIABLE(info);
-      eigen_assert( info && "COLAMD failed " );
-      
+      eigen_assert(info && "COLAMD failed ");
+
       perm.resize(n);
-      for (StorageIndex i = 0; i < n; i++) perm.indices()(p(i)) = i;
+      for (StorageIndex i = 0; i < n; i++)
+        perm.indices()(p(i)) = i;
     }
 };
 

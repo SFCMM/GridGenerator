@@ -16,14 +16,6 @@
 namespace Eigen {
 
 namespace internal {
-template <typename _MatrixType, int _UpLo>
-struct traits<LDLT<_MatrixType, _UpLo>> : traits<_MatrixType> {
-  typedef MatrixXpr XprKind;
-  typedef SolverStorage StorageKind;
-  typedef int StorageIndex;
-  enum { Flags = 0 };
-};
-
 template <typename MatrixType, int UpLo> struct LDLT_Traits;
 
 // PositiveSemiDef means positive semi-definite and non-zero; same for
@@ -47,7 +39,7 @@ enum SignMatrix { PositiveSemiDef, NegativeSemiDef, ZeroSign, Indefinite };
  * where P is a permutation matrix, L is lower triangular with a unit diagonal
  * and D is a diagonal matrix.
  *
- * The decomposition uses pivoting to ensure stability, so that D will have
+ * The decomposition uses pivoting to ensure stability, so that L will have
  * zeros in the bottom right rank(A) - n submatrix. Avoiding the square root
  * on D also stabilizes the computation.
  *
@@ -60,19 +52,20 @@ enum SignMatrix { PositiveSemiDef, NegativeSemiDef, ZeroSign, Indefinite };
  *
  * \sa MatrixBase::ldlt(), SelfAdjointView::ldlt(), class LLT
  */
-template <typename _MatrixType, int _UpLo>
-class LDLT : public SolverBase<LDLT<_MatrixType, _UpLo>> {
+template <typename _MatrixType, int _UpLo> class LDLT {
 public:
   typedef _MatrixType MatrixType;
-  typedef SolverBase<LDLT> Base;
-  friend class SolverBase<LDLT>;
-
-  EIGEN_GENERIC_PUBLIC_INTERFACE(LDLT)
   enum {
+    RowsAtCompileTime = MatrixType::RowsAtCompileTime,
+    ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
     UpLo = _UpLo
   };
+  typedef typename MatrixType::Scalar Scalar;
+  typedef typename NumTraits<typename MatrixType::Scalar>::Real RealScalar;
+  typedef Eigen::Index Index; ///< \deprecated since Eigen 3.3
+  typedef typename MatrixType::StorageIndex StorageIndex;
   typedef Matrix<Scalar, RowsAtCompileTime, 1, 0, MaxRowsAtCompileTime, 1>
       TmpMatrixType;
 
@@ -173,7 +166,6 @@ public:
     return m_sign == internal::NegativeSemiDef || m_sign == internal::ZeroSign;
   }
 
-#ifdef EIGEN_PARSED_BY_DOXYGEN
   /** \returns a solution x of \f$ A x = b \f$ using the current decomposition
    * of A.
    *
@@ -189,13 +181,18 @@ public:
    * also be singular (all the other matrices are invertible). In that case, the
    * least-square solution of \f$ D y_3 = y_2 \f$ is computed. This does not
    * mean that this function computes the least-square solution of \f$ A x = b
-   * \f$ if \f$ A \f$ is singular.
+   * \f$ is \f$ A \f$ is singular.
    *
    * \sa MatrixBase::ldlt(), SelfAdjointView::ldlt()
    */
   template <typename Rhs>
-  inline const Solve<LDLT, Rhs> solve(const MatrixBase<Rhs> &b) const;
-#endif
+  inline const Solve<LDLT, Rhs> solve(const MatrixBase<Rhs> &b) const {
+    eigen_assert(m_isInitialized && "LDLT is not initialized.");
+    eigen_assert(m_matrix.rows() == b.rows() &&
+                 "LDLT::solve(): invalid number of rows of the right hand side "
+                 "matrix b");
+    return Solve<LDLT, Rhs>(*this, b.derived());
+  }
 
   template <typename Derived>
   bool solveInPlace(MatrixBase<Derived> &bAndX) const;
@@ -234,16 +231,12 @@ public:
    */
   const LDLT &adjoint() const { return *this; };
 
-  EIGEN_DEVICE_FUNC inline EIGEN_CONSTEXPR Index rows() const EIGEN_NOEXCEPT {
-    return m_matrix.rows();
-  }
-  EIGEN_DEVICE_FUNC inline EIGEN_CONSTEXPR Index cols() const EIGEN_NOEXCEPT {
-    return m_matrix.cols();
-  }
+  inline Index rows() const { return m_matrix.rows(); }
+  inline Index cols() const { return m_matrix.cols(); }
 
   /** \brief Reports whether previous computation was successful.
    *
-   * \returns \c Success if computation was successful,
+   * \returns \c Success if computation was succesful,
    *          \c NumericalIssue if the factorization failed because of a zero
    * pivot.
    */
@@ -254,10 +247,7 @@ public:
 
 #ifndef EIGEN_PARSED_BY_DOXYGEN
   template <typename RhsType, typename DstType>
-  void _solve_impl(const RhsType &rhs, DstType &dst) const;
-
-  template <bool Conjugate, typename RhsType, typename DstType>
-  void _solve_impl_transposed(const RhsType &rhs, DstType &dst) const;
+  EIGEN_DEVICE_FUNC void _solve_impl(const RhsType &rhs, DstType &dst) const;
 #endif
 
 protected:
@@ -582,22 +572,14 @@ template <typename _MatrixType, int _UpLo>
 template <typename RhsType, typename DstType>
 void LDLT<_MatrixType, _UpLo>::_solve_impl(const RhsType &rhs,
                                            DstType &dst) const {
-  _solve_impl_transposed<true>(rhs, dst);
-}
-
-template <typename _MatrixType, int _UpLo>
-template <bool Conjugate, typename RhsType, typename DstType>
-void LDLT<_MatrixType, _UpLo>::_solve_impl_transposed(const RhsType &rhs,
-                                                      DstType &dst) const {
+  eigen_assert(rhs.rows() == rows());
   // dst = P b
   dst = m_transpositions * rhs;
 
   // dst = L^-1 (P b)
-  // dst = L^-*T (P b)
-  matrixL().template conjugateIf<!Conjugate>().solveInPlace(dst);
+  matrixL().solveInPlace(dst);
 
-  // dst = D^-* (L^-1 P b)
-  // dst = D^-1 (L^-*T P b)
+  // dst = D^-1 (L^-1 P b)
   // more precisely, use pseudo-inverse of D (see bug 241)
   using std::abs;
   const typename Diagonal<const MatrixType>::RealReturnType vecD(vectorD());
@@ -612,6 +594,7 @@ void LDLT<_MatrixType, _UpLo>::_solve_impl_transposed(const RhsType &rhs,
   // xSYTRS routines use 0 for the tolerance. Using numeric_limits::min() gives
   // us more robustness to denormals.
   RealScalar tolerance = (std::numeric_limits<RealScalar>::min)();
+
   for (Index i = 0; i < vecD.size(); ++i) {
     if (abs(vecD(i)) > tolerance)
       dst.row(i) /= vecD(i);
@@ -619,12 +602,10 @@ void LDLT<_MatrixType, _UpLo>::_solve_impl_transposed(const RhsType &rhs,
       dst.row(i).setZero();
   }
 
-  // dst = L^-* (D^-* L^-1 P b)
-  // dst = L^-T (D^-1 L^-*T P b)
-  matrixL().transpose().template conjugateIf<Conjugate>().solveInPlace(dst);
+  // dst = L^-T (D^-1 L^-1 P b)
+  matrixU().solveInPlace(dst);
 
-  // dst = P^T (L^-* D^-* L^-1 P b) = A^-1 b
-  // dst = P^-T (L^-T D^-1 L^-*T P b) = A^-1 b
+  // dst = P^-1 (L^-T D^-1 L^-1 P b) = A^-1 b
   dst = m_transpositions.transpose() * dst;
 }
 #endif

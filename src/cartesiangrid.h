@@ -32,7 +32,7 @@ inline auto levelSize(LevelOffsetType& level) -> GInt { return level.end - level
 // };
 
 template <GInt NDIM>
-using Point = vectorD<NDIM>;
+using Point = VectorD<NDIM>;
 
 template <GInt NDIM>
 struct NeighborList {
@@ -41,7 +41,7 @@ struct NeighborList {
 
 template <GInt NDIM>
 struct ChildList {
-  std::array<GInt, maxNoChildren<NDIM>()> n{INVALID_CELLID};
+  std::array<GInt, maxNoChildren<NDIM>()> c{INVALID_CELLID};
 };
 
 class GridInterface {
@@ -177,6 +177,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   using PropertyBitsetType = gridgen::cell::BitsetType;
   using CellProperties     = GridGenCellProperties;
+  using ChildListType      = std::array<GInt, maxNoChildren<NDIM>()>;
 
   CartesianGridGen()                        = default;
   ~CartesianGridGen() override              = default;
@@ -268,7 +269,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
 
       refineGrid(m_levelOffsets, l);
-      // findChildLevelNghbrs(m_levelOffsets, l);
+      findChildLevelNghbrs(m_levelOffsets, l);
       // deleteOutsideCells(l+1);
     }
 
@@ -277,8 +278,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   static constexpr auto memorySizePerCell() -> GInt {
-    return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) + sizeof(Point<NDIM>) + sizeof(NeighborList<NDIM>)
-           + sizeof(ChildList<NDIM>) + sizeof(PropertyBitsetType) + 1;
+    return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) // m_parentId, m_globalId, m_noChildren, m_rfnDistance, m_levelOffsets
+           + sizeof(Point<NDIM>)              // m_center
+           + sizeof(NeighborList<NDIM>)       // m_nghbrIds
+           + sizeof(ChildList<NDIM>)          // m_childIds
+           + sizeof(PropertyBitsetType)       // m_properties
+           + 1;                               // m_level
   }
 
 
@@ -338,8 +343,67 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     const GInt    refinedLvl       = std::to_integer<GInt>(m_level[cellId]) + 1;
     const GDouble refinedLvlLength = lengthOnLvl(refinedLvl);
 
-    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); childId++) {
-      m_center[offset] = m_center[cellId] + 0.5 * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
+    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+      const GInt childCellId = offset + childId;
+      // todo: replace childDir with constant expression function
+      m_center[childCellId]   = m_center[cellId] + HALF * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
+      m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
+      m_parentId[childCellId] = cellId;
+      m_globalId[childCellId] = childCellId;
+
+      // reset since we overwrite previous levels
+      m_noChildren[childCellId] = 0;
+      m_properties[childCellId].reset();
+      m_childIds[childCellId] = {INVALID_CELLID};
+      m_nghbrIds[childCellId] = {INVALID_CELLID};
+
+      // check for cuts with the geometry
+      // todo: implement
+      //      if(property(cellId, CellProperties::IsBndry)) {
+      //        property(childCellId, CellProperties::IsBndry) = checkCellForCut(childCellId);
+      //      }
+
+      // update parent
+      m_childIds[cellId].c[childId] = childCellId;
+      m_noChildren[cellId]++;
+    }
+  }
+
+  void findChildLevelNghbrs(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
+    // check all children at the given level
+    for(GInt parentId = levelOffset[level].begin; parentId < levelOffset[level].end; ++parentId) {
+      const ChildListType& children = m_childIds[parentId].c;
+      for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+        if(children[childId] == INVALID_CELLID) {
+          // no child
+          continue;
+        }
+        // check all neighbors
+        for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
+          // neighbor direction not set
+          if(m_nghbrIds[children[childId]].n[dir] == INVALID_CELLID) {
+            // todo: replace nghbrInside by const expression function
+            const GInt nghbrId = nghbrInside[childId][dir];
+            // neighbor is within the same parent cell
+            if(nghbrId != INVALID_CELLID) {
+              m_nghbrIds[children[childId]].n[dir] = nghbrId;
+            } else {
+              // todo: replace nghbrParentChildId by const expression function
+              const GInt parentLvlNeighborChildId = nghbrParentChildId[childId][dir];
+              ASSERT(parentLvlNeighborChildId > INVALID_CELLID, "The definition of nghbrParentChildId is wrong! "
+                                                                "childId: "
+                                                                    + std::to_string(childId) + " dir "
+                                                                    + std::to_string(dir));
+
+              const GInt parentLvlNghbrId = m_nghbrIds[parentId].n[dir];
+              if(parentLvlNghbrId != INVALID_CELLID && parentLvlNeighborChildId != INVALID_CELLID
+                 && m_childIds[parentLvlNghbrId].c[parentLvlNeighborChildId] != INVALID_CELLID) {
+                m_nghbrIds[children[childId]].n[dir] = m_childIds[parentLvlNghbrId].c[parentLvlNeighborChildId];
+              }
+            }
+          }
+        }
+      }
     }
   }
 };

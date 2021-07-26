@@ -23,6 +23,6 @@ using GInt  = int64_t;
 using GUint = uint64_t;
 
 template <GInt NDIM>
-using vectorD = Eigen::Matrix<GDouble, NDIM, 1>;
+using VectorD = Eigen::Matrix<GDouble, NDIM, 1>;
 
 #endif // GRIDGENERATOR_TYPES_H

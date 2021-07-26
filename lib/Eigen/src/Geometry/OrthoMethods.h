@@ -11,26 +11,28 @@
 #ifndef EIGEN_ORTHOMETHODS_H
 #define EIGEN_ORTHOMETHODS_H
 
-namespace Eigen { 
+namespace Eigen {
 
 /** \geometry_module \ingroup Geometry_Module
-  *
-  * \returns the cross product of \c *this and \a other
-  *
-  * Here is a very good explanation of cross-product: http://xkcd.com/199/
-  * 
-  * With complex numbers, the cross product is implemented as
-  * \f$ (\mathbf{a}+i\mathbf{b}) \times (\mathbf{c}+i\mathbf{d}) = (\mathbf{a} \times \mathbf{c} - \mathbf{b} \times \mathbf{d}) - i(\mathbf{a} \times \mathbf{d} - \mathbf{b} \times \mathbf{c})\f$
-  * 
-  * \sa MatrixBase::cross3()
-  */
-template<typename Derived>
-template<typename OtherDerived>
+ *
+ * \returns the cross product of \c *this and \a other
+ *
+ * Here is a very good explanation of cross-product: http://xkcd.com/199/
+ *
+ * With complex numbers, the cross product is implemented as
+ * \f$ (\mathbf{a}+i\mathbf{b}) \times (\mathbf{c}+i\mathbf{d}) = (\mathbf{a}
+ * \times \mathbf{c} - \mathbf{b} \times \mathbf{d}) - i(\mathbf{a} \times
+ * \mathbf{d} - \mathbf{b} \times \mathbf{c})\f$
+ *
+ * \sa MatrixBase::cross3()
+ */
+template <typename Derived>
+template <typename OtherDerived>
 #ifndef EIGEN_PARSED_BY_DOXYGEN
-EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-typename MatrixBase<Derived>::template cross_product_return_type<OtherDerived>::type
+EIGEN_DEVICE_FUNC inline typename MatrixBase<
+    Derived>::template cross_product_return_type<OtherDerived>::type
 #else
-typename MatrixBase<Derived>::PlainObject
+inline typename MatrixBase<Derived>::PlainObject
 #endif
 MatrixBase<Derived>::cross(const MatrixBase<OtherDerived>& other) const
 {
