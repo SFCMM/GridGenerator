@@ -200,15 +200,15 @@ class PastixBase : public SparseSolverBase<Derived>
     
     inline Index cols() const { return m_size; }
     inline Index rows() const { return m_size; }
-
-    /** \brief Reports whether previous computation was successful.
-     *
-     * \returns \c Success if computation was succesful,
-     *          \c NumericalIssue if the PaStiX reports a problem
-     *          \c InvalidInput if the input matrix is invalid
-     *
-     * \sa iparm()
-     */
+    
+     /** \brief Reports whether previous computation was successful.
+      *
+      * \returns \c Success if computation was successful,
+      *          \c NumericalIssue if the PaStiX reports a problem
+      *          \c InvalidInput if the input matrix is invalid
+      *
+      * \sa iparm()          
+      */
     ComputationInfo info() const
     {
       eigen_assert(m_isInitialized && "Decomposition is not initialized.");

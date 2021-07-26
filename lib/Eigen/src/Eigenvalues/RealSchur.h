@@ -189,10 +189,9 @@ template<typename _MatrixType> class RealSchur
     template<typename HessMatrixType, typename OrthMatrixType>
     RealSchur& computeFromHessenberg(const HessMatrixType& matrixH, const OrthMatrixType& matrixQ,  bool computeU);
     /** \brief Reports whether previous computation was successful.
-     *
-     * \returns \c Success if computation was succesful, \c NoConvergence
-     * otherwise.
-     */
+      *
+      * \returns \c Success if computation was successful, \c NoConvergence otherwise.
+      */
     ComputationInfo info() const
     {
       eigen_assert(m_isInitialized && "RealSchur is not initialized.");
@@ -261,7 +260,7 @@ RealSchur<MatrixType>& RealSchur<MatrixType>::compute(const EigenBase<InputType>
   {
     m_matT.setZero(matrix.rows(),matrix.cols());
     if(computeU)
-      m_matU.setIdentity(matrix.rows(), matrix.cols());
+      m_matU.setIdentity(matrix.rows(),matrix.cols());
     m_info = Success;
     m_isInitialized = true;
     m_matUisUptodate = computeU;
@@ -269,13 +268,18 @@ RealSchur<MatrixType>& RealSchur<MatrixType>::compute(const EigenBase<InputType>
   }
 
   // Step 1. Reduce to Hessenberg form
-  m_hess.compute(matrix.derived() / scale);
+  m_hess.compute(matrix.derived()/scale);
 
   // Step 2. Reduce to real Schur form
-  computeFromHessenberg(m_hess.matrixH(), m_hess.matrixQ(), computeU);
+  // Note: we copy m_hess.matrixQ() into m_matU here and not in computeFromHessenberg
+  //       to be able to pass our working-space buffer for the Householder to Dense evaluation.
+  m_workspaceVector.resize(matrix.cols());
+  if(computeU)
+    m_hess.matrixQ().evalTo(m_matU, m_workspaceVector);
+  computeFromHessenberg(m_hess.matrixH(), m_matU, computeU);
 
   m_matT *= scale;
-
+  
   return *this;
 }
 template<typename MatrixType>
@@ -285,13 +289,13 @@ RealSchur<MatrixType>& RealSchur<MatrixType>::computeFromHessenberg(const HessMa
   using std::abs;
 
   m_matT = matrixH;
-  if (computeU)
+  m_workspaceVector.resize(m_matT.cols());
+  if(computeU && !internal::is_same_dense(m_matU,matrixQ))
     m_matU = matrixQ;
-
+  
   Index maxIters = m_maxIters;
   if (maxIters == -1)
     maxIters = m_maxIterationsPerRow * matrixH.rows();
-  m_workspaceVector.resize(m_matT.cols());
   Scalar* workspace = &m_workspaceVector.coeffRef(0);
 
   // The matrix m_matT is divided in three parts. 

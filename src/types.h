@@ -6,7 +6,7 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wduplicated-branches"
-#include <Eigen/dense>
+#include <Eigen/Core>
 #pragma GCC diagnostic pop
 
 

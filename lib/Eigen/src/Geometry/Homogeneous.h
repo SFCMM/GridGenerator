@@ -13,19 +13,19 @@
 namespace Eigen {
 
 /** \geometry_module \ingroup Geometry_Module
- *
- * \class Homogeneous
- *
- * \brief Expression of one (or a set of) homogeneous vector(s)
- *
- * \param MatrixType the type of the object in which we are making homogeneous
- *
- * This class represents an expression of one (or a set of) homogeneous
- * vector(s). It is the return type of MatrixBase::homogeneous() and most of the
- * time this is the only way it is used.
- *
- * \sa MatrixBase::homogeneous()
- */
+  *
+  * \class Homogeneous
+  *
+  * \brief Expression of one (or a set of) homogeneous vector(s)
+  *
+  * \param MatrixType the type of the object in which we are making homogeneous
+  *
+  * This class represents an expression of one (or a set of) homogeneous vector(s).
+  * It is the return type of MatrixBase::homogeneous() and most of the time
+  * this is the only way it is used.
+  *
+  * \sa MatrixBase::homogeneous()
+  */
 
 namespace internal {
 
@@ -61,34 +61,33 @@ template<typename MatrixType,int _Direction> class Homogeneous
   : public MatrixBase<Homogeneous<MatrixType,_Direction> >, internal::no_assignment_operator
 {
   public:
-  typedef MatrixType NestedExpression;
-  enum { Direction = _Direction };
 
-  typedef MatrixBase<Homogeneous> Base;
-  EIGEN_DENSE_PUBLIC_INTERFACE(Homogeneous)
+    typedef MatrixType NestedExpression;
+    enum { Direction = _Direction };
 
-  EIGEN_DEVICE_FUNC explicit inline Homogeneous(const MatrixType &matrix)
-      : m_matrix(matrix) {}
+    typedef MatrixBase<Homogeneous> Base;
+    EIGEN_DENSE_PUBLIC_INTERFACE(Homogeneous)
 
-  EIGEN_DEVICE_FUNC inline Index rows() const {
-    return m_matrix.rows() + (int(Direction) == Vertical ? 1 : 0);
-  }
-  EIGEN_DEVICE_FUNC inline Index cols() const {
-    return m_matrix.cols() + (int(Direction) == Horizontal ? 1 : 0);
-  }
+    EIGEN_DEVICE_FUNC explicit inline Homogeneous(const MatrixType& matrix)
+      : m_matrix(matrix)
+    {}
 
-  EIGEN_DEVICE_FUNC const NestedExpression &nestedExpression() const {
-    return m_matrix;
-  }
+    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+    inline Index rows() const EIGEN_NOEXCEPT { return m_matrix.rows() + (int(Direction)==Vertical   ? 1 : 0); }
+    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+    inline Index cols() const EIGEN_NOEXCEPT { return m_matrix.cols() + (int(Direction)==Horizontal ? 1 : 0); }
 
-  template <typename Rhs>
-  EIGEN_DEVICE_FUNC inline const Product<Homogeneous, Rhs>
-  operator*(const MatrixBase<Rhs> &rhs) const {
-    eigen_assert(int(Direction) == Horizontal);
-    return Product<Homogeneous, Rhs>(*this, rhs.derived());
-  }
+    EIGEN_DEVICE_FUNC const NestedExpression& nestedExpression() const { return m_matrix; }
 
-  template<typename Lhs> friend
+    template<typename Rhs>
+    EIGEN_DEVICE_FUNC inline const Product<Homogeneous,Rhs>
+    operator* (const MatrixBase<Rhs>& rhs) const
+    {
+      eigen_assert(int(Direction)==Horizontal);
+      return Product<Homogeneous,Rhs>(*this,rhs.derived());
+    }
+
+    template<typename Lhs> friend
     EIGEN_DEVICE_FUNC inline const Product<Lhs,Homogeneous>
     operator* (const MatrixBase<Lhs>& lhs, const Homogeneous& rhs)
     {
@@ -255,32 +254,30 @@ struct traits<homogeneous_left_product_impl<Homogeneous<MatrixType,Vertical>,Lhs
 
 template<typename MatrixType,typename Lhs>
 struct homogeneous_left_product_impl<Homogeneous<MatrixType,Vertical>,Lhs>
-    : public ReturnByValue<homogeneous_left_product_impl<
-          Homogeneous<MatrixType, Vertical>, Lhs>> {
-  typedef typename traits<homogeneous_left_product_impl>::LhsMatrixType
-      LhsMatrixType;
+  : public ReturnByValue<homogeneous_left_product_impl<Homogeneous<MatrixType,Vertical>,Lhs> >
+{
+  typedef typename traits<homogeneous_left_product_impl>::LhsMatrixType LhsMatrixType;
   typedef typename remove_all<LhsMatrixType>::type LhsMatrixTypeCleaned;
-  typedef typename remove_all<typename LhsMatrixTypeCleaned::Nested>::type
-      LhsMatrixTypeNested;
-  EIGEN_DEVICE_FUNC homogeneous_left_product_impl(const Lhs &lhs,
-                                                  const MatrixType &rhs)
-      : m_lhs(take_matrix_for_product<Lhs>::run(lhs)), m_rhs(rhs) {}
+  typedef typename remove_all<typename LhsMatrixTypeCleaned::Nested>::type LhsMatrixTypeNested;
+  EIGEN_DEVICE_FUNC homogeneous_left_product_impl(const Lhs& lhs, const MatrixType& rhs)
+    : m_lhs(take_matrix_for_product<Lhs>::run(lhs)),
+      m_rhs(rhs)
+  {}
 
-  EIGEN_DEVICE_FUNC inline Index rows() const { return m_lhs.rows(); }
-  EIGEN_DEVICE_FUNC inline Index cols() const { return m_rhs.cols(); }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  inline Index rows() const EIGEN_NOEXCEPT { return m_lhs.rows(); }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  inline Index cols() const EIGEN_NOEXCEPT { return m_rhs.cols(); }
 
-  template <typename Dest> EIGEN_DEVICE_FUNC void evalTo(Dest &dst) const {
-    // FIXME investigate how to allow lazy evaluation of this product when
-    // possible
-    dst = Block < const LhsMatrixTypeNested,
-    LhsMatrixTypeNested::RowsAtCompileTime,
-    LhsMatrixTypeNested::ColsAtCompileTime == Dynamic
-        ? Dynamic
-        : LhsMatrixTypeNested::ColsAtCompileTime - 1 >
-              (m_lhs, 0, 0, m_lhs.rows(), m_lhs.cols() - 1) * m_rhs;
-    dst += m_lhs.col(m_lhs.cols() - 1)
-               .rowwise()
-               .template replicate<MatrixType::ColsAtCompileTime>(m_rhs.cols());
+  template<typename Dest> EIGEN_DEVICE_FUNC void evalTo(Dest& dst) const
+  {
+    // FIXME investigate how to allow lazy evaluation of this product when possible
+    dst = Block<const LhsMatrixTypeNested,
+              LhsMatrixTypeNested::RowsAtCompileTime,
+              LhsMatrixTypeNested::ColsAtCompileTime==Dynamic?Dynamic:LhsMatrixTypeNested::ColsAtCompileTime-1>
+            (m_lhs,0,0,m_lhs.rows(),m_lhs.cols()-1) * m_rhs;
+    dst += m_lhs.col(m_lhs.cols()-1).rowwise()
+            .template replicate<MatrixType::ColsAtCompileTime>(m_rhs.cols());
   }
 
   typename LhsMatrixTypeCleaned::Nested m_lhs;
@@ -299,28 +296,26 @@ struct traits<homogeneous_right_product_impl<Homogeneous<MatrixType,Horizontal>,
 };
 
 template<typename MatrixType,typename Rhs>
-struct homogeneous_right_product_impl<Homogeneous<MatrixType, Horizontal>, Rhs>
-    : public ReturnByValue<homogeneous_right_product_impl<
-          Homogeneous<MatrixType, Horizontal>, Rhs>> {
+struct homogeneous_right_product_impl<Homogeneous<MatrixType,Horizontal>,Rhs>
+  : public ReturnByValue<homogeneous_right_product_impl<Homogeneous<MatrixType,Horizontal>,Rhs> >
+{
   typedef typename remove_all<typename Rhs::Nested>::type RhsNested;
-  EIGEN_DEVICE_FUNC homogeneous_right_product_impl(const MatrixType &lhs,
-                                                   const Rhs &rhs)
-      : m_lhs(lhs), m_rhs(rhs) {}
+  EIGEN_DEVICE_FUNC homogeneous_right_product_impl(const MatrixType& lhs, const Rhs& rhs)
+    : m_lhs(lhs), m_rhs(rhs)
+  {}
 
-  EIGEN_DEVICE_FUNC inline Index rows() const { return m_lhs.rows(); }
-  EIGEN_DEVICE_FUNC inline Index cols() const { return m_rhs.cols(); }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR inline Index rows() const EIGEN_NOEXCEPT { return m_lhs.rows(); }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR inline Index cols() const EIGEN_NOEXCEPT { return m_rhs.cols(); }
 
-  template <typename Dest> EIGEN_DEVICE_FUNC void evalTo(Dest &dst) const {
-    // FIXME investigate how to allow lazy evaluation of this product when
-    // possible
-    dst = m_lhs * Block < const RhsNested,
-    RhsNested::RowsAtCompileTime == Dynamic ? Dynamic
-                                            : RhsNested::RowsAtCompileTime - 1,
-    RhsNested::ColsAtCompileTime >
-        (m_rhs, 0, 0, m_rhs.rows() - 1, m_rhs.cols());
-    dst += m_rhs.row(m_rhs.rows() - 1)
-               .colwise()
-               .template replicate<MatrixType::RowsAtCompileTime>(m_lhs.rows());
+  template<typename Dest> EIGEN_DEVICE_FUNC void evalTo(Dest& dst) const
+  {
+    // FIXME investigate how to allow lazy evaluation of this product when possible
+    dst = m_lhs * Block<const RhsNested,
+                        RhsNested::RowsAtCompileTime==Dynamic?Dynamic:RhsNested::RowsAtCompileTime-1,
+                        RhsNested::ColsAtCompileTime>
+            (m_rhs,0,0,m_rhs.rows()-1,m_rhs.cols());
+    dst += m_rhs.row(m_rhs.rows()-1).colwise()
+            .template replicate<MatrixType::RowsAtCompileTime>(m_lhs.rows());
   }
 
   typename MatrixType::Nested m_lhs;
@@ -328,9 +323,9 @@ struct homogeneous_right_product_impl<Homogeneous<MatrixType, Horizontal>, Rhs>
 };
 
 template<typename ArgType,int Direction>
-struct evaluator_traits<Homogeneous<ArgType, Direction>> {
-  typedef typename storage_kind_to_evaluator_kind<
-      typename ArgType::StorageKind>::Kind Kind;
+struct evaluator_traits<Homogeneous<ArgType,Direction> >
+{
+  typedef typename storage_kind_to_evaluator_kind<typename ArgType::StorageKind>::Kind Kind;
   typedef HomogeneousShape Shape;
 };
 
