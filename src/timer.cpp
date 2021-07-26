@@ -11,7 +11,7 @@ auto timers() -> TimerManager& {
   return timers;
 }
 
-vector<FunctionTiming> TimerProfiling::s_functionTimings;
+std::vector<FunctionTiming> TimerProfiling::s_functionTimings;
 
 
 auto operator<(const FunctionTiming& a, const FunctionTiming& b) -> GBool {
@@ -84,7 +84,7 @@ TimerProfiling::~TimerProfiling() {
 auto TimerProfiling::getTimingId(const string& name) -> GInt {
   GInt tId = -1;
   if(!s_functionTimings.empty()) {
-    for(vector<FunctionTiming>::size_type i = 0; i < s_functionTimings.size(); i++) {
+    for(std::vector<FunctionTiming>::size_type i = 0; i < s_functionTimings.size(); i++) {
       if(s_functionTimings[i].getName() == name) {
         tId = i;
       }

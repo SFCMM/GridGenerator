@@ -14,20 +14,25 @@ struct LevelOffsetType {
   GInt end;
 };
 
+inline auto levelSize(LevelOffsetType& level) -> GInt { return level.end - level.begin; }
+
+// template <GInt NDIM>
+// class Point {
+//  public:
+//   auto operator=(const std::vector<GDouble>& rhs) -> Point& {
+//     for(int i = 0; i < NDIM; i++) {
+//       m_coordinates[i] = rhs[i];
+//     }
+//     return *this;
+//   }
+//
+//
+//  private:
+//   std::array<GDouble, NDIM> m_coordinates{NAN};
+// };
+
 template <GInt NDIM>
-class Point {
- public:
-  auto operator=(const std::vector<GDouble>& rhs) -> Point& {
-    for(int i = 0; i < NDIM; i++) {
-      m_coordinates[i] = rhs[i];
-    }
-    return *this;
-  }
-
-
- private:
-  std::array<GDouble, NDIM> m_coordinates{NAN};
-};
+using Point = vectorD<NDIM>;
 
 template <GInt NDIM>
 struct NeighborList {
@@ -51,6 +56,7 @@ class GridInterface {
   virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
   virtual void setCapacity(GInt capacity)                = 0;
   virtual void setMinLvl(const GInt minLvl)              = 0;
+  virtual void setMaxLvl(const GInt maxLvl)              = 0;
 
   [[nodiscard]] virtual inline auto cog() const -> std::vector<GDouble>          = 0;
   [[nodiscard]] virtual inline auto geomExtent() const -> std::vector<GDouble>   = 0;
@@ -58,6 +64,7 @@ class GridInterface {
   [[nodiscard]] virtual inline auto decisiveDirection() const -> GDouble         = 0;
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
   [[nodiscard]] virtual inline auto minLvl() const -> GInt                       = 0;
+  [[nodiscard]] virtual inline auto maxLvl() const -> GInt                       = 0;
   //  virtual auto                      levelOffset(GInt level) -> LevelOffsetType&  = 0;
   //  virtual auto                      center(const GInt id) -> GDouble&            = 0;
   //  virtual auto                      nghbrId(const GInt id) -> GInt&              = 0;
@@ -95,7 +102,14 @@ class BaseCartesianGrid : public GridInterface {
       m_lengthOnLevel.at(l) = HALF * m_lengthOnLevel.at(l - 1);
     }
   }
-  void setMinLvl(const GInt minLvl) override { m_minLvl = minLvl; }
+  void setMinLvl(const GInt minLvl) override {
+    gridgen_log << "set minLVL " << minLvl << std::endl;
+    m_minLvl = minLvl;
+  }
+  void setMaxLvl(const GInt maxLvl) override {
+    gridgen_log << "set maxLVL " << maxLvl << std::endl;
+    m_maxLvl = maxLvl;
+  }
 
   [[nodiscard]] inline auto cog() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_centerOfGravity.begin(), m_centerOfGravity.end());
@@ -108,6 +122,7 @@ class BaseCartesianGrid : public GridInterface {
   };
   [[nodiscard]] inline auto decisiveDirection() const -> GDouble override { return m_decisiveDirection; };
   [[nodiscard]] inline auto minLvl() const -> GInt override { return m_minLvl; };
+  [[nodiscard]] inline auto maxLvl() const -> GInt override { return m_maxLvl; };
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       return m_lengthOnLevel.at(lvl);
@@ -117,6 +132,7 @@ class BaseCartesianGrid : public GridInterface {
 
  private:
   GInt m_minLvl = 1;
+  GInt m_maxLvl = 1;
 
   // box containing the whole geometry
   std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
@@ -155,6 +171,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
  public:
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::minLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::maxLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::lengthOnLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::cog;
 
@@ -180,12 +197,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_childIds.resize(capacity);
     m_rfnDistance.resize(capacity);
     m_properties.resize(capacity);
+    m_level.resize(capacity);
     m_capacity = capacity;
   }
 
   void setMinLvl(const GInt _minLvl) override {
     m_levelOffsets.resize(_minLvl);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
+  }
+  void setMaxLvl(const GInt _maxLvl) override {
+    m_levelOffsets.resize(_maxLvl);
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
 
   //  auto levelOffset(const GInt level) -> LevelOffsetType& override { return m_levelOffsets[level]; }
@@ -215,7 +237,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     const GInt begin                         = m_levelOffsets[0].begin;
-    m_center[begin]                          = cog();
+    m_center[begin]                          = Point<NDIM>(cog().data());
     m_globalId[begin]                        = begin;
     property(begin, CellProperties::IsBndry) = 1;
     m_size                                   = 1;
@@ -244,6 +266,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
           outOfMemory(l + 1);
         }
       }
+
+      refineGrid(m_levelOffsets, l);
+      // findChildLevelNghbrs(m_levelOffsets, l);
+      // deleteOutsideCells(l+1);
     }
 
 
@@ -290,6 +316,31 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
     TERMM(-1, "Out of memory!");
+  }
+
+  void refineGrid(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
+    gridgen_log << SP2 << "+ refining grid on level: " << level << std::endl;
+    std::cout << SP2 << "+ refining grid on level: " << level << std::endl;
+
+    ASSERT(level + 1 < maxLvl(),
+           "Invalid refinement level! " + std::to_string(level + 1) + "<" + std::to_string(maxLvl()));
+
+    // refine all cells on the given level
+    for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
+      refineCell(cellId, levelOffset[level + 1].begin);
+    }
+  }
+
+  void refineCell(const GInt cellId, const GInt offset) {
+    if(DEBUG_LEVEL > Debug_Level::debug) {
+      gridgen_log << "refine cell " << cellId << " with offset " << offset << std::endl;
+    }
+    const GInt    refinedLvl       = std::to_integer<GInt>(m_level[cellId]) + 1;
+    const GDouble refinedLvlLength = lengthOnLvl(refinedLvl);
+
+    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); childId++) {
+      m_center[offset] = m_center[cellId] + 0.5 * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
+    }
   }
 };
 

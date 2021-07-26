@@ -4,6 +4,7 @@
 #include <array>
 #include <limits>
 #include <vector>
+#include "functions.h"
 #include "types.h"
 
 static constexpr GFloat  GFloatEps  = std::numeric_limits<GFloat>::epsilon();
@@ -18,6 +19,7 @@ static constexpr GDouble DKBIT                   = 1024;
 
 // arbitrary maximum cell level
 static constexpr GInt MAX_LVL = 100;
+static constexpr GInt MAX_DIM = 4;
 
 enum class Debug_Level { no_debug, min_debug, debug, more_debug, max_debug };
 
@@ -33,6 +35,37 @@ static const GString SP4{"        "};
 static const GString SP5{"          "};
 static const GString SP6{"            "};
 static const GString SP7{"              "};
+
+static constexpr std::array<std::array<GDouble, MAX_DIM>, maxNoChildren<MAX_DIM>()> childDir = {{
+    //-> 2D
+    // -x,-y, -z
+    {{-1, -1, -1, -1}},
+    //+x, -y, -z
+    {{1, -1, -1, -1}},
+    //-x, +y, -z
+    {{-1, 1, -1, -1}},
+    //+x, -y, -z
+    {{1, 1, -1, -1}},
+    //<- 2D
+
+    //-> 3D (+z)
+    {{-1, -1, 1, -1}},
+    {{1, -1, 1, -1}},
+    {{-1, 1, 1, -1}},
+    {{1, 1, 1, -1}},
+    //<- 3D (+z)
+
+    //-> 4D
+    {{-1, -1, -1, 1}},
+    {{1, -1, -1, 1}},
+    {{-1, 1, -1, 1}},
+    {{1, 1, -1, 1}},
+    {{-1, -1, 1, 1}},
+    {{1, -1, 1, 1}},
+    {{-1, 1, 1, 1}},
+    {{1, 1, 1, 1}}
+    //<- 4D
+}};
 
 
 #endif

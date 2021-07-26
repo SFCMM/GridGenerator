@@ -207,7 +207,7 @@ inline auto TimerManager::newGroup(const std::string name) -> GInt {
 /// Creates a new timer and returns its timerId.
 inline auto TimerManager::newGroupTimer(const std::string& name, const GInt groupId) -> GInt {
   ASSERT(static_cast<std::size_t>(groupId) < m_groups.size() && groupId > -1,
-         "groupId: " + std::to_string(groupId) + " does not exists | name: " + std::to_string(name));
+         "groupId: " + std::to_string(groupId) + " does not exists | name: " + name);
   const GInt newTimerId = m_timers.size();
   m_timers.emplace_back(name, groupId, newTimerId, -1);
   return newTimerId;
@@ -220,8 +220,7 @@ inline auto TimerManager::newSubTimer(const std::string& name, const GInt timerI
   }
 
   ASSERT(static_cast<std::size_t>(timerId) < m_timers.size(),
-         "timerId " + std::to_string(timerId) + " does not exist when trying to create subtimer with name "
-             + std::to_string(name));
+         "timerId " + std::to_string(timerId) + " does not exist when trying to create subtimer with name " + name);
 
   const GInt groupId    = m_timers[timerId].group;
   const GInt newTimerId = m_timers.size();
@@ -243,8 +242,8 @@ inline void TimerManager::recordTimerStart(const GInt timerId, const GString& po
 
 inline void TimerManager::startTimer(const GInt timerId, const GString& pos) {
   ASSERT(m_timers[timerId].status != Timer::Running,
-         "The timer " + std::to_string(m_timers[timerId].name) + " with id: " + std::to_string(timerId)
-             + " can't be started because it is already running! " + std::to_string(pos));
+         "The timer " + m_timers[timerId].name + " with id: " + std::to_string(timerId)
+             + " can't be started because it is already running! " + pos);
   std::ignore = pos;
 
   chronoTimePoint t            = time();

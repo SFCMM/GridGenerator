@@ -1,7 +1,9 @@
 #ifndef GRIDGENERATOR_FUNCTIONS_H
 #define GRIDGENERATOR_FUNCTIONS_H
+#include <gcem.hpp>
 #include <sstream>
 #include "constants.h"
+
 
 template <GInt LENGTH, class T>
 inline auto strStreamify(std::vector<T> in) -> std::stringstream {
