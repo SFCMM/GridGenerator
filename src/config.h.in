@@ -9,8 +9,8 @@
 
 
 /*
- * If you set this to zero, each message (i.e. after each "endl") the buffer is written to the file.
- * A good starting value is 256 kB (256*1024 = 262144).
+ * If you set this to zero, each message, i.e. after each "endl", is written to the file.
+ * Value is in bytes/chars!
  */
 #define LOG_MIN_FLUSH_SIZE 0
 
@@ -28,7 +28,7 @@
 
 // clang-format off
 #define PROJECT_VER @PROJECT_VERSION@
-#define BUILD_NUM 45
+#define BUILD_NUM 49
 #define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@
 #define COMPILER_NAME @CMAKE_CXX_COMPILER_ID@
 #define BUILD_TYPE @CMAKE_BUILD_TYPE@

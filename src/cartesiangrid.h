@@ -222,14 +222,27 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     //  Refine to min level
     for(GInt l = 0; l < minLvl(); l++) {
-      const GInt prevLevelNoCells = m_levelOffsets[l].end - m_levelOffsets[l].begin;
+      const GInt prevLevelBegin   = m_levelOffsets[l].begin;
+      const GInt prevLevelEnd     = m_levelOffsets[l].end;
+      const GInt prevLevelNoCells = prevLevelEnd - prevLevelBegin;
+
       if(m_levelOffsets[l].begin == 0) {
         // m_capacity - (prevLevelNoCells) * maxNoChildren<NDIM>()
         // from the end - maximum number of cells at the current level
-        m_levelOffsets[l + 1] = {m_capacity - (prevLevelNoCells)*maxNoChildren<NDIM>(), m_capacity};
+        const GInt newLevelBegin = m_capacity - (prevLevelNoCells)*maxNoChildren<NDIM>();
+        m_levelOffsets[l + 1]    = {newLevelBegin, m_capacity};
+
+        if(prevLevelEnd > newLevelBegin) {
+          outOfMemory(l + 1);
+        }
       } else {
+        const GInt newLevelEnd = (prevLevelNoCells)*maxNoChildren<NDIM>();
         // from the start to the maximum number of cells at the current level
-        m_levelOffsets[l + 1] = {0, (prevLevelNoCells)*maxNoChildren<NDIM>()};
+        m_levelOffsets[l + 1] = {0, newLevelEnd};
+
+        if(prevLevelBegin < newLevelEnd) {
+          outOfMemory(l + 1);
+        }
       }
     }
 
@@ -261,6 +274,23 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GInt m_capacity{0};
   GInt m_size{0};
+
+  void outOfMemory(GInt level) {
+    cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    gridgen_log << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
+    cerr0 << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
+    gridgen_log << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", "
+                << m_levelOffsets[level - 1].end << "]" << std::endl;
+    cerr0 << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", " << m_levelOffsets[level - 1].end
+          << "]" << std::endl;
+    gridgen_log << "level " << level << " [" << m_levelOffsets[level].begin << ", " << m_levelOffsets[level].end << "]"
+                << std::endl;
+    cerr0 << "level " << level << " [" << m_levelOffsets[level].begin << ", " << m_levelOffsets[level].end << "]"
+          << std::endl;
+    cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+
+    TERMM(-1, "Out of memory!");
+  }
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

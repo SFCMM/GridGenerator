@@ -3,7 +3,7 @@
   "dim": 4,
   "minLevel": 3,
   "uniformLevel": 4,
-  "maxNoCells": 1000,
+  "maxNoCells": 5000,
   "boundingBox": [
     0,
     1.0,
