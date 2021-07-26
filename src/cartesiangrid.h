@@ -423,19 +423,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       if(property(cellId, CellProperties::TmpMarker)) {
         continue;
       }
-      if(property(cellId, CellProperties::IsBndry)) {
-        property(cellId, CellProperties::IsInside)  = true;
-        property(cellId, CellProperties::TmpMarker) = true;
-        continue;
-      }
 
-      if(pointIsInside(m_center[cellId])) {
-        property(cellId, CellProperties::IsInside)  = true;
-        property(cellId, CellProperties::TmpMarker) = true;
-        floodCells(cellId);
-      } else {
-        property(cellId, CellProperties::IsInside)  = false;
-        property(cellId, CellProperties::TmpMarker) = true;
+      property(cellId, CellProperties::TmpMarker) = true;
+      property(cellId, CellProperties::IsInside)  = pointIsInside(m_center[cellId]);
+      if(!property(cellId, CellProperties::IsBndry)) {
         floodCells(cellId);
       }
     }
