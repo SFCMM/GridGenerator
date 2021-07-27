@@ -63,6 +63,16 @@ static constexpr inline auto maxNoNghbrs() -> GInt {
   return 2 * NDIM;
 }
 
+static constexpr inline auto oppositeDir(const GInt dir) -> GInt{
+  return 2 * (dir / 2) + 1 - (dir % 2);
+  //0 = 1 ok
+  //1 = 0 ok
+  //2 = 3 ok
+  //...
+  //5 = 4 ok
+  //6 = 7 ok
+  //7 = 6 ok
+}
 
 template <class T>
 static constexpr inline auto isEven(T num) -> GBool {

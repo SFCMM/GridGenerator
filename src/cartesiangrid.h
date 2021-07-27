@@ -405,30 +405,26 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         ASSERT(parentId != INVALID_CELLID, "Invalid parentId!");
 
         // remove from parent
-        for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
-          const GInt childCellId = m_childIds[m_parentId[cellId]].c[childId];
-          if(childCellId == cellId) {
-            m_childIds[m_parentId[cellId]].c[childId] = INVALID_CELLID;
-          }
-        }
+        updateParent(m_parentId[cellId], cellId, INVALID_CELLID);
         --m_noChildren[parentId];
 
         // remove from neighbors
         for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
           const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
           if(nghbrCellId != INVALID_CELLID) {
-            // todo: implement (next)
-            // nghbrCellId[nghbrCellId][oppositeDir(dir)] = -1;
+            m_nghbrIds[nghbrCellId].n[oppositeDir(dir)] = -1;
           }
         }
         if(cellId != m_levelOffsets[level].end - 1) {
-          // copy a inside cell to the current position to fill the hole
-          // todo: implement (next)
-          // copyCell(m_levelOffsets[level].end-1, cellId);
+          // copy an inside cell to the current position to fill the hole
+          copyCell(m_levelOffsets[level].end - 1, cellId);
         }
         m_levelOffsets[level].end--;
       }
     }
+    m_size = levelSize(m_levelOffsets[level]);
+    gridgen_log << SP3 << "* grid has " << m_size << " cells" << std::endl;
+    std::cout << SP3 << "* grid has " << m_size << " cells" << std::endl;
   }
 
   void markOutsideCells(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
@@ -468,6 +464,43 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   auto pointIsInside(const Point<NDIM>& center) const -> GBool {
     // todo: implement
     return true;
+  }
+
+  void copyCell(const GInt from, const GInt to) {
+    ASSERT(!property(from, CellProperties::Del), "Invalid cell to be copied!");
+
+    m_properties[to] = m_properties[from];
+    m_level[to]      = m_level[from];
+    m_center[to]     = m_center[from];
+    m_globalId[to]   = m_globalId[from];
+    m_parentId[to]   = m_parentId[from];
+    m_nghbrIds[to]   = m_nghbrIds[from];
+    m_childIds[to]   = m_childIds[from];
+    m_noChildren[to] = m_noChildren[from];
+
+    for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir){
+      if(m_nghbrIds[to].n[dir] != INVALID_CELLID){
+        m_nghbrIds[m_nghbrIds[to].n[dir]].n[oppositeDir(dir)] = to;
+      }
+    }
+
+    updateParent(m_parentId[to], from, to);
+
+    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId){
+      if(m_childIds[to].c[childId]!=INVALID_CELLID){
+        m_parentId[m_childIds[to].c[childId]] = to;
+      }
+    }
+  }
+
+  void updateParent(const GInt parentId, const GInt oldChildCellId, const GInt newChildCellId){
+    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId){
+      if(m_childIds[parentId].c[childId] == oldChildCellId){
+        m_childIds[parentId].c[childId] = newChildCellId;
+        return;
+      }
+    }
+    TERMM(-1, "Invalid cell operation!");
   }
 };
 
