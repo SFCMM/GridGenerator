@@ -456,8 +456,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       if(property(cellId, CellProperties::TmpMarker)) {
         continue;
       }
-      const GBool isBndryCell                     = property(cellId, CellProperties::IsBndry);
       property(cellId, CellProperties::TmpMarker) = true;
+      const GBool isBndryCell                     = property(cellId, CellProperties::IsBndry);
       property(cellId, CellProperties::IsInside)  = isBndryCell || pointIsInside(m_center[cellId]);
       if(!isBndryCell) {
         floodCells(cellId);
