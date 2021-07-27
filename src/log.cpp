@@ -12,41 +12,7 @@ using namespace std;
 // todo: fix documentation
 // todo: add tests
 
-/** \brief Adds an attribute to the prefix of the XML string.
- * \author Andreas Lintermann, Sven Berger
- * \date 13.08.2012
- *
- * \param[in] att The attribute to add, consists of a pair of MStrings.
- * \return The location of the attribute in the vector of pairs.
- */
-auto Log::addAttribute(const pair<GString, const GString>& att) -> GInt {
-  m_buffer->m_prefixAttributes.emplace_back(att);
-  m_buffer->createPrefixMessage();
-  return static_cast<GInt>(m_buffer->m_prefixAttributes.size() - 1);
-}
 
-/** \brief Erases an attribute from the prefix of the XML string.
- * \author Andreas Lintermann, Sven Berger
- * \date 13.08.2012
- *
- *  \param[in] attId The ID of the attribute to delete.
- */
-void Log::eraseAttribute(const GInt attId) {
-  m_buffer->m_prefixAttributes.erase(m_buffer->m_prefixAttributes.begin() + attId);
-  m_buffer->createPrefixMessage();
-}
-
-/** \brief Modifies an attribute of the prefix of the XML string.
- * \author Andreas Lintermann, Sven Berger
- * \date 13.08.2012
- *
- *  \param[in] attId The ID of the attribute to modify.
- *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
- */
-void Log::modifyAttribute(const GInt attId, const pair<GString, GString>& att) {
-  m_buffer->m_prefixAttributes[attId] = att;
-  m_buffer->createPrefixMessage();
-}
 
 /**
  * \brief Parses the string input and returns the string with XML entities escaped
@@ -404,10 +370,10 @@ void LogFile::open(const GString& filename, const GBool rootOnlyHardwired, const
   // Only open file if it was not yet opened
   if(!m_isOpen) {
     // Open a simple file
-    m_buffer = new Log_simpleFileBuffer(filename, argc, argv, mpiComm, rootOnlyHardwired);
+    buffer() = make_unique<Log_simpleFileBuffer>(filename, argc, argv, mpiComm, rootOnlyHardwired);
 
     // Associate the stream with the newly created buffer
-    rdbuf(m_buffer);
+    rdbuf(buffer().get());
 
     // Set state variable
     m_isOpen = true;
@@ -423,11 +389,10 @@ void LogFile::open(const GString& filename, const GBool rootOnlyHardwired, const
 void LogFile::close(const GBool forceClose) {
   // Only close file if was already opened
   if(m_isOpen) {
-    static_cast<Log_simpleFileBuffer*>(m_buffer)->close(
-        forceClose); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+    buffer()->close(forceClose); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
     // Delete internal buffer to prevent memory leaks
-    delete m_buffer;
+    buffer().reset();
 
     // Set state variable
     m_isOpen = false;
@@ -442,7 +407,7 @@ void LogFile::close(const GBool forceClose) {
  * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
  * \return The previous internal state (may be stored to return to the previous behavior).
  */
-auto LogFile::setRootOnly(const GBool rootOnly) -> GBool { return m_buffer->setRootOnly(rootOnly); }
+auto LogFile::setRootOnly(const GBool rootOnly) -> GBool { return buffer()->setRootOnly(rootOnly); }
 
 /**
  * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
@@ -456,7 +421,7 @@ auto LogFile::setRootOnly(const GBool rootOnly) -> GBool { return m_buffer->setR
  */
 auto LogFile::setMinFlushSize(const GInt minFlushSize) -> GInt {
   if(m_isOpen) {
-    return m_buffer->setMinFlushSize(minFlushSize);
+    return buffer()->setMinFlushSize(minFlushSize);
   }
 
   return 0;

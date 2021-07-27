@@ -1,6 +1,7 @@
 #ifndef GRIDGENERATOR_LOG_H
 #define GRIDGENERATOR_LOG_H
 #include <fstream>
+#include <memory>
 #include <mpi.h>
 #include <sstream>
 #include <vector>
@@ -57,35 +58,7 @@ class Log_buffer : public std::stringbuf {
 
   virtual auto setRootOnly(GBool rootOnly = true) -> GBool;
   virtual auto setMinFlushSize(GInt minFlushSize) -> GInt;
-};
-
-/**
- * \brief Base class for all Log<xyz> classes.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
- * \details This class is used to hold stream/buffer-independent methods. All Log<xyz>
- * subclasses inherit from this class. The auxiliary classes Log_<xyz> (especially the
- * buffers), however, should NOT have this class as their parent.
- */
-class Log : public std::ostream {
-  friend class Log_buffer;
-
- protected:
-  Log_buffer* m_buffer = nullptr;
-
- public:
-#ifdef CLANG_COMPILER
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wuninitialized"
-#endif
-  Log() : std::ostream(m_buffer){};
-#ifdef CLANG_COMPILER
-#pragma clang diagnostic pop
-#endif
-  virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;
-  auto         addAttribute(const std::pair<GString, const GString>&) -> GInt;
-  void         eraseAttribute(GInt);
-  void         modifyAttribute(GInt, const std::pair<GString, GString>&);
+  virtual void close(GBool forceClose = false) = 0;
 };
 
 
@@ -123,7 +96,75 @@ class Log_simpleFileBuffer : public Log_buffer {
   auto operator=(Log_simpleFileBuffer&&) -> Log_simpleFileBuffer& = delete;
 
   void open(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false);
-  void close(GBool forceClose = false);
+  void close(GBool forceClose = false) override;
+};
+
+/**
+ * \brief Base class for all Log<xyz> classes.
+ * \author Michael Schlottke, Sven Berger
+ * \date June 2012
+ * \details This class is used to hold stream/buffer-independent methods. All Log<xyz>
+ * subclasses inherit from this class. The auxiliary classes Log_<xyz> (especially the
+ * buffers), however, should NOT have this class as their baseclass.
+ */
+class Log : public std::ostream {
+  friend class Log_buffer;
+
+ public:
+#ifdef CLANG_COMPILER
+  #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
+#endif
+  Log() : std::ostream(m_buffer.get()){};
+#ifdef CLANG_COMPILER
+#pragma clang diagnostic pop
+#endif
+  virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;
+
+/** \brief Adds an attribute to the prefix of the XML string.
+ * \author Andreas Lintermann, Sven Berger
+ * \date 13.08.2012
+ *
+ * \param[in] att The attribute to add, consists of a pair of MStrings.
+ * \return The location of the attribute in the vector of pairs.
+ */
+  auto         addAttribute(const std::pair<GString, const GString>& att) -> GInt{
+    m_buffer->m_prefixAttributes.emplace_back(att);
+    m_buffer->createPrefixMessage();
+    return static_cast<GInt>(m_buffer->m_prefixAttributes.size() - 1);
+  }
+
+/** \brief Erases an attribute from the prefix of the XML string.
+ * \author Andreas Lintermann, Sven Berger
+ * \date 13.08.2012
+ *
+ *  \param[in] attId The ID of the attribute to delete.
+ */
+  void         eraseAttribute(GInt attId){
+    m_buffer->m_prefixAttributes.erase(m_buffer->m_prefixAttributes.begin() + attId);
+    m_buffer->createPrefixMessage();
+  }
+
+/** \brief Modifies an attribute of the prefix of the XML string.
+ * \author Andreas Lintermann, Sven Berger
+ * \date 13.08.2012
+ *
+ *  \param[in] attId The ID of the attribute to modify.
+ *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
+ */
+  void         modifyAttribute(GInt attId, const std::pair<GString, GString>& att){
+    m_buffer->m_prefixAttributes[attId] = att;
+    m_buffer->createPrefixMessage();
+  }
+
+  inline auto buffer() -> std::unique_ptr<Log_buffer>&{
+    return m_buffer;
+  }
+  inline auto buffer() const-> const std::unique_ptr<Log_buffer>&{
+    return m_buffer;
+  }
+ private:
+  std::unique_ptr<Log_buffer> m_buffer;
 };
 
 /**

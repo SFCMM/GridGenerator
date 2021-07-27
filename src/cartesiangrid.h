@@ -16,21 +16,6 @@ struct LevelOffsetType {
 
 inline auto levelSize(LevelOffsetType& level) -> GInt { return level.end - level.begin; }
 
-// template <GInt NDIM>
-// class Point {
-//  public:
-//   auto operator=(const std::vector<GDouble>& rhs) -> Point& {
-//     for(int i = 0; i < NDIM; i++) {
-//       m_coordinates[i] = rhs[i];
-//     }
-//     return *this;
-//   }
-//
-//
-//  private:
-//   std::array<GDouble, NDIM> m_coordinates{NAN};
-// };
-
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
 
@@ -65,9 +50,6 @@ class GridInterface {
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
   [[nodiscard]] virtual inline auto minLvl() const -> GInt                       = 0;
   [[nodiscard]] virtual inline auto maxLvl() const -> GInt                       = 0;
-  //  virtual auto                      levelOffset(GInt level) -> LevelOffsetType&  = 0;
-  //  virtual auto                      center(const GInt id) -> GDouble&            = 0;
-  //  virtual auto                      nghbrId(const GInt id) -> GInt&              = 0;
 
   //// Grid Generation specific
   virtual void createMinLvlGrid() = 0;
@@ -201,7 +183,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_level.resize(capacity);
     m_capacity = capacity;
   }
-
   void setMinLvl(const GInt _minLvl) override {
     m_levelOffsets.resize(_minLvl);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
@@ -210,9 +191,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_levelOffsets.resize(_maxLvl);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
-
-  //  auto levelOffset(const GInt level) -> LevelOffsetType& override { return m_levelOffsets[level]; }
-  //  auto center(const GInt id) -> GDouble& override { return &m_center[id]; }
 
   void createMinLvlGrid() override {
     RECORD_TIMER_START(TimeKeeper[Timers::GridMin]);
@@ -408,6 +386,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
     }
   }
+
   void deleteOutsideCells(const GInt level) {
     markOutsideCells(m_levelOffsets, level);
 
@@ -481,7 +460,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  auto pointIsInside(Point<NDIM>& center) const -> GBool {
+  auto pointIsInside(const Point<NDIM>& center) const -> GBool {
     // todo: implement
     return true;
   }

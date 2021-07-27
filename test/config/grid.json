@@ -1,9 +1,9 @@
 {
   "dry-run": true,
   "dim": 4,
-  "minLevel": 3,
-  "uniformLevel": 4,
-  "maxNoCells": 5000,
+  "minLevel": 5,
+  "uniformLevel": 5,
+  "maxNoCells": 2000000,
   "boundingBox": [
     0,
     1.0,
