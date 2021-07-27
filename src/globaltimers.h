@@ -15,6 +15,7 @@ struct Timers_ {
     Init,
 
     GridGeneration,
+    GridInit,
     GridMin,
     GridUniform,
     GridRefinement,

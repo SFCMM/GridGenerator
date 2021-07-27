@@ -68,6 +68,7 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::Init], "Init", TimeKeeper[Timers::timertotal]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridGeneration], "Create the grid.", TimeKeeper[Timers::timertotal]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridInit], "Init grid.", TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridMin], "Minlevel grid generation.", TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridUniform], "Uniform grid generation.",
                          TimeKeeper[Timers::GridGeneration]);
@@ -165,6 +166,7 @@ template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_START(TimeKeeper[Timers::GridGeneration]);
+  RECORD_TIMER_START(TimeKeeper[Timers::GridInit]);
 
   gridgen_log << "Generating a grid[" << NDIM << "D]" << endl;
   m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>();
@@ -212,6 +214,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << SP2 << "+ decisive direction: " << m_grid->decisiveDirection() << "\n";
   gridgen_log << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->geomExtent()).str() << "\n";
   gridgen_log << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
+  RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
   m_grid->createMinLvlGrid();
 
