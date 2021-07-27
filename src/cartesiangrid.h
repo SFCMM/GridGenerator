@@ -412,6 +412,39 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     markOutsideCells(m_levelOffsets, level);
 
     // delete cells that have been marked as being outside
+    for(GInt cellId = m_levelOffsets[level].end - 1; cellId >= m_levelOffsets[level].begin; --cellId) {
+      ASSERT(property(cellId, CellProperties::IsInside) == property(cellId, CellProperties::IsBndry),
+             "Properties not set correctly! IsBndry implies IsInside!");
+      // remove cell since it is not inside
+      if(!property(cellId, CellProperties::IsInside)) {
+        const GInt parentId = m_parentId[cellId];
+        ASSERT(parentId != INVALID_CELLID, "Invalid parentId!");
+
+        // remove from parent
+        for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+          const GInt childCellId = m_childIds[m_parentId[cellId]].c[childId];
+          if(childCellId == cellId) {
+            m_childIds[m_parentId[cellId]].c[childId] = INVALID_CELLID;
+          }
+        }
+        --m_noChildren[parentId];
+
+        // remove from neighbors
+        for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
+          const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
+          if(nghbrCellId != INVALID_CELLID) {
+            // todo: implement (next)
+            // nghbrCellId[nghbrCellId][oppositeDir(dir)] = -1;
+          }
+        }
+        if(cellId != m_levelOffsets[level].end - 1) {
+          // copy a inside cell to the current position to fill the hole
+          // todo: implement (next)
+          // copyCell(m_levelOffsets[level].end-1, cellId);
+        }
+        m_levelOffsets[level].end--;
+      }
+    }
   }
 
   void markOutsideCells(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
@@ -423,33 +456,33 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       if(property(cellId, CellProperties::TmpMarker)) {
         continue;
       }
-
+      const GBool isBndryCell                     = property(cellId, CellProperties::IsBndry);
       property(cellId, CellProperties::TmpMarker) = true;
-      property(cellId, CellProperties::IsInside)  = pointIsInside(m_center[cellId]);
-      if(!property(cellId, CellProperties::IsBndry)) {
+      property(cellId, CellProperties::IsInside)  = isBndryCell || pointIsInside(m_center[cellId]);
+      if(!isBndryCell) {
         floodCells(cellId);
       }
     }
   }
 
-  void floodCells(GInt cellId){
+  void floodCells(GInt cellId) {
     const GBool inside = property(cellId, CellProperties::IsInside);
-    for(GInt id = 0; id < maxNoNghbrs<NDIM>(); ++id){
+    for(GInt id = 0; id < maxNoNghbrs<NDIM>(); ++id) {
       const GInt nghbrId = m_nghbrIds[cellId].n[id];
-      if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::TmpMarker)){
-        if(!property(nghbrId, CellProperties::IsBndry)){
-          property(nghbrId, CellProperties::IsInside)  = inside;
+      if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::TmpMarker)) {
+        if(!property(nghbrId, CellProperties::IsBndry)) {
+          property(nghbrId, CellProperties::IsInside) = inside;
           floodCells(nghbrId);
         } else {
-          property(nghbrId, CellProperties::IsInside)  = true;
+          property(nghbrId, CellProperties::IsInside) = true;
         }
         property(nghbrId, CellProperties::TmpMarker) = true;
       }
     }
   }
 
-  auto pointIsInside(Point<NDIM>& center)const ->GBool{
-    //todo: implement
+  auto pointIsInside(Point<NDIM>& center) const -> GBool {
+    // todo: implement
     return true;
   }
 };
