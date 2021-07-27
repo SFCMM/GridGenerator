@@ -218,7 +218,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     const GInt begin                         = m_levelOffsets[0].begin;
     m_center[begin]                          = Point<NDIM>(cog().data());
     m_globalId[begin]                        = begin;
-    property(begin, CellProperties::IsBndry) = 1;
+    property(begin, CellProperties::IsBndry) = true;
     m_size                                   = 1;
 
     //  Refine to min level
@@ -226,6 +226,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       const GInt prevLevelBegin   = m_levelOffsets[l].begin;
       const GInt prevLevelEnd     = m_levelOffsets[l].end;
       const GInt prevLevelNoCells = prevLevelEnd - prevLevelBegin;
+      if(DEBUG_LEVEL > Debug_Level::no_debug) {
+        gridgen_log << "LevelOffset " << l << ":[" << prevLevelBegin << ", " << prevLevelEnd << "]" << std::endl;
+      }
+
 
       if(m_levelOffsets[l].begin == 0) {
         // m_capacity - (prevLevelNoCells) * maxNoChildren<NDIM>()
@@ -305,8 +309,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     gridgen_log << SP2 << "+ refining grid on level: " << level << std::endl;
     std::cout << SP2 << "+ refining grid on level: " << level << std::endl;
 
-    ASSERT(level + 1 < maxLvl(),
-           "Invalid refinement level! " + std::to_string(level + 1) + "<" + std::to_string(maxLvl()));
+    ASSERT(level + 1 <= maxLvl(),
+           "Invalid refinement level! " + std::to_string(level + 1) + ">" + std::to_string(maxLvl()));
 
     // refine all cells on the given level
     for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
@@ -392,7 +396,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     // delete cells that have been marked as being outside
     for(GInt cellId = m_levelOffsets[level].end - 1; cellId >= m_levelOffsets[level].begin; --cellId) {
-      ASSERT(property(cellId, CellProperties::IsInside) == property(cellId, CellProperties::IsBndry),
+      ASSERT(!property(cellId, CellProperties::IsBndry)
+                 || property(cellId, CellProperties::IsInside) == property(cellId, CellProperties::IsBndry),
              "Properties not set correctly! IsBndry implies IsInside!");
       // remove cell since it is not inside
       if(!property(cellId, CellProperties::IsInside)) {
