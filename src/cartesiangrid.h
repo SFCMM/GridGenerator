@@ -254,7 +254,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       findChildLevelNghbrs(m_levelOffsets, l);
       deleteOutsideCells(l + 1);
     }
-
+    std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
+    reorderHilberCurve();
 
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridMin]);
   }
@@ -412,7 +413,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
           const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
           if(nghbrCellId != INVALID_CELLID) {
-            m_nghbrIds[nghbrCellId].n[oppositeDir(dir)] = -1;
+            m_nghbrIds[nghbrCellId].n[oppositeDir(dir)] = INVALID_CELLID;
           }
         }
         if(cellId != m_levelOffsets[level].end - 1) {
@@ -502,6 +503,21 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
     TERMM(-1, "Invalid cell operation!");
   }
+
+  void reorderHilberCurve() {
+    Point<NDIM> centerOfGravity =  Point<NDIM>(cog().data());
+    std::vector<GInt> hilberIds(m_size);
+
+    GInt hilverLevel = minLvl();
+    for(GInt cellId = 0; cellId < m_size; ++cellId){
+      //Normalization to unit cube
+      //array() since there is no scalar addition for vectors...
+      Point<NDIM> x = ((m_center[cellId] - centerOfGravity).array() + HALF * lengthOnLvl(0))/lengthOnLvl(0);
+      hilberIds[cellId] = hilbert::index<NDIM>(x, hilverLevel);
+    }
+
+  }
+
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

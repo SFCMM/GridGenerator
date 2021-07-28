@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(gridgenerator)
 project(gridgenerator VERSION "0.0.0")
 
+add_subdirectory(UnitTest)
+
 configure_file(src/config.h.in config.h @ONLY)
 
 

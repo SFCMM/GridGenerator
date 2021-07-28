@@ -36,6 +36,18 @@ static const GString SP5{"          "};
 static const GString SP6{"            "};
 static const GString SP7{"              "};
 
+/// Return maximum number of children per cell
+template <GInt NDIM>
+static constexpr inline auto maxNoChildren() -> GInt {
+  return gcem::pow(2, NDIM);
+}
+
+/// Return maximum number of Neighbors per cell
+template <GInt NDIM>
+static constexpr inline auto maxNoNghbrs() -> GInt {
+  return 2 * NDIM;
+}
+
 
 // todo: replace with constant expression function
 static constexpr std::array<std::array<GDouble, MAX_DIM>, maxNoChildren<MAX_DIM>()> childDir = {{

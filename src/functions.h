@@ -1,8 +1,10 @@
 #ifndef GRIDGENERATOR_FUNCTIONS_H
 #define GRIDGENERATOR_FUNCTIONS_H
+#include <bitset>
 #include <gcem.hpp>
 #include <sstream>
 #include "constants.h"
+//#include "macros.h"
 #include "types.h"
 
 
@@ -26,11 +28,6 @@ inline auto strStreamify(std::array<T, LENGTH> in) -> std::stringstream {
   return str;
 }
 
-/// Return maximum number of children per cell
-template <GInt NDIM>
-static constexpr inline auto maxNoChildren() -> GInt {
-  return gcem::pow(2, NDIM);
-}
 
 // todo: implement this...
 // static constexpr inline auto nghbrInside(const GInt childId, const GInt dir) -> GInt{
@@ -57,21 +54,15 @@ static constexpr inline auto maxNoChildren() -> GInt {
 //     }
 // }
 
-/// Return maximum number of Neighbors per cell
-template <GInt NDIM>
-static constexpr inline auto maxNoNghbrs() -> GInt {
-  return 2 * NDIM;
-}
-
-static constexpr inline auto oppositeDir(const GInt dir) -> GInt{
+static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
   return 2 * (dir / 2) + 1 - (dir % 2);
-  //0 = 1 ok
-  //1 = 0 ok
-  //2 = 3 ok
+  // 0 = 1 ok
+  // 1 = 0 ok
+  // 2 = 3 ok
   //...
-  //5 = 4 ok
-  //6 = 7 ok
-  //7 = 6 ok
+  // 5 = 4 ok
+  // 6 = 7 ok
+  // 7 = 6 ok
 }
 
 template <class T>
@@ -93,4 +84,63 @@ static constexpr inline void fill(T& lhs, U value) {
   }
 }
 
+namespace hilbert {
+template <GInt NDIM>
+inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) {
+  // todo: make this assert work
+  //    ASSERT(static_cast<GBool>(x.array() >=0) && static_cast<GBool>(x.array() <=1), "Invalid Coordinates");
+  VectorD<NDIM> position = x;
+  GInt          index    = 0;
+
+  for(GInt level = 0; level < hilbertLevel; ++level) {
+    std::bitset<NDIM> quadrant;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      quadrant[dir] = position[dir] >= 0.5;
+    }
+    const GInt hilbertLUTId = quadrant.to_ulong();
+    static_assert(NDIM <= 4, "Not implemented!");
+    // todo: find a more general way (maybe) this is faster than anything else...
+    static constexpr std::array<GInt, 16> hilbertLUT{0, 3, 1, 2, 5, 4, 6, 7, 10, 9, 11, 8, 15, 14, 12, 13};
+
+
+    // Skip the maximum number of cells in the subtrees given by the hilbertLevel
+    // 2D: hilbertLevel =3
+    // l=0: 2^(2*2)=16
+    // l=1: 2^(2)=4
+    // l=2: 2^0=1
+    const GInt multiplier = gcem::pow(2, NDIM * (hilbertLevel - 1 - level));
+    GInt       quad       = hilbertLUT[hilbertLUTId];
+    index += multiplier * quad;
+
+    // rescale to new unit cube of half the size!
+    VectorD<NDIM> transformed = 2 * position;
+    if(quad >= 8) {
+      transformed[3] -= 1;
+      //rotation of the curve
+      if(quad >=12) {
+        --quad;
+      }
+      quad = (quad-6)%4;
+    }
+    if(quad >= 4) {
+      transformed[2] -= 1;
+      //rotation of the curve
+      quad = quad % 4 - 1;
+    }
+    if(quad == 1) {
+      transformed[1] -= 1;
+    }
+    if(quad == 2) {
+      transformed[0] -= 1;
+      transformed[1] -= 1;
+    }
+    if(quad == 3) {
+      transformed[0] -= 1;
+    }
+
+    position = transformed;
+  }
+  return index;
+}
+} // namespace hilbert
 #endif // GRIDGENERATOR_FUNCTIONS_H
