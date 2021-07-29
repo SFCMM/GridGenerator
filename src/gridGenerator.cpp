@@ -69,7 +69,8 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::Init], "Init", TimeKeeper[Timers::timertotal]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridGeneration], "Create the grid.", TimeKeeper[Timers::timertotal]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridInit], "Init grid.", TimeKeeper[Timers::GridGeneration]);
-  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridMin], "Minlevel grid generation.", TimeKeeper[Timers::GridGeneration]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridPart], "Partitioning grid generation.",
+                         TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridUniform], "Uniform grid generation.",
                          TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridRefinement], "Grid refinement.", TimeKeeper[Timers::GridGeneration]);
@@ -191,7 +192,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     cout << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
   }
 
-  m_grid->setMinLvl(m_minLvl);
+  m_grid->setMinLvl(m_partionLvl);
   m_grid->setMaxLvl(m_maxRefinementLvl);
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
@@ -216,7 +217,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
-  m_grid->createMinLvlGrid();
+  m_grid->createPartitioningGrid();
 
   RECORD_TIMER_START(TimeKeeper[Timers::GridUniform]);
   GInt                     x  = 1;
@@ -242,7 +243,7 @@ template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
 
-  m_minLvl     = required_config_value<GInt>("minLevel");
+  m_partionLvl = required_config_value<GInt>("partionLevel");
   m_uniformLvl = required_config_value<GInt>("uniformLevel");
 
   m_grid->setBoundingBox(opt_config_value<std::vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim - 1)));

@@ -52,7 +52,7 @@ class GridInterface {
   [[nodiscard]] virtual inline auto maxLvl() const -> GInt                       = 0;
 
   //// Grid Generation specific
-  virtual void createMinLvlGrid() = 0;
+  virtual void createPartitioningGrid() = 0;
 
  private:
 };
@@ -192,19 +192,19 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
 
-  void createMinLvlGrid() override {
-    RECORD_TIMER_START(TimeKeeper[Timers::GridMin]);
+  void createPartitioningGrid() override {
+    RECORD_TIMER_START(TimeKeeper[Timers::GridPart]);
     if(m_capacity < 1) {
       TERMM(-1, "Invalid grid capacity.");
     }
 
-    gridgen_log << SP1 << "(3) create minLevel grid with level " << minLvl() << std::endl;
-    std::cout << SP1 << "(3) create minLevel grid with level " << minLvl() << std::endl;
+    gridgen_log << SP1 << "(3) Create partitioning grid with level " << minLvl() << std::endl;
+    std::cout << SP1 << "(3) Create partitioning grid with level " << minLvl() << std::endl;
 
     gridgen_log << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
     std::cout << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
 
-    // use lazy initialization for grid generation and make sure final minLevel grid starts in the beginning
+    // use lazy initialization for grid generation and make sure final partitioning grid starts in the beginning
     if(isEven(minLvl())) {
       // initial cell placed in the beginning
       m_levelOffsets[0] = {0, 1};
@@ -257,7 +257,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
     reorderHilberCurve();
 
-    RECORD_TIMER_STOP(TimeKeeper[Timers::GridMin]);
+    RECORD_TIMER_STOP(TimeKeeper[Timers::GridPart]);
   }
 
   static constexpr auto memorySizePerCell() -> GInt {

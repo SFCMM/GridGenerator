@@ -68,7 +68,7 @@ class GridGenerator {
   GInt m_maxNoOffsprings = DEFAULT_MAXNOOFFSPRINGS;
   // maximum workload of subtree of a partioning cell
   GInt                               m_maxOffspringWorkload = DEFAULT_MAXNOOFFSPRINGS;
-  GInt                               m_minLvl               = -1;
+  GInt                               m_partionLvl           = -1;
   GInt                               m_uniformLvl           = -1;
   GInt                               m_maxRefinementLvl     = -1;
   GBool                              m_dryRun               = false;
