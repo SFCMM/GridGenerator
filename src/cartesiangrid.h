@@ -52,8 +52,9 @@ class GridInterface {
   [[nodiscard]] virtual inline auto maxLvl() const -> GInt                       = 0;
 
   //// Grid Generation specific
-  virtual void createPartitioningGrid() = 0;
-  virtual void uniformRefineGrid(const GInt uniformLvl) = 0;
+  virtual void createPartitioningGrid()                      = 0;
+  virtual void uniformRefineGrid(const GInt uniformLvl)      = 0;
+  virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
 
  private:
 };
@@ -199,8 +200,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Invalid grid capacity.");
     }
 
-    gridgen_log << SP1 << "(3) Create partitioning grid with level " << minLvl() << std::endl;
-    std::cout << SP1 << "(3) Create partitioning grid with level " << minLvl() << std::endl;
+    gridgen_log << SP1 << "Create partitioning grid with level " << minLvl() << std::endl;
+    std::cout << SP1 << "Create partitioning grid with level " << minLvl() << std::endl;
 
     gridgen_log << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
     std::cout << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
@@ -263,46 +264,76 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void uniformRefineGrid(const GInt uniformLevel) override {
     RECORD_TIMER_START(TimeKeeper[Timers::GridUniform]);
-    gridgen_log << SP1 << "(4) Uniformly refine grid to level " <<uniformLevel<< std::endl;
-    std::cout << SP1 << "(4) Uniformly refine grid to level " <<uniformLevel << std::endl;
+    gridgen_log << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
+    std::cout << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
 
-    if(minLvl() == uniformLevel){
+    m_maxLevel = uniformLevel;
+
+    if(minLvl() == uniformLevel) {
       return;
     }
 
     for(GInt l = minLvl(); l < uniformLevel; l++) {
-      m_levelOffsets[l+1]={m_size, m_size + levelSize(m_levelOffsets[l]) * maxNoChildren<NDIM>()};
-      if(m_levelOffsets[l+1].end > m_capacity){
-        outOfMemory(l+1);
+      m_levelOffsets[l + 1] = {m_size, m_size + levelSize(m_levelOffsets[l]) * maxNoChildren<NDIM>()};
+      if(m_levelOffsets[l + 1].end > m_capacity) {
+        outOfMemory(l + 1);
       }
 
-      if(!MPI::isSerial()){
-        //updateHaloOffsets();
+      if(!MPI::isSerial()) {
+        // updateHaloOffsets();
       }
 
       refineGrid(m_levelOffsets, l);
-      if(!MPI::isSerial()){
-        //todo:implement
-        //refineGrid(m_haloOffsets, l);
+      if(!MPI::isSerial()) {
+        // todo:implement
+        // refineGrid(m_haloOffsets, l);
       }
-      m_size = m_levelOffsets[l+1].end;
+      m_size = m_levelOffsets[l + 1].end;
 
       findChildLevelNghbrs(m_levelOffsets, l);
       if(!MPI::isSerial()) {
-        //todo:implement
-        //findChildLevelNeighbors(m_haloOffsets, l);
+        // todo:implement
+        // findChildLevelNeighbors(m_haloOffsets, l);
       }
 
       if(!MPI::isSerial()) {
-        //todo:implement
-//        deleteOutsideCellsParallel(l + 1);
+        // todo:implement
+        //        deleteOutsideCellsParallel(l + 1);
       } else {
         deleteOutsideCells(l + 1);
       }
 
-      m_size = m_levelOffsets[l+1].end;
+      m_size = m_levelOffsets[l + 1].end;
     }
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
+  }
+
+  void refineMarkedCells(const GInt noCellsToRefine) override {
+    if(noCellsToRefine == 0){
+      return;
+    }
+
+    gridgen_log << SP1 << "Refining marked cells to level " << m_maxLevel + 1 << std::endl;
+    std::cout << SP1 << "Refining marked cells to level " << m_maxLevel + 1<< std::endl;
+    // update the offsets
+    m_levelOffsets[m_maxLevel + 1] = {m_size, m_size + noCellsToRefine * maxNoChildren<NDIM>()};
+    if(m_levelOffsets[m_maxLevel + 1].end > m_capacity) {
+      outOfMemory(m_maxLevel + 1);
+    }
+    gridgen_log << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
+    std::cout << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
+
+
+    if(!MPI::isSerial()) {
+      // todo:implement
+      // updateHaloOffsets();
+    }
+
+    // refine marked cells
+    // todo:implement
+    //    refineMarkedCells(m_maxLevel);
+
+    ++m_maxLevel;
   }
 
   static constexpr auto memorySizePerCell() -> GInt {
@@ -333,6 +364,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GInt m_capacity{0};
   GInt m_size{0};
+  GInt m_maxLevel{0};
 
   void outOfMemory(GInt level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;

@@ -172,7 +172,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << "Generating a grid[" << NDIM << "D]" << endl;
   m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>();
 
-  cout << SP1 << "(1) Reading Grid definition" << endl;
+  cout << SP1 << "Reading Grid definition" << endl;
   loadGridDefinition<NDIM>();
   m_grid->setCapacity(m_maxNoCells);
   gridgen_log << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
@@ -197,7 +197,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
 
-  cout << SP1 << "(2) Reading Geometry" << endl;
+  cout << SP1 << "Reading Geometry" << endl;
   m_geometry = std::make_unique<Geometry<NDIM>>(MPI_COMM_WORLD);
   // todo: implement
   //  m_noBndIdsPerSolver.reserve(m_geometry->noNodes());
@@ -228,14 +228,14 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 
   m_grid->uniformRefineGrid(m_uniformLvl);
 
-
   RECORD_TIMER_START(TimeKeeper[Timers::GridRefinement]);
-  GInt y = 1;
-  for(int i = 0; i < 10000; ++i) {
-    y += gamma(2 * 3.14 * NDIM);
+  for(GInt refinedLvl = m_uniformLvl; refinedLvl < m_maxRefinementLvl; ++refinedLvl) {
+    GInt noCellsToRefine = 0;
+    // todo:implement
+    // GInt noCellsToRefine = markCellsForRefinement();
+    m_grid->refineMarkedCells(noCellsToRefine);
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridRefinement]);
-
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridGeneration]);
 }
 
