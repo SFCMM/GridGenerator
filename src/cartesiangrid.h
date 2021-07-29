@@ -53,6 +53,7 @@ class GridInterface {
 
   //// Grid Generation specific
   virtual void createPartitioningGrid() = 0;
+  virtual void uniformRefineGrid(const GInt uniformLvl) = 0;
 
  private:
 };
@@ -260,6 +261,50 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridPart]);
   }
 
+  void uniformRefineGrid(const GInt uniformLevel) override {
+    RECORD_TIMER_START(TimeKeeper[Timers::GridUniform]);
+    gridgen_log << SP1 << "(4) Uniformly refine grid to level " <<uniformLevel<< std::endl;
+    std::cout << SP1 << "(4) Uniformly refine grid to level " <<uniformLevel << std::endl;
+
+    if(minLvl() == uniformLevel){
+      return;
+    }
+
+    for(GInt l = minLvl(); l < uniformLevel; l++) {
+      m_levelOffsets[l+1]={m_size, m_size + levelSize(m_levelOffsets[l]) * maxNoChildren<NDIM>()};
+      if(m_levelOffsets[l+1].end > m_capacity){
+        outOfMemory(l+1);
+      }
+
+      if(!MPI::isSerial()){
+        //updateHaloOffsets();
+      }
+
+      refineGrid(m_levelOffsets, l);
+      if(!MPI::isSerial()){
+        //todo:implement
+        //refineGrid(m_haloOffsets, l);
+      }
+      m_size = m_levelOffsets[l+1].end;
+
+      findChildLevelNghbrs(m_levelOffsets, l);
+      if(!MPI::isSerial()) {
+        //todo:implement
+        //findChildLevelNeighbors(m_haloOffsets, l);
+      }
+
+      if(!MPI::isSerial()) {
+        //todo:implement
+//        deleteOutsideCellsParallel(l + 1);
+      } else {
+        deleteOutsideCells(l + 1);
+      }
+
+      m_size = m_levelOffsets[l+1].end;
+    }
+    RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
+  }
+
   static constexpr auto memorySizePerCell() -> GInt {
     return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) // m_parentId, m_globalId, m_noChildren, m_rfnDistance, m_levelOffsets
            + sizeof(Point<NDIM>)              // m_center
@@ -331,7 +376,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
       const GInt childCellId = offset + childId;
       // todo: replace childDir with constant expression function
-      m_center[childCellId] = m_center[cellId] + HALF * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
+      m_center[childCellId]   = m_center[cellId] + HALF * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
       m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
       m_parentId[childCellId] = cellId;
       m_globalId[childCellId] = childCellId;
@@ -500,14 +545,14 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  void swapCell(GInt idA, GInt idB){
-    copyCell(idA, m_capacity-1);
+  void swapCell(GInt idA, GInt idB) {
+    copyCell(idA, m_capacity - 1);
     copyCell(idB, idA);
-    copyCell(m_capacity-1, idB);
+    copyCell(m_capacity - 1, idB);
   }
 
   void updateParent(const GInt parentId, const GInt oldChildCellId, const GInt newChildCellId) {
-    ASSERT(parentId >=0, "Invalid parentId!");
+    ASSERT(parentId >= 0, "Invalid parentId!");
     for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
       if(m_childIds[parentId].c[childId] == oldChildCellId) {
         m_childIds[parentId].c[childId] = newChildCellId;
@@ -517,7 +562,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void reorderHilberCurve() {
-    gridgen_log << SP2 << "+ reordering grid based on Hilbert curve" <<  std::endl;
+    gridgen_log << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
     std::cout << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
 
     Point<NDIM>       centerOfGravity = Point<NDIM>(cog().data());
@@ -538,16 +583,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       hilbertIds[cellId] = hilbert::index<NDIM>(x, hilbertLevel);
     }
     if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      gridgen_log << "checking duplicated Hilbert Ids"<<  std::endl;
+      gridgen_log << "checking duplicated Hilbert Ids" << std::endl;
       std::vector<GInt> duplicatedIds = checkDuplicateIds(hilbertIds);
       if(!duplicatedIds.empty()) {
-        for(auto id: duplicatedIds){
+        for(auto id : duplicatedIds) {
           GInt cellId = 0;
-          std::cerr<< "duplicated id " << id << std::endl;
-          for(auto hilbertId : hilbertIds){
-            if(id == hilbertId){
-              std::cerr << "cellid " << cellId <<std::endl;
-              std::cerr << m_center[cellId]<<std::endl;
+          std::cerr << "duplicated id " << id << std::endl;
+          for(auto hilbertId : hilbertIds) {
+            if(id == hilbertId) {
+              std::cerr << "cellId " << cellId << std::endl;
+              std::cerr << m_center[cellId] << std::endl;
             }
             ++cellId;
           }
@@ -559,16 +604,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // sort index by hilberId
     std::sort(index.begin(), index.end(), [&](int A, int B) -> bool { return hilbertIds[A] < hilbertIds[B]; });
 
-    for(GInt id = 0; id < m_size; ++id){
+    for(GInt id = 0; id < m_size; ++id) {
       const GInt hilbertPos = index[id];
-      if(id != hilbertPos){
+      if(id != hilbertPos) {
         // is not already in correct position due to swapping
-        if(id != pos[hilbertPos]){
+        if(id != pos[hilbertPos]) {
           swapCell(id, pos[hilbertPos]);
         }
-        GInt tmp = rev[id];
+        GInt tmp             = rev[id];
         rev[pos[hilbertPos]] = tmp;
-        pos[tmp] = pos[hilbertPos];
+        pos[tmp]             = pos[hilbertPos];
       }
     }
 
@@ -581,8 +626,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         hilbertIds[cellId] = hilbert::index<NDIM>(x, hilbertLevel);
       }
       for(GInt cellId = 1; cellId < m_size; ++cellId) {
-        if(hilbertIds[cellId-1]>hilbertIds[cellId]){
-          std::cerr << hilbertIds[cellId-1] << " > " << hilbertIds[cellId] << std::endl;
+        if(hilbertIds[cellId - 1] > hilbertIds[cellId]) {
+          std::cerr << hilbertIds[cellId - 1] << " > " << hilbertIds[cellId] << std::endl;
           TERMM(-1, "Hilbert Ids not ordered correctly!");
         }
       }
