@@ -2,12 +2,25 @@
 #define GRIDGENERATOR_TYPES_H
 #include <cstdint>
 #include <string>
+#include "compiler_config.h"
+#ifdef GCC_COMPILER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wduplicated-branches"
+#endif
+#ifdef CLANG_COMPILER
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#endif
 #include <Eigen/Core>
+#ifdef GCC_COMPILER
 #pragma GCC diagnostic pop
+#endif
+#ifdef CLANG_COMPILER
+#pragma clang diagnostic pop
+#endif
 
 
 using GFloat      = float;

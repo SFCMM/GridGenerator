@@ -86,7 +86,7 @@ static constexpr inline void fill(T& lhs, U value) {
 
 namespace hilbert {
 template <GInt NDIM>
-inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) {
+inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt{
   // todo: make this assert work
   //    ASSERT(static_cast<GBool>(x.array() >=0) && static_cast<GBool>(x.array() <=1), "Invalid Coordinates");
   VectorD<NDIM> position = x;
