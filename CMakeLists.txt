@@ -21,7 +21,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_executable(gridgenerator
         src/main.cpp src/gridGenerator.cpp src/gridGenerator.h src/config.h.in src/log.cpp src/log.h src/macros.h
         src/globalmpi.h src/backtrace.h src/types.h src/sys.h src/timer.h
-        src/timer.cpp src/gmath.h src/compiler_config.h src/globaltimers.h src/cartesiangrid.h src/gtree.h src/gridcell.h src/WeightMethod.h src/geometry.h src/functions.h)
+        src/timer.cpp src/gmath.h src/compiler_config.h src/globaltimers.h src/cartesiangrid.h src/gtree.h
+        src/gridcell.h src/WeightMethod.h src/geometry.h src/functions.h src/IO.h)
 
 
 #TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)

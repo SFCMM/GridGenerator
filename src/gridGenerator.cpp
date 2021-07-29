@@ -217,13 +217,13 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   gridgen_log << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
-  //create partitioning grid first, which is done without MPI parallelization
+  // create partitioning grid first, which is done without MPI parallelization
   m_grid->createPartitioningGrid();
 
-  if(!MPI::isSerial()){
-    //todo:implement
+  if(!MPI::isSerial()) {
+    // todo:implement
     TERMM(-1, "Not implemented");
-    //m_grid->setupMPIComm();
+    // m_grid->setupMPIComm();
   }
 
   m_grid->uniformRefineGrid(m_uniformLvl);
@@ -237,6 +237,10 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridRefinement]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridGeneration]);
+
+  RECORD_TIMER_START(TimeKeeper[Timers::IO]);
+  m_grid->save();
+  RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
@@ -246,7 +250,7 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
   m_partionLvl = required_config_value<GInt>("partitionLevel");
   m_uniformLvl = required_config_value<GInt>("uniformLevel");
-  if(m_partionLvl > m_uniformLvl){
+  if(m_partionLvl > m_uniformLvl) {
     TERMM(-1, "Invalid definition of grid level partitionLevel >= uniformLevel");
   }
 
@@ -254,7 +258,7 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
   m_maxRefinementLvl = m_uniformLvl;
   m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
-  if(m_maxRefinementLvl < m_uniformLvl){
+  if(m_maxRefinementLvl < m_uniformLvl) {
     TERMM(-1, "Invalid definition of grid level uniformLevel >= maxRfnmtLvl");
   }
 

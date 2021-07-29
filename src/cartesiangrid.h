@@ -3,6 +3,7 @@
 
 #include <gcem.hpp>
 
+#include "IO.h"
 #include "globaltimers.h"
 #include "gtree.h"
 #include "macros.h"
@@ -55,6 +56,9 @@ class GridInterface {
   virtual void createPartitioningGrid()                      = 0;
   virtual void uniformRefineGrid(const GInt uniformLvl)      = 0;
   virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
+
+  ////IO
+  virtual void save() = 0;
 
  private:
 };
@@ -309,12 +313,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void refineMarkedCells(const GInt noCellsToRefine) override {
-    if(noCellsToRefine == 0){
+    if(noCellsToRefine == 0) {
       return;
     }
 
     gridgen_log << SP1 << "Refining marked cells to level " << m_maxLevel + 1 << std::endl;
-    std::cout << SP1 << "Refining marked cells to level " << m_maxLevel + 1<< std::endl;
+    std::cout << SP1 << "Refining marked cells to level " << m_maxLevel + 1 << std::endl;
     // update the offsets
     m_levelOffsets[m_maxLevel + 1] = {m_size, m_size + noCellsToRefine * maxNoChildren<NDIM>()};
     if(m_levelOffsets[m_maxLevel + 1].end > m_capacity) {
@@ -335,6 +339,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     ++m_maxLevel;
   }
+
+  void save() override { ASCII::writePointsCSV<NDIM>("Test", m_size-1, m_center); }
 
   static constexpr auto memorySizePerCell() -> GInt {
     return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) // m_parentId, m_globalId, m_noChildren, m_rfnDistance, m_levelOffsets

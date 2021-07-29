@@ -131,4 +131,7 @@ static constexpr std::array<std::array<GDouble, maxNoNghbrs<MAX_DIM>()>, maxNoCh
     }};
 
 
+namespace coordinate {
+static constexpr std::array<char, 4> name = {'x', 'y', 'z', 'w'};
+}
 #endif
