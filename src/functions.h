@@ -151,13 +151,14 @@ inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt {
 } // namespace hilbert
 
 inline auto checkDuplicateIds(const std::vector<GInt>& ids) -> std::vector<GInt> {
-  std::map<GInt, GInt> countMap;
+  std::unordered_map<GInt, GInt> countMap;
 
   // Iterate over the vector and store the frequency of each element in map
   for(const auto& elem : ids) {
     const auto [it, success] = countMap.insert(std::pair<GInt, GInt>(elem, 1));
     if(!success) {
-      it->second++;
+      //todo: using *it* produces a warning... (7/2021)
+      countMap[elem]++;
     }
   }
   // Output for elements with more than count 1
