@@ -314,8 +314,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
            "Invalid refinement level! " + std::to_string(level + 1) + ">" + std::to_string(maxLvl()));
 
     // refine all cells on the given level
+    GInt cellCount = 0;
     for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
-      refineCell(cellId, levelOffset[level + 1].begin);
+      refineCell(cellId, levelOffset[level + 1].begin + cellCount * maxNoChildren<NDIM>());
+      ++cellCount;
     }
   }
 
@@ -329,7 +331,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
       const GInt childCellId = offset + childId;
       // todo: replace childDir with constant expression function
-      m_center[childCellId]   = m_center[cellId] + HALF * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
+      m_center[childCellId] = m_center[cellId] + HALF * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
       m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
       m_parentId[childCellId] = cellId;
       m_globalId[childCellId] = childCellId;
@@ -462,13 +464,14 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  auto pointIsInside(const Point<NDIM>& center) const -> GBool {
+  auto pointIsInside(const Point<NDIM>& /*center*/) const -> GBool {
     // todo: implement
     return true;
   }
 
   void copyCell(const GInt from, const GInt to) {
     ASSERT(!property(from, CellProperties::Del), "Invalid cell to be copied!");
+    TERMM(-1, "Not yet tested!");
 
     m_properties[to] = m_properties[from];
     m_level[to]      = m_level[from];
@@ -479,24 +482,24 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_childIds[to]   = m_childIds[from];
     m_noChildren[to] = m_noChildren[from];
 
-    for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir){
-      if(m_nghbrIds[to].n[dir] != INVALID_CELLID){
+    for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
+      if(m_nghbrIds[to].n[dir] != INVALID_CELLID) {
         m_nghbrIds[m_nghbrIds[to].n[dir]].n[oppositeDir(dir)] = to;
       }
     }
 
     updateParent(m_parentId[to], from, to);
 
-    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId){
-      if(m_childIds[to].c[childId]!=INVALID_CELLID){
+    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+      if(m_childIds[to].c[childId] != INVALID_CELLID) {
         m_parentId[m_childIds[to].c[childId]] = to;
       }
     }
   }
 
-  void updateParent(const GInt parentId, const GInt oldChildCellId, const GInt newChildCellId){
-    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId){
-      if(m_childIds[parentId].c[childId] == oldChildCellId){
+  void updateParent(const GInt parentId, const GInt oldChildCellId, const GInt newChildCellId) {
+    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+      if(m_childIds[parentId].c[childId] == oldChildCellId) {
         m_childIds[parentId].c[childId] = newChildCellId;
         return;
       }
@@ -505,19 +508,48 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void reorderHilberCurve() {
-    Point<NDIM> centerOfGravity =  Point<NDIM>(cog().data());
-    std::vector<GInt> hilberIds(m_size);
+    gridgen_log << SP2 << "+ reordering grid based on Hilbert curve" <<  std::endl;
+    std::cout << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
 
-    GInt hilverLevel = minLvl();
-    for(GInt cellId = 0; cellId < m_size; ++cellId){
-      //Normalization to unit cube
-      //array() since there is no scalar addition for vectors...
-      Point<NDIM> x = ((m_center[cellId] - centerOfGravity).array() + HALF * lengthOnLvl(0))/lengthOnLvl(0);
-      hilberIds[cellId] = hilbert::index<NDIM>(x, hilverLevel);
+    Point<NDIM>       centerOfGravity = Point<NDIM>(cog().data());
+    std::vector<GInt> hilbertIds(m_size);
+    std::vector<GInt> index(m_size);
+    // generate index
+    std::iota(index.begin(), index.end(), 0);
+
+    GInt hilbertLevel = minLvl();
+    for(GInt cellId = 0; cellId < m_size; ++cellId) {
+      // Normalization to unit cube
+      // array() since there is no scalar addition for vectors...
+      Point<NDIM> x      = ((m_center[cellId] - centerOfGravity).array() + HALF * lengthOnLvl(0)) / lengthOnLvl(0);
+      hilbertIds[cellId] = hilbert::index<NDIM>(x, hilbertLevel);
+    }
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      gridgen_log << "checking duplicated Hilbert Ids"<<  std::endl;
+      std::vector<GInt> duplicatedIds = checkDuplicateIds(hilbertIds);
+      if(!duplicatedIds.empty()) {
+        for(auto id: duplicatedIds){
+          GInt cellId = 0;
+          std::cerr<< "duplicated id " << id << std::endl;
+          for(auto hilbertId : hilbertIds){
+            if(id == hilbertId){
+              std::cerr << "cellid " << cellId <<std::endl;
+              std::cerr << m_center[cellId]<<std::endl;
+            }
+            ++cellId;
+          }
+        }
+        TERMM(-1, "Duplicated Hilbert Ids found!");
+      }
     }
 
-  }
+    // sort index by hilberId
+    std::sort(index.begin(), index.end(), [&](int A, int B) -> bool { return hilbertIds[A] < hilbertIds[B]; });
 
+    for(auto val : index) {
+      cerr0 << val << " " << hilbertIds[val] << std::endl;
+    }
+  }
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

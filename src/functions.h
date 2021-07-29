@@ -2,14 +2,15 @@
 #define GRIDGENERATOR_FUNCTIONS_H
 #include <bitset>
 #include <gcem.hpp>
+#include <iostream>
+#include <map>
 #include <sstream>
 #include "constants.h"
-//#include "macros.h"
 #include "types.h"
 
 
 template <GInt LENGTH, class T>
-inline auto strStreamify(std::vector<T> in) -> std::stringstream {
+inline auto strStreamify(const std::vector<T>& in) -> std::stringstream {
   std::stringstream str;
   str << in[0];
   for(GInt i = 1; i < LENGTH; i++) {
@@ -19,7 +20,7 @@ inline auto strStreamify(std::vector<T> in) -> std::stringstream {
 }
 
 template <GInt LENGTH, class T>
-inline auto strStreamify(std::array<T, LENGTH> in) -> std::stringstream {
+inline auto strStreamify(const std::array<T, LENGTH>& in) -> std::stringstream {
   std::stringstream str;
   str << in[0];
   for(GInt i = 1; i < LENGTH; i++) {
@@ -86,7 +87,7 @@ static constexpr inline void fill(T& lhs, U value) {
 
 namespace hilbert {
 template <GInt NDIM>
-inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt{
+inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt {
   // todo: make this assert work
   //    ASSERT(static_cast<GBool>(x.array() >=0) && static_cast<GBool>(x.array() <=1), "Invalid Coordinates");
   VectorD<NDIM> position = x;
@@ -115,17 +116,23 @@ inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt{
     // rescale to new unit cube of half the size!
     VectorD<NDIM> transformed = 2 * position;
     if(quad >= 8) {
+      if(transformed[2] > 1) {
+        transformed[2] -= 1;
+      }
       transformed[3] -= 1;
-      //rotation of the curve
-      if(quad >=12) {
+      // rotation of the curve
+      if(quad >= 12) {
         --quad;
       }
-      quad = (quad-6)%4;
+      quad = (quad - 6) % 4;
     }
     if(quad >= 4) {
       transformed[2] -= 1;
-      //rotation of the curve
+      // rotation of the curve
       quad = quad % 4 - 1;
+      if(quad == -1) {
+        transformed[0] -= 1;
+      }
     }
     if(quad == 1) {
       transformed[1] -= 1;
@@ -137,10 +144,29 @@ inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt{
     if(quad == 3) {
       transformed[0] -= 1;
     }
-
     position = transformed;
   }
   return index;
 }
 } // namespace hilbert
+
+inline auto checkDuplicateIds(const std::vector<GInt>& ids) -> std::vector<GInt> {
+  std::map<GInt, GInt> countMap;
+
+  // Iterate over the vector and store the frequency of each element in map
+  for(const auto& elem : ids) {
+    const auto [it, success] = countMap.insert(std::pair<GInt, GInt>(elem, 1));
+    if(!success) {
+      it->second++;
+    }
+  }
+  // Output for elements with more than count 1
+  std::vector<GInt> duplicated;
+  for(auto& it : countMap) {
+    if(it.second > 1) {
+      duplicated.emplace_back(it.first);
+    }
+  }
+  return duplicated;
+}
 #endif // GRIDGENERATOR_FUNCTIONS_H

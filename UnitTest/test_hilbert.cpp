@@ -90,6 +90,23 @@ TEST(HilbertIndex3D, HandlesZeroInput) {
   EXPECT_EQ(hilbert::index<3>(quadrant7, 2), 63);
   EXPECT_EQ(hilbert::index<3>(quadrant7, 3), 511);
   EXPECT_EQ(hilbert::index<3>(quadrant7, 4), 4095);
+
+  //quadrants with close coordinates!
+  // quadrant spacing level 1 0.5 <- identical id on level 1
+  // quadrant spacing level 2 0.25 <- different id on level 2
+  VectorD<3> quadrantA = {0.375, 0.125, 0.625};
+  VectorD<3> quadrantB = {0.375, 0.125, 0.875};
+  EXPECT_EQ(hilbert::index<3>(quadrantA, 1), 5);
+  EXPECT_EQ(hilbert::index<3>(quadrantA, 2), 43);
+  EXPECT_EQ(hilbert::index<3>(quadrantB, 1), 5);
+  EXPECT_EQ(hilbert::index<3>(quadrantB, 2), 44);
+
+  VectorD<3> quadrantC = {  0.875, 0.125, 0.875};
+  VectorD<3> quadrantD = { 0.625, 0.375, 0.875};
+  EXPECT_EQ(hilbert::index<3>(quadrantC, 1), 4);
+  EXPECT_EQ(hilbert::index<3>(quadrantC, 2), 36);
+  EXPECT_EQ(hilbert::index<3>(quadrantD, 1), 4);
+  EXPECT_EQ(hilbert::index<3>(quadrantD, 2), 38);
 }
 
 TEST(HilbertIndex4D, HandlesZeroInput) {
@@ -140,4 +157,64 @@ TEST(HilbertIndex4D, HandlesZeroInput) {
   EXPECT_EQ(hilbert::index<4>(quadrant7, 2), 119);
   EXPECT_EQ(hilbert::index<4>(quadrant7, 3), 1911);
   EXPECT_EQ(hilbert::index<4>(quadrant7, 4), 30583);
+
+  //quadrants with close coordinates!
+  // quadrant spacing level 1 0.5 <- identical id on level 1
+  // quadrant spacing level 2 0.25 <- different id on level 2
+  VectorD<4> quadrantA = {0.375, 0.125, 0.625, 0.875};
+  VectorD<4> quadrantB = {0.375, 0.125, 0.875, 0.875};
+
+  EXPECT_EQ(hilbert::index<4>(quadrantA, 1), 15);
+  EXPECT_EQ(hilbert::index<4>(quadrantA, 2), 249);
+  EXPECT_EQ(hilbert::index<4>(quadrantB, 1), 15);
+  EXPECT_EQ(hilbert::index<4>(quadrantB, 2), 254);
+
+  VectorD<4> quadrantC = {  0.875, 0.125, 0.875, 0.375};
+  VectorD<4> quadrantD = { 0.625, 0.375, 0.875, 0.375};
+  VectorD<4> quadrantE = { 0.125, 0.625, 0.625, 0.125};
+  VectorD<4> quadrantF = { 0.625, 0.125, 0.875, 0.375};
+
+  EXPECT_EQ(hilbert::index<4>(quadrantD, 1), 4);
+  EXPECT_EQ(hilbert::index<4>(quadrantD, 2), 76);
+  EXPECT_EQ(hilbert::index<4>(quadrantE, 1), 6);
+  EXPECT_EQ(hilbert::index<4>(quadrantE, 2), 96);
+  EXPECT_EQ(hilbert::index<4>(quadrantC, 1), 4);
+  EXPECT_EQ(hilbert::index<4>(quadrantC, 2), 78);
+  EXPECT_EQ(hilbert::index<4>(quadrantF, 1), 4);
+  EXPECT_EQ(hilbert::index<4>(quadrantF, 2), 79);
+
+  VectorD<4> quadrantG = {0.625, 0.125, 0.875, 0.875};
+  VectorD<4> quadrantH = {0.875, 0.125, 0.875, 0.875};
+  EXPECT_EQ(hilbert::index<4>(quadrantG, 1), 14);
+  EXPECT_EQ(hilbert::index<4>(quadrantG, 2), 239);
+  EXPECT_EQ(hilbert::index<4>(quadrantH, 1), 14);
+  EXPECT_EQ(hilbert::index<4>(quadrantH, 2), 238);
+
+  VectorD<4> quadrantI = {0.625, 0.625, 0.875, 0.875};
+  VectorD<4> quadrantJ = {0.625, 0.875, 0.875, 0.875};
+  EXPECT_EQ(hilbert::index<4>(quadrantI, 1), 13);
+  EXPECT_EQ(hilbert::index<4>(quadrantI, 2), 223);
+  EXPECT_EQ(hilbert::index<4>(quadrantJ, 1), 13);
+  EXPECT_EQ(hilbert::index<4>(quadrantJ, 2), 220);
+
+  VectorD<4> quadrantK = {0.625, 0.625, 0.875, 0.375};
+  VectorD<4> quadrantL = {0.875, 0.625, 0.875, 0.375};
+  EXPECT_EQ(hilbert::index<4>(quadrantK, 1), 7);
+  EXPECT_EQ(hilbert::index<4>(quadrantK, 2), 127);
+  EXPECT_EQ(hilbert::index<4>(quadrantL, 1), 7);
+  EXPECT_EQ(hilbert::index<4>(quadrantL, 2), 126);
+
+  VectorD<4> quadrantM = {0.125, 0.625, 0.875, 0.375};
+  VectorD<4> quadrantN = {0.375, 0.625, 0.875, 0.375};
+  EXPECT_EQ(hilbert::index<4>(quadrantM, 1), 6);
+  EXPECT_EQ(hilbert::index<4>(quadrantM, 2), 111);
+  EXPECT_EQ(hilbert::index<4>(quadrantN, 1), 6);
+  EXPECT_EQ(hilbert::index<4>(quadrantN, 2), 110);
+
+  VectorD<4> quadrantO = {0.125, 0.125, 0.875, 0.375};
+  VectorD<4> quadrantP = {0.375, 0.125, 0.875, 0.375};
+  EXPECT_EQ(hilbert::index<4>(quadrantO, 1), 5);
+  EXPECT_EQ(hilbert::index<4>(quadrantO, 2), 95);
+  EXPECT_EQ(hilbert::index<4>(quadrantP, 1), 5);
+  EXPECT_EQ(hilbert::index<4>(quadrantP, 2), 94);
 }
