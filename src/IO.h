@@ -3,9 +3,14 @@
 #include <fstream>
 #include <iostream>
 #include "constants.h"
-#include "types.h"
 #include "macros.h"
+#include "types.h"
 //#include <csv/csv.hpp>
+
+namespace hidden::_detail {
+const std::function<GBool(GInt)> defaultTrue  = [](GInt /*ignored*/) { return true; };
+const std::function<GBool(GInt)> defaultFalse = [](GInt /*ignored*/) { return false; };
+} // namespace hidden::_detail
 
 namespace ASCII {
 // using namespace csv;
@@ -13,7 +18,8 @@ using namespace std;
 
 template <GInt DIM>
 inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                           const std::vector<GString>& index={}, const std::vector<std::vector<GString>>& values={}) {
+                           const std::vector<GString>& index = {}, const std::vector<std::vector<GString>>& values = {},
+                           const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
   ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
   ofstream pointFile;
@@ -25,12 +31,15 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
       pointFile << ",";
     }
   }
-  for(const auto& columnHeader: index){
+  for(const auto& columnHeader : index) {
     pointFile << "," << columnHeader;
   }
   pointFile << "\n";
 
   for(GInt id = 0; id < noValues; ++id) {
+    if(!filter(id)) {
+      continue;
+    }
     const auto& coord = coordinates[id];
     for(GInt i = 0; i < DIM; ++i) {
       pointFile << coord[i];
@@ -38,7 +47,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
         pointFile << ",";
       }
     }
-    for(const auto& column: values){
+    for(const auto& column : values) {
       pointFile << "," << column[id];
     }
     pointFile << "\n";

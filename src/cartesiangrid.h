@@ -258,7 +258,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
       refineGrid(m_levelOffsets, l);
       findChildLevelNghbrs(m_levelOffsets, l);
-      deleteOutsideCells(l+1);
+      deleteOutsideCells(l + 1);
       m_currentHighestLvl++;
     }
 
@@ -343,13 +343,21 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void save() override {
+    std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) {
+      return std::to_integer<GInt>(m_level[cellId]) == m_currentHighestLvl;
+    };
+
+    std::function<GBool(GInt)> isLeaf = [&](GInt cellId) {
+      return m_noChildren[cellId] == 0;
+    };
+
     std::vector<GString>              index = {"Level", "NoChildren"};
     std::vector<std::vector<GString>> values;
     values.emplace_back(toStringVector(m_level, m_size));
     values.emplace_back(toStringVector(m_noChildren, m_size));
 
 
-    ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values);
+    ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values, isHighestLevel);
   }
 
   static constexpr auto memorySizePerCell() -> GInt {
@@ -436,7 +444,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_nghbrIds[childCellId] = {INVALID_CELLID};
 
       // if parent is a boundary cell check for children as well
-      if(property(cellId,CellProperties::IsBndry)){
+      if(property(cellId, CellProperties::IsBndry)) {
         property(childCellId, CellProperties::IsBndry) = cellHasCut(childCellId);
       }
 
@@ -564,13 +572,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto pointIsInside(const Point<NDIM>& center) const -> GBool {
     // todo: implement properly
-    return center.norm() < 0.75+GDoubleEps;
+    return center.norm() < 0.75 + GDoubleEps;
   }
 
   [[nodiscard]] auto cellHasCut(GInt cellId) const -> GBool {
     // todo: implement properly
     const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(m_level[cellId]));
-    return m_center[cellId].norm() < (0.75+(gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength,2)))+GDoubleEps);
+    return m_center[cellId].norm() < (0.75 + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
   }
 
   void copyCell(const GInt from, const GInt to) {
