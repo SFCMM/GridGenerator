@@ -341,12 +341,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void save() override {
-    std::vector<GString>              index = {"Level"};
+    std::vector<GString>              index = {"Level", "NoChildren"};
     std::vector<std::vector<GString>> values;
-    std::vector<GString>              level;
-    std::transform(m_level.begin(), m_level.begin() + m_size, std::back_inserter(level),
-                   [](std::byte b) -> GString { return std::to_string(std::to_integer<GInt>(b)); });
-    values.emplace_back(level);
+    values.emplace_back(toStringVector(m_level, m_size));
+    values.emplace_back(toStringVector(m_noChildren, m_size));
 
 
     ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values);

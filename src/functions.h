@@ -8,9 +8,9 @@
 #include "constants.h"
 #include "types.h"
 
-
+/// Helpers
 template <GInt LENGTH, class T>
-inline auto strStreamify(const std::vector<T>& in) -> std::stringstream {
+static inline auto strStreamify(const std::vector<T>& in) -> std::stringstream {
   std::stringstream str;
   str << in[0];
   for(GInt i = 1; i < LENGTH; i++) {
@@ -20,7 +20,7 @@ inline auto strStreamify(const std::vector<T>& in) -> std::stringstream {
 }
 
 template <GInt LENGTH, class T>
-inline auto strStreamify(const std::array<T, LENGTH>& in) -> std::stringstream {
+static inline auto strStreamify(const std::array<T, LENGTH>& in) -> std::stringstream {
   std::stringstream str;
   str << in[0];
   for(GInt i = 1; i < LENGTH; i++) {
@@ -29,42 +29,34 @@ inline auto strStreamify(const std::array<T, LENGTH>& in) -> std::stringstream {
   return str;
 }
 
+template<typename T>
+static inline auto toStringVector(const std::vector<T>& in, GInt size=-1) -> std::vector<GString>{
+  std::vector<GString>              string_vector;
 
-// todo: implement this...
-// static constexpr inline auto nghbrInside(const GInt childId, const GInt dir) -> GInt{
-//
-//   switch (childId){
-//     case 0:// -x,-y,-z,-zz
-//       //2D
-//       //dir = 1 neighbor right +x 1
-//       //dir = 3 neighbor up +y 2
-//       //3D
-//       //dir = 5 neighbor up chilId + 2^(NDIM-1) = 4
-//       //4D
-//       //dir = 7 childId + 2^NDIM = 8
-//     case 1: //+x -y -z -zz
-//       //2D
-//       //dir = 0 neighbor left +x 0
-//       //dir = 3 neighbor up +y 3
-//       //3D
-//       //dir = 5 neighbor up chilId + 2^(NDIM-1) = 5
-//       //4D
-//       //dir = 8 childId + 2^NDIM = 9
-//       default:
-//       return -1;
-//     }
-// }
+  if(size==-1){
+    size = in.size();
+  }
 
-static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
-  return 2 * (dir / 2) + 1 - (dir % 2);
-  // 0 = 1 ok
-  // 1 = 0 ok
-  // 2 = 3 ok
-  //...
-  // 5 = 4 ok
-  // 6 = 7 ok
-  // 7 = 6 ok
+  std::transform(in.begin(), in.begin() + size, std::back_inserter(string_vector),
+                 [](T b) -> GString { return std::to_string(b); });
+  return string_vector;
 }
+
+template<>
+inline auto toStringVector<std::byte>(const std::vector<std::byte>& in, GInt size) -> std::vector<GString>{
+  std::vector<GString>              string_vector;
+
+  if(size==-1){
+    size = in.size();
+  }
+
+  std::transform(in.begin(), in.begin() + size, std::back_inserter(string_vector),
+                 [](std::byte b) -> GString { return std::to_string(std::to_integer<GInt>(b)); });
+  return string_vector;
+}
+
+
+
 
 template <class T>
 static constexpr inline auto isEven(T num) -> GBool {
@@ -84,6 +76,21 @@ static constexpr inline void fill(T& lhs, U value) {
     lhs[i] = static_cast<T>(value);
   }
 }
+
+
+/// Cartesian grid stuff!
+//todo: move this some where else!
+static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
+  return 2 * (dir / 2) + 1 - (dir % 2);
+  // 0 = 1 ok
+  // 1 = 0 ok
+  // 2 = 3 ok
+  //...
+  // 5 = 4 ok
+  // 6 = 7 ok
+  // 7 = 6 ok
+}
+
 
 namespace hilbert {
 template <GInt NDIM>
@@ -157,7 +164,7 @@ inline auto checkDuplicateIds(const std::vector<GInt>& ids) -> std::vector<GInt>
   for(const auto& elem : ids) {
     const auto [it, success] = countMap.insert(std::pair<GInt, GInt>(elem, 1));
     if(!success) {
-      //todo: using *it* produces a warning... (7/2021)
+      // todo: using *it* produces a warning... (7/2021)
       countMap[elem]++;
     }
   }
