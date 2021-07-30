@@ -1,17 +1,15 @@
 {
   "dry-run": true,
-  "dim": 4,
-  "partitionLevel": 4,
-  "uniformLevel": 5,
-  "maxNoCells": 2000000,
+  "dim": 3,
+  "partitionLevel": 7,
+  "uniformLevel": 8,
+  "maxNoCells": 5000000,
   "boundingBox": [
-    0,
+    -1.0,
     1.0,
-    0.0,
+    -1.0,
     1.0,
-    0.0,
-    1.0,
-    0,
+    -1.0,
     1.0
   ],
   "unused-value": "unused dummy"

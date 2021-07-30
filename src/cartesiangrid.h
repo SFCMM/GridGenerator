@@ -258,8 +258,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
       refineGrid(m_levelOffsets, l);
       findChildLevelNghbrs(m_levelOffsets, l);
-      deleteOutsideCells(l + 1);
+      deleteOutsideCells(l+1);
+      m_currentHighestLvl++;
     }
+
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
     reorderHilberCurve();
 
@@ -271,7 +273,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     gridgen_log << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
     std::cout << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
 
-    m_maxLevel = uniformLevel;
+    m_currentHighestLvl = uniformLevel;
 
     if(minLvl() == uniformLevel) {
       return;
@@ -317,12 +319,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       return;
     }
 
-    gridgen_log << SP1 << "Refining marked cells to level " << m_maxLevel + 1 << std::endl;
-    std::cout << SP1 << "Refining marked cells to level " << m_maxLevel + 1 << std::endl;
+    gridgen_log << SP1 << "Refining marked cells to level " << m_currentHighestLvl + 1 << std::endl;
+    std::cout << SP1 << "Refining marked cells to level " << m_currentHighestLvl + 1 << std::endl;
     // update the offsets
-    m_levelOffsets[m_maxLevel + 1] = {m_size, m_size + noCellsToRefine * maxNoChildren<NDIM>()};
-    if(m_levelOffsets[m_maxLevel + 1].end > m_capacity) {
-      outOfMemory(m_maxLevel + 1);
+    m_levelOffsets[m_currentHighestLvl + 1] = {m_size, m_size + noCellsToRefine * maxNoChildren<NDIM>()};
+    if(m_levelOffsets[m_currentHighestLvl + 1].end > m_capacity) {
+      outOfMemory(m_currentHighestLvl + 1);
     }
     gridgen_log << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
     std::cout << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
@@ -335,9 +337,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     // refine marked cells
     // todo:implement
-    //    refineMarkedCells(m_maxLevel);
+    //    refineMarkedCells(m_currentHighestLvl);
 
-    ++m_maxLevel;
+    ++m_currentHighestLvl;
   }
 
   void save() override {
@@ -378,7 +380,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GInt m_capacity{0};
   GInt m_size{0};
-  GInt m_maxLevel{0};
+  GInt m_currentHighestLvl{0};
 
   void outOfMemory(GInt level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
@@ -432,6 +434,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_properties[childCellId].reset();
       m_childIds[childCellId] = {INVALID_CELLID};
       m_nghbrIds[childCellId] = {INVALID_CELLID};
+
+      // if parent is a boundary cell check for children as well
+      if(property(cellId,CellProperties::IsBndry)){
+        property(childCellId, CellProperties::IsBndry) = cellHasCut(childCellId);
+      }
 
       // check for cuts with the geometry
       // todo: implement
@@ -555,9 +562,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  auto pointIsInside(const Point<NDIM>& /*center*/) const -> GBool {
-    // todo: implement
-    return true;
+  [[nodiscard]] auto pointIsInside(const Point<NDIM>& center) const -> GBool {
+    // todo: implement properly
+    return center.norm() < 0.75+GDoubleEps;
+  }
+
+  [[nodiscard]] auto cellHasCut(GInt cellId) const -> GBool {
+    // todo: implement properly
+    const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(m_level[cellId]));
+    return m_center[cellId].norm() < (0.75+(gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength,2)))+GDoubleEps);
   }
 
   void copyCell(const GInt from, const GInt to) {
