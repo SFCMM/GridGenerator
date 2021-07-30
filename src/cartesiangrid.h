@@ -190,11 +190,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_capacity = capacity;
   }
   void setMinLvl(const GInt _minLvl) override {
-    m_levelOffsets.resize(_minLvl);
+    m_levelOffsets.resize(_minLvl+1);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
   }
   void setMaxLvl(const GInt _maxLvl) override {
-    m_levelOffsets.resize(_maxLvl);
+    m_levelOffsets.resize(_maxLvl+1);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
 
@@ -249,7 +249,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       } else {
         const GInt newLevelEnd = (prevLevelNoCells)*maxNoChildren<NDIM>();
         // from the start to the maximum number of cells at the current level
-        m_levelOffsets[l + 1] = {0, newLevelEnd};
+        m_levelOffsets.at(l + 1) = {0, newLevelEnd};
 
         if(prevLevelBegin < newLevelEnd) {
           outOfMemory(l + 1);
@@ -340,7 +340,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     ++m_maxLevel;
   }
 
-  void save() override { ASCII::writePointsCSV<NDIM>("Test", m_size-1, m_center); }
+  void save() override { ASCII::writePointsCSV<NDIM>("Test", m_size, m_center); }
 
   static constexpr auto memorySizePerCell() -> GInt {
     return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) // m_parentId, m_globalId, m_noChildren, m_rfnDistance, m_levelOffsets

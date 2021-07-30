@@ -16,7 +16,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   pointFile.open(fileName+".csv");
 
   for(GInt id = 0; id < DIM; ++id){
-    pointFile<<coordinate::name[id];
+    pointFile<<coordinate::name.at(id);
     if(id+1<DIM){
       pointFile <<",";
     }
@@ -26,7 +26,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   for(GInt id = 0; id< noValues; ++id){
     const auto& coord = coordinates[id];
     for(GInt i = 0; i< DIM; ++i){
-      pointFile << coord[DIM];
+      pointFile << coord[i];
       if(i+1<DIM){
         pointFile <<",";
       }
