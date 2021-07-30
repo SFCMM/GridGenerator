@@ -3,7 +3,7 @@
 #include "config.h"
 #include "constants.h"
 #include "gridGenerator.h"
-#include "sys.h"
+#include "util/sys.h"
 
 class AppConfiguration {
  public:

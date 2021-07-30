@@ -9,8 +9,8 @@
 #include "geometry.h"
 #include "globalmpi.h"
 #include "gridGenerator.h"
-#include "sys.h"
 #include "timer.h"
+#include "util/sys.h"
 
 #ifdef _OPENMP
 #include <omp.h>

@@ -8,6 +8,21 @@
 #include "IO.h"
 #include "macros.h"
 #include "timer.h"
+#include "math/hilbert.h"
+
+namespace cartesian {
+static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
+  return 2 * (dir / 2) + 1 - (dir % 2);
+  // 0 = 1 ok
+  // 1 = 0 ok
+  // 2 = 3 ok
+  //...
+  // 5 = 4 ok
+  // 6 = 7 ok
+  // 7 = 6 ok
+}
+} // namespace cartesian
+
 
 struct LevelOffsetType {
  public:
@@ -521,7 +536,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
           const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
           if(nghbrCellId != INVALID_CELLID) {
-            m_nghbrIds[nghbrCellId].n[oppositeDir(dir)] = INVALID_CELLID;
+            m_nghbrIds[nghbrCellId].n[cartesian::oppositeDir(dir)] = INVALID_CELLID;
           }
         }
         if(cellId != m_levelOffsets[level].end - 1) {
@@ -597,7 +612,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
       if(m_nghbrIds[to].n[dir] != INVALID_CELLID) {
-        m_nghbrIds[m_nghbrIds[to].n[dir]].n[oppositeDir(dir)] = to;
+        m_nghbrIds[m_nghbrIds[to].n[dir]].n[cartesian::oppositeDir(dir)] = to;
       }
     }
 

@@ -11,7 +11,7 @@ struct APPROX_ERROR {};
 
 template <class T, class U>
 auto approx(const T& /*unused*/, const U& /*unused*/, const T /*unused*/) -> GBool {
-  using error = typename detail_::APPROX_ERROR<T, U>::ERROR_BOTH_TYPES_MUST_BE_MFloats;
+  using error = typename detail_::APPROX_ERROR<T, U>::ERROR_BOTH_TYPES_MUST_BE_GDouble;
   error();
   return true;
 }

@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "math/hilbert.h"
 #include "gtest/gtest.h"
 
 TEST(HilbertIndex2D, HandlesZeroInput) {

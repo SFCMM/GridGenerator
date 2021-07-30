@@ -11,9 +11,9 @@
 #include <iostream>
 #include <mpi.h>
 #include <sstream>
-#include "backtrace.h"
 #include "globalmpi.h"
 #include "log.h"
+#include "util/backtrace.h"
 
 
 /// Define macros to stringify literal and expanded macro arguments

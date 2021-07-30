@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 #include "constants.h"
-#include "gmath.h"
 #include "macros.h"
+#include "math/gmath.h"
 #include "types.h"
 
 
