@@ -4,32 +4,42 @@
 #include <iostream>
 #include "constants.h"
 #include "types.h"
+#include "macros.h"
 //#include <csv/csv.hpp>
 
 namespace ASCII {
-//using namespace csv;
+// using namespace csv;
 using namespace std;
 
 template <GInt DIM>
-inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates) {
-  ofstream pointFile;
-  pointFile.open(fileName+".csv");
+inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
+                           const std::vector<GString>& index={}, const std::vector<std::vector<GString>>& values={}) {
+  ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
-  for(GInt id = 0; id < DIM; ++id){
-    pointFile<<coordinate::name.at(id);
-    if(id+1<DIM){
-      pointFile <<",";
+  ofstream pointFile;
+  pointFile.open(fileName + ".csv");
+
+  for(GInt id = 0; id < DIM; ++id) {
+    pointFile << coordinate::name.at(id);
+    if(id + 1 < DIM) {
+      pointFile << ",";
     }
   }
-  pointFile<<"\n";
+  for(const auto& columnHeader: index){
+    pointFile << "," << columnHeader;
+  }
+  pointFile << "\n";
 
-  for(GInt id = 0; id< noValues; ++id){
+  for(GInt id = 0; id < noValues; ++id) {
     const auto& coord = coordinates[id];
-    for(GInt i = 0; i< DIM; ++i){
+    for(GInt i = 0; i < DIM; ++i) {
       pointFile << coord[i];
-      if(i+1<DIM){
-        pointFile <<",";
+      if(i + 1 < DIM) {
+        pointFile << ",";
       }
+    }
+    for(const auto& column: values){
+      pointFile << "," << column[id];
     }
     pointFile << "\n";
   }

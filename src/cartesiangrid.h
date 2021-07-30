@@ -3,9 +3,9 @@
 
 #include <gcem.hpp>
 
-#include "IO.h"
 #include "globaltimers.h"
 #include "gtree.h"
+#include "IO.h"
 #include "macros.h"
 #include "timer.h"
 
@@ -190,11 +190,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_capacity = capacity;
   }
   void setMinLvl(const GInt _minLvl) override {
-    m_levelOffsets.resize(_minLvl+1);
+    m_levelOffsets.resize(_minLvl + 1);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
   }
   void setMaxLvl(const GInt _maxLvl) override {
-    m_levelOffsets.resize(_maxLvl+1);
+    m_levelOffsets.resize(_maxLvl + 1);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
 
@@ -340,7 +340,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     ++m_maxLevel;
   }
 
-  void save() override { ASCII::writePointsCSV<NDIM>("Test", m_size, m_center); }
+  void save() override {
+    std::vector<GString>              index = {"Level"};
+    std::vector<std::vector<GString>> values;
+    std::vector<GString>              level;
+    std::transform(m_level.begin(), m_level.begin() + m_size, std::back_inserter(level),
+                   [](std::byte b) -> GString { return std::to_string(std::to_integer<GInt>(b)); });
+    values.emplace_back(level);
+
+
+    ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values);
+  }
 
   static constexpr auto memorySizePerCell() -> GInt {
     return sizeof(GInt) * (1 + 1 + 1 + 1 + 2) // m_parentId, m_globalId, m_noChildren, m_rfnDistance, m_levelOffsets
