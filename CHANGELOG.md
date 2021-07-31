@@ -37,9 +37,10 @@
 - Add CMake build profiles.
 - Add bench cmd command.
 - Run unit test from CI.
-- Add option to generate initial doxygen documentation.
 - Add documentation in Readme.md of all configuration options.
 ## Done:
+- Add option to generate initial doxygen documentation.
+
 
 # V0.0.1
 - Generate basic uniform grid
