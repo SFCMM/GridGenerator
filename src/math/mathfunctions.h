@@ -2,7 +2,6 @@
 #define MATHFUNCTIONS_H
 #include <gcem.hpp>
 #include <cmath>
-#include "types.h"
 
 namespace detail_ {
 template <class T, class U>
@@ -15,7 +14,7 @@ struct APPROX_ERROR {};
 /// \tparam U
 /// \return
 template <class T, class U>
-constexpr inline auto approx(const T& /*unused*/, const U& /*unused*/, const T& /*unused*/) -> GBool {
+constexpr inline auto approx(const T& /*unused*/, const U& /*unused*/, const T& /*unused*/) -> bool {
   using error = typename detail_::APPROX_ERROR<T, U>::ERROR_BOTH_TYPES_MUST_BE_GDouble_or_GFloat;
   error();
   return true;

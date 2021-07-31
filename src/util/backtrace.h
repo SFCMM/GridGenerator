@@ -6,6 +6,8 @@
 #include <sstream>
 #include "compiler_config.h"
 
+//todo: activate
+
 #ifdef GCC_COMPILER
 // Needed for stack trace
 #include <cxxabi.h>
