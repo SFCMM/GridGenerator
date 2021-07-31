@@ -13,7 +13,7 @@
 #include <vector>
 #include "constants.h"
 #include "macros.h"
-#include "math/gmath.h"
+#include "math/mathfunctions.h"
 #include "types.h"
 
 

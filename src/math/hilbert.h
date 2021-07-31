@@ -1,5 +1,5 @@
-#ifndef GRIDGENERATOR_HILBERT_H
-#define GRIDGENERATOR_HILBERT_H
+#ifndef HILBERT_H
+#define HILBERT_H
 #include "types.h"
 #include <bitset>
 #include <gcem.hpp>
@@ -77,4 +77,4 @@ inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt {
   return index;
 }
 } // namespace hilbert
-#endif // GRIDGENERATOR_HILBERT_H
+#endif // HILBERT_H
