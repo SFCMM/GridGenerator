@@ -25,7 +25,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   ofstream pointFile;
   static constexpr unsigned int N = 64;
   static constexpr unsigned int buffer_size = 1024*N;
-  char buffer[buffer_size];
+  std::array<char, buffer_size> buffer{};
   pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
   pointFile.open(fileName + ".csv");
 
