@@ -34,45 +34,12 @@ inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt {
     // l=1: 2^(2)=4
     // l=2: 2^0=1
     const GInt multiplier = gcem::pow(2, NDIM * (hilbertLevel - 1 - level));
-    GInt       quad       = hilbertLUT[hilbertLUTId];
-    index += multiplier * quad;
+    index += multiplier * hilbertLUT[hilbertLUTId];
 
     // rescale to new unit cube of half the size!
-    VectorD<NDIM> transformed = 2 * position;
-    if(quad >= 8) {
-      if(transformed[2] > 1) {
-        transformed[2] -= 1;
-      }
-      transformed[3] -= 1;
-      // rotation of the curve
-      if(quad >= 12) {
-        --quad;
-      }
-      quad = (quad - 6) % 4;
+    for(GInt dir = 0; dir < NDIM; ++dir){
+      position[dir] = 2 * position[dir] - quadrant[dir];
     }
-    if(quad >= 4) {
-      transformed[2] -= 1;
-      // rotation of the curve
-      quad = quad % 4 - 1;
-      if(quad == -1) {
-        transformed[0] -= 1;
-      }
-    }
-    switch (quad){
-      case 1:
-        transformed[1] -= 1;
-        break;
-      case 2:
-        transformed[0] -= 1;
-        transformed[1] -= 1;
-        break;
-      case 3:
-        transformed[0] -= 1;
-        break;
-      default:
-        break;
-    }
-    position = transformed;
   }
   return index;
 }
