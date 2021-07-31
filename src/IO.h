@@ -23,6 +23,10 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
   ofstream pointFile;
+  static constexpr unsigned int N = 64;
+  static constexpr unsigned int buffer_size = 1024*N;
+  char buffer[buffer_size];
+  pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
   pointFile.open(fileName + ".csv");
 
   for(GInt id = 0; id < DIM; ++id) {
