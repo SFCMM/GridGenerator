@@ -26,11 +26,12 @@
 - Add python script to analyse performance.
 - Add error for documentation
 - Add doxygen generation to CI
+- (Optimize IO speed by manual buffering.)
+
 
 # V0.0.2
 ## Planned
 - Add analytical geometries cube, rectangular and sphere. 
-- Optimize IO speed by adding buffering.
 - Boundary refinement.
 - Write out VTK Point file (Binary/ASCII).
 - Add OpenMP parallelization.
@@ -40,6 +41,7 @@
 - Add documentation in Readme.md of all configuration options.
 ## Done:
 - Add option to generate initial doxygen documentation.
+- Increase buffer size to 64kb.
 
 
 # V0.0.1
