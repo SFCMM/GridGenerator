@@ -49,30 +49,83 @@ class GridInterface {
  public:
   GridInterface()                     = default;
   virtual ~GridInterface()            = default;
+
+  //deleted constructors not needed
   GridInterface(const GridInterface&) = delete;
   GridInterface(GridInterface&&)      = delete;
   auto operator=(const GridInterface&) -> GridInterface& = delete;
   auto operator=(GridInterface&&) -> GridInterface& = delete;
 
+  ////Setter functions.
+
+  /// Set the bounding box for the current grid.
+  /// \param bbox Provide the bounding box in the following format {x1, x2, y1, y2...}
   virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
+
+  /// Set the maximum number of cells that this grid can use. Can only be called once!
+  /// \param capacity The capacity of this grid object to store cells.
   virtual void setCapacity(GInt capacity)                = 0;
+
+  // todo: remove this function and provide the value in createPartitioningGrid()
   virtual void setMinLvl(const GInt minLvl)              = 0;
+
+  /// Maximum possible level of the grid to store.
+  /// \param maxLvl The maximum possible level the grid object can store.
   virtual void setMaxLvl(const GInt maxLvl)              = 0;
 
+  //// Getter functions.
+
+  /// Get the center of gravity of the grid.
+  /// \return Center of gravity of the grid.
   [[nodiscard]] virtual inline auto cog() const -> std::vector<GDouble>          = 0;
+
+  //todo: rename
+  /// Geometric extent of the grid.
+  /// \return Geometric extent.
   [[nodiscard]] virtual inline auto geomExtent() const -> std::vector<GDouble>   = 0;
+
+  /// The bounding box of the grid.
+  /// \return Bounding box.
   [[nodiscard]] virtual inline auto boundingBox() const -> std::vector<GDouble>  = 0;
-  [[nodiscard]] virtual inline auto decisiveDirection() const -> GDouble         = 0;
+
+  //todo: rename
+  /// Direction of the largest extent of the bounding box.
+  /// \return Direction of largest extent.
+  [[nodiscard]] virtual inline auto decisiveDirection() const -> GInt         = 0;
+
+  /// The length of the cell at a given level.
+  /// \param lvl The level of the cell length.
+  /// \return The length of a cell at the provided level.
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
+
+  //todo: rename
+  ///
+  /// \return
   [[nodiscard]] virtual inline auto minLvl() const -> GInt                       = 0;
+
+  /// The maximum level supported by this grid.
+  /// \return The maximum level this grid can possibly have.
   [[nodiscard]] virtual inline auto maxLvl() const -> GInt                       = 0;
 
+  //todo: add function to get the currently highest level.
+
   //// Grid Generation specific
+  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
+  /// configuration file. The grid up to this level is always produced on a single MPI rank.
   virtual void createPartitioningGrid()                      = 0;
+
+  /// Uniformly refine the grid up to the provided level.
+  /// \param uniformLvl Level of uniform refinement.
   virtual void uniformRefineGrid(const GInt uniformLvl)      = 0;
+
+  /// Refine the cells that have been marked for refinement.
+  /// \param noCellsToRefine The number of cells that have been marked.
   virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
 
+
+  //todo: add the filename as an argument
   ////IO
+  /// Save the grid to a file.
   virtual void save() = 0;
 
  private:
@@ -123,7 +176,7 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto boundingBox() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_boundingBox.begin(), m_boundingBox.end());
   };
-  [[nodiscard]] inline auto decisiveDirection() const -> GDouble override { return m_decisiveDirection; };
+  [[nodiscard]] inline auto decisiveDirection() const -> GInt override { return m_decisiveDirection; };
   [[nodiscard]] inline auto minLvl() const -> GInt override { return m_minLvl; };
   [[nodiscard]] inline auto maxLvl() const -> GInt override { return m_maxLvl; };
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
@@ -144,7 +197,7 @@ class BaseCartesianGrid : public GridInterface {
   // m_center of gravity of the geometry
   std::array<GDouble, NDIM> m_centerOfGravity{NAN};
   // direction of largest extent
-  GDouble m_decisiveDirection{};
+  GInt m_decisiveDirection{};
   // length of the cells on each level basest on the largest extent
   std::array<GDouble, MAX_LVL> m_lengthOnLevel{NAN};
 };
