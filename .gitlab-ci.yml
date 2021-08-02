@@ -22,13 +22,14 @@ UnitTest:
     - make UnitTest -j 2
     - cd UnitTest
     - ./UnitTest --gtest_output="xml:report.xml"
+    - mv report.xml ${CI_PROJECT_DIR}
     - ls -larth
   artifacts:
     when: always
     paths:
-      - report.xml
+      - ${CI_PROJECT_DIR}/report.xml
     reports:
-      junit: report.xml
+      junit: ${CI_PROJECT_DIR}/report.xml
     expire_in: 4 week
 
 
