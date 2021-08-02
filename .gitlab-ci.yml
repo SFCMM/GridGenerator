@@ -16,6 +16,7 @@ stages:
 UnitTest:
   stage: test
   script:
+    - ls -larth
     - make UnitTest
     - cd UnitTest
     - ./UnitTest --gtest_output="xml:report.xml"
