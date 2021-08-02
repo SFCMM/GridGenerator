@@ -28,18 +28,26 @@
 - Add doxygen generation to CI
 - (Optimize IO speed by manual buffering.)
 - Split out common sim libs
+- Setup valgrind and sanitize tests
+- Run coverage within CI
 
 
 # V0.0.2
 ## Planned
-- Add analytical geometries cube, rectangular and sphere. 
 - Boundary refinement.
 - Write out VTK Point file (Binary/ASCII).
 - Add OpenMP parallelization.
-- Add CMake build profiles.
 - Add bench cmd command.
 - Add documentation in Readme.md of all configuration options.
+- Build CI Pipeline from presets
+
+## On-going
+- Add CMake build presets for all build types.
+- Add analytical geometries cube, rectangular and sphere.
+
+
 ## Done:
+- Add Cmake preset
 - Add option to generate initial doxygen documentation.
 - Increase buffer size to 64kb.
 - Run unit test from CI.
