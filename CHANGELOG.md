@@ -27,6 +27,7 @@
 - Add error for documentation
 - Add doxygen generation to CI
 - (Optimize IO speed by manual buffering.)
+- Split out common sim libs
 
 
 # V0.0.2
@@ -37,11 +38,12 @@
 - Add OpenMP parallelization.
 - Add CMake build profiles.
 - Add bench cmd command.
-- Run unit test from CI.
 - Add documentation in Readme.md of all configuration options.
 ## Done:
 - Add option to generate initial doxygen documentation.
 - Increase buffer size to 64kb.
+- Run unit test from CI.
+
 
 
 # V0.0.1
