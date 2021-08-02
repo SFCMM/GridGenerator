@@ -22,11 +22,12 @@ UnitTest:
     - make UnitTest -j 2
     - cd UnitTest
     - ./UnitTest --gtest_output="xml:report.xml"
+    - cd ..
     - ls -larth
   artifacts:
     when: always
     reports:
-      junit: ./report.xml
+      junit: report.xml
 
 
 GNU:
