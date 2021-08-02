@@ -15,7 +15,7 @@ static constexpr GInt    BASE2                   = 2;
 static constexpr GDouble HALF                    = 0.5;
 static constexpr GInt    INVALID_CELLID          = -1;
 static constexpr GInt    KBIT                    = 1024;
-static constexpr GDouble DKBIT                   = 1024;
+static constexpr GDouble DKBIT                   = static_cast<GDouble>(KBIT);
 
 // arbitrary maximum cell level
 static constexpr GInt MAX_LVL = 100;

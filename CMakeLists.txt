@@ -9,7 +9,7 @@ configure_file(src/config.h.in config.h @ONLY)
 
 set(CMAKE_CXX_STANDARD 17)
 
-#todo: move to aux/host file
+#todo: move to presets file
 include_directories(/home/svenb/build/omp411/include)
 link_directories(/home/svenb/build/omp411/lib)
 find_package(MPI REQUIRED)

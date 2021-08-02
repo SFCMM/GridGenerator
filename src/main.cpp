@@ -5,25 +5,32 @@
 #include "gridGenerator.h"
 #include "util/sys.h"
 
+
+namespace internal_ {
+/// Helper object to store some general application configuration options
 class AppConfiguration {
  public:
   auto run(GInt debug) -> int {
-    // todo: replace with switch
-    if(debug == static_cast<GInt>(Debug_Level::no_debug)) {
-      return run<Debug_Level::no_debug>();
+    switch(debug) {
+      case static_cast<GInt>(Debug_Level::no_debug):
+        return run<Debug_Level::no_debug>();
+      case static_cast<GInt>(Debug_Level::min_debug):
+        return run<Debug_Level::min_debug>();
+      case static_cast<GInt>(Debug_Level::debug):
+        return run<Debug_Level::debug>();
+      case static_cast<GInt>(Debug_Level::more_debug):
+        return run<Debug_Level::more_debug>();
+      case static_cast<GInt>(Debug_Level::max_debug):
+        [[fallthrough]];
+      default:
+        return run<Debug_Level::max_debug>();
+        break;
     }
-    if(debug == static_cast<GInt>(Debug_Level::min_debug)) {
-      return run<Debug_Level::min_debug>();
-    }
-    if(debug == static_cast<GInt>(Debug_Level::debug)) {
-      return run<Debug_Level::debug>();
-    }
-    if(debug == static_cast<GInt>(Debug_Level::more_debug)) {
-      return run<Debug_Level::more_debug>();
-    }
-    return run<Debug_Level::max_debug>();
   }
 
+  /// Start point of the main application.
+  /// \tparam DEBUG The debug level that is activated.
+  /// \return The status of the application main run loop. (0 = ok -1 = Error...)
   template <Debug_Level DEBUG>
   auto run() -> int {
     gridgen::GridGenerator<DEBUG> gridGen{};
@@ -31,6 +38,9 @@ class AppConfiguration {
     return gridGen.run();
   }
 
+  /// Set the commandline arguments for later processing.
+  /// \param argc number of commandline arguments
+  /// \param argv string of arguments
   void setCMD(int argc, GChar** argv) {
     m_argc = argc;
     m_argv = argv;
@@ -44,7 +54,13 @@ class AppConfiguration {
 
   GString m_configurationFile = "grid.json";
 };
+} // namespace internal_
 
+
+/// Default entry point of the application. Parse commandline arguments.
+/// \param argc Number of received commandline arguments.
+/// \param argv String of received commandline arguments.
+/// \return The status of the application main run loop. (0 = ok -1 = Error...)
 auto main(int argc, GChar** argv) -> int {
   std::ostringstream tmpBuffer;
   tmpBuffer << "GridGenerator v" << XSTRINGIFY(PROJECT_VER);
@@ -68,7 +84,7 @@ auto main(int argc, GChar** argv) -> int {
     exit(0);
   }
 
-  AppConfiguration gridGenRunner{};
+  internal_::AppConfiguration gridGenRunner{};
   gridGenRunner.setCMD(argc, argv);
 
   GInt debug = result["debug"].as<GInt>();
