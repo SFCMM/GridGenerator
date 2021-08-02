@@ -1,6 +1,8 @@
 #ifndef GRIDGENERATOR_CONFIG_H_IN
 #define GRIDGENERATOR_CONFIG_H_IN
 
+#include "common/types.h"
+
 /// The default max number of offsprings allowed for a partitioning cell.
 static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
 

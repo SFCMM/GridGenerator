@@ -3,7 +3,7 @@
 
 #include <bitset>
 #include "functions.h"
-#include "gridcell.h"
+#include "gridcell_properties.h"
 #include "macros.h"
 
 

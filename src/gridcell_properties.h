@@ -1,5 +1,7 @@
-#ifndef GRIDGENERATOR_GRIDCELL_H
-#define GRIDGENERATOR_GRIDCELL_H
+#ifndef GRIDGENERATOR_GRIDCELL_PROPERTIES_H
+#define GRIDGENERATOR_GRIDCELL_PROPERTIES_H
+//todo: merge both of these enum classes since the bits don't matter!
+
 /// Grid cell properties. (Until 63 bits are used this does not increase memory!)
 // bitsets are initialized to 0!
 enum class GridCellProperties {
@@ -49,4 +51,4 @@ constexpr auto p(const GridGenCellProperties property) -> std::underlying_type<G
 using BitsetType = std::bitset<p(GridGenCellProperties::NumProperties)>;
 } // namespace gridgen::cell
 
-#endif // GRIDGENERATOR_GRIDCELL_H
+#endif // GRIDGENERATOR_GRIDCELL_PROPERTIES_H

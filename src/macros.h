@@ -1,6 +1,6 @@
 #ifndef GRIDGENERATOR_MACROS_H
 #define GRIDGENERATOR_MACROS_H
-#include "compiler_config.h"
+#include "common/compiler_config.h"
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push

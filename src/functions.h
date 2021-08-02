@@ -5,8 +5,8 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include "common/types.h"
 #include "constants.h"
-#include "types.h"
 
 /// Helpers
 template <GInt LENGTH, class T>

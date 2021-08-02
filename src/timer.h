@@ -11,10 +11,10 @@
 #include <unistd.h>
 #include <utility>
 #include <vector>
+#include "common/types.h"
 #include "constants.h"
 #include "macros.h"
 #include "math/mathfunctions.h"
-#include "types.h"
 
 
 #define NEW_TIMER_GROUP(id, groupName) const GInt id = timers().newGroup(groupName)

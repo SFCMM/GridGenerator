@@ -3,8 +3,8 @@
 
 #include <array>
 #include <iostream>
+#include "common/types.h"
 #include "mpi.h"
-#include "types.h"
 
 namespace MPI {
 

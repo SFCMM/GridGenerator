@@ -4,12 +4,12 @@
 #include <json.h>
 #include <ostream>
 
-#include "WeightMethod.h"
 #include "cartesiangrid.h"
+#include "common/types.h"
 #include "geometry.h"
 #include "globaltimers.h"
-#include "gridcell.h"
-#include "types.h"
+#include "gridcell_properties.h"
+#include "WeightMethod.h"
 
 using json = nlohmann::json;
 

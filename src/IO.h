@@ -2,9 +2,9 @@
 #define GRIDGENERATOR_IO_H
 #include <fstream>
 #include <iostream>
+#include "common/types.h"
 #include "constants.h"
 #include "macros.h"
-#include "types.h"
 //#include <csv/csv.hpp>
 
 namespace hidden::_detail {

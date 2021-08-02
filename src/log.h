@@ -5,8 +5,8 @@
 #include <mpi.h>
 #include <sstream>
 #include <vector>
-#include "compiler_config.h"
-#include "types.h"
+#include "common/compiler_config.h"
+#include "common/types.h"
 
 inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 

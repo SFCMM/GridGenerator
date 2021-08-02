@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
-#include "compiler_config.h"
+#include "common/compiler_config.h"
 
 //todo: activate
 

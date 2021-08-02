@@ -4,8 +4,9 @@
 #include <array>
 #include <limits>
 #include <vector>
+#include "common/types.h"
+#include "config.h"
 #include "functions.h"
-#include "types.h"
 
 static constexpr GFloat  GFloatEps  = std::numeric_limits<GFloat>::epsilon();
 static constexpr GDouble GDoubleEps = std::numeric_limits<GDouble>::epsilon();
