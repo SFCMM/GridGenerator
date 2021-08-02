@@ -22,6 +22,7 @@ UnitTest:
     - make UnitTest -j 2
     - cd UnitTest
     - ./UnitTest --gtest_output="xml:report.xml"
+    - ls -larth
   artifacts:
     when: always
     reports:
