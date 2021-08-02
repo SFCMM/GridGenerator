@@ -33,7 +33,7 @@ class AppConfiguration {
   /// \return The status of the application main run loop. (0 = ok -1 = Error...)
   template <Debug_Level DEBUG>
   auto run() -> int {
-    gridgen::GridGenerator<DEBUG> gridGen{};
+    GridGenerator<DEBUG> gridGen{};
     gridGen.init(m_argc, m_argv, m_configurationFile);
     return gridGen.run();
   }

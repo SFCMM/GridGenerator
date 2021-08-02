@@ -38,4 +38,11 @@ using GUint = uint64_t;
 template <GInt NDIM>
 using VectorD = Eigen::Matrix<GDouble, NDIM, 1>;
 
+class NullBuffer : public std::streambuf {
+ public:
+  auto overflow(int c) -> int override { return c; }
+};
+
+inline NullBuffer nullBuffer; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
 #endif // GRIDGENERATOR_TYPES_H

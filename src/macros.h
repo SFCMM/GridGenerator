@@ -11,7 +11,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <sstream>
-#include "globalmpi.h"
+#include "common/globalmpi.h"
 #include "log.h"
 #include "util/backtrace.h"
 

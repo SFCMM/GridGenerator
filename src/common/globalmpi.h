@@ -3,8 +3,9 @@
 
 #include <array>
 #include <iostream>
+#include <mpi.h>
+
 #include "common/types.h"
-#include "mpi.h"
 
 namespace MPI {
 

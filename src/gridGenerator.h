@@ -13,12 +13,6 @@
 
 using json = nlohmann::json;
 
-namespace gridgen {
-class NullBuffer : public std::streambuf {
- public:
-  auto overflow(int c) -> int override { return c; }
-};
-
 template <Debug_Level DEBUG_LEVEL>
 class GridGenerator {
  public:
@@ -34,8 +28,6 @@ class GridGenerator {
   auto run() -> int;
 
  private:
-  NullBuffer nullBuffer;
-
   int m_domainId  = -1;
   int m_noDomains = -1;
 
@@ -64,11 +56,11 @@ class GridGenerator {
 
   GInt m_dim        = -1;
   GInt m_maxNoCells = -1;
-  // maximum size of subtree of a partioning cell
+  // maximum size of subtree of a partitioning cell
   GInt m_maxNoOffsprings = DEFAULT_MAXNOOFFSPRINGS;
-  // maximum workload of subtree of a partioning cell
+  // maximum workload of subtree of a partitioning cell
   GInt                               m_maxOffspringWorkload = DEFAULT_MAXNOOFFSPRINGS;
-  GInt                               m_partionLvl           = -1;
+  GInt                               m_partitionLvl         = -1;
   GInt                               m_uniformLvl           = -1;
   GInt                               m_maxRefinementLvl     = -1;
   GBool                              m_dryRun               = false;
@@ -78,7 +70,5 @@ class GridGenerator {
   std::unique_ptr<GridInterface>     m_grid;
   std::unique_ptr<GeometryInterface> m_geometry;
 };
-
-} // namespace gridgen
 
 #endif // GRIDGENERATOR_GRIDGENERATOR_H

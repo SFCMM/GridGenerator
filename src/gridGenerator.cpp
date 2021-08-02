@@ -3,11 +3,11 @@
 #include <mpi.h>
 #include <utility>
 
+#include "common/globalmpi.h"
 #include "config.h"
 #include "constants.h"
 #include "functions.h"
 #include "geometry.h"
-#include "globalmpi.h"
 #include "gridGenerator.h"
 #include "timer.h"
 #include "util/sys.h"
@@ -86,16 +86,23 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   loadConfiguration();
   RECORD_TIMER_STOP(TimeKeeper[Timers::Init]);
 
-  // todo: replace with switch
-  if(m_dim == 2) {
-    generateGrid<2>();
-  } else if(m_dim == 3) {
-    generateGrid<3>();
-  } else if(m_dim == 4) {
-    generateGrid<4>();
-  } else if(m_dim == 1) {
-    generateGrid<1>();
+  switch(m_dim) {
+    case 1:
+      generateGrid<1>();
+      break;
+    case 2:
+      generateGrid<2>();
+      break;
+    case 3:
+      generateGrid<3>();
+      break;
+    case 4:
+      generateGrid<4>();
+      break;
+    default:
+      TERMM(-1, "Invalid number of dimensions 1-4.");
   }
+
   gridgen_log << "Grid generator finished <||" << endl;
   cout << "Grid generator finished <||" << endl;
 
@@ -192,7 +199,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     cout << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
   }
 
-  m_grid->setMinLvl(m_partionLvl);
+  m_grid->setMinLvl(m_partitionLvl);
   m_grid->setMaxLvl(m_maxRefinementLvl);
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
@@ -248,9 +255,9 @@ template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
 
-  m_partionLvl = required_config_value<GInt>("partitionLevel");
-  m_uniformLvl = required_config_value<GInt>("uniformLevel");
-  if(m_partionLvl > m_uniformLvl) {
+  m_partitionLvl = required_config_value<GInt>("partitionLevel");
+  m_uniformLvl   = required_config_value<GInt>("uniformLevel");
+  if(m_partitionLvl > m_uniformLvl) {
     TERMM(-1, "Invalid definition of grid level partitionLevel >= uniformLevel");
   }
 
@@ -308,8 +315,8 @@ void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
 }
 
 
-template class gridgen::GridGenerator<Debug_Level::no_debug>;
-template class gridgen::GridGenerator<Debug_Level::min_debug>;
-template class gridgen::GridGenerator<Debug_Level::debug>;
-template class gridgen::GridGenerator<Debug_Level::more_debug>;
-template class gridgen::GridGenerator<Debug_Level::max_debug>;
+template class GridGenerator<Debug_Level::no_debug>;
+template class GridGenerator<Debug_Level::min_debug>;
+template class GridGenerator<Debug_Level::debug>;
+template class GridGenerator<Debug_Level::more_debug>;
+template class GridGenerator<Debug_Level::max_debug>;
