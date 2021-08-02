@@ -27,7 +27,7 @@ UnitTest:
   artifacts:
     when: always
     reports:
-      junit: report.xml
+      junit: UnitTest/report.xml
 
 
 GNU:
