@@ -9,17 +9,11 @@
 
 static constexpr GFloat  GFloatEps  = std::numeric_limits<GFloat>::epsilon();
 static constexpr GDouble GDoubleEps = std::numeric_limits<GDouble>::epsilon();
-
-static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
 static constexpr GInt    BASE2                   = 2;
 static constexpr GDouble HALF                    = 0.5;
 static constexpr GInt    INVALID_CELLID          = -1;
 static constexpr GInt    KBIT                    = 1024;
 static constexpr GDouble DKBIT                   = static_cast<GDouble>(KBIT);
-
-// arbitrary maximum cell level
-static constexpr GInt MAX_LVL = 100;
-static constexpr GInt MAX_DIM = 4;
 
 enum class Debug_Level { no_debug, min_debug, debug, more_debug, max_debug };
 

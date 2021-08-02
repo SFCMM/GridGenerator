@@ -1,6 +1,15 @@
 #ifndef GRIDGENERATOR_CONFIG_H_IN
 #define GRIDGENERATOR_CONFIG_H_IN
 
+/// The default max number of offsprings allowed for a partitioning cell.
+static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
+
+/// arbitrary maximum cell level
+static constexpr GInt MAX_LVL = 100;
+
+/// Maximum number of dimensions supported (might need some changes if changed)
+static constexpr GInt MAX_DIM = 4;
+
 // just write a single file as a logfile
 #define GRIDGEN_SINGLE_FILE_LOG
 
