@@ -1,6 +1,10 @@
 #todo: get docker stuff working...
 #image: gcc:10.3.0
 
+stages:
+  - build
+  - test
+
 .buildTemplate:
   stage: build
   script:
@@ -8,6 +12,17 @@
     - cd build-$ccompiler
     - cmake -DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" ..
     - make gridgenerator -j 2
+
+UnitTest:
+  stage: test
+  script:
+    - make UnitTest
+    - cd UnitTest
+    - ./UnitTest --gtest_output="xml:report.xml"
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 
 GNU:
