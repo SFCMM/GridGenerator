@@ -26,7 +26,7 @@ UnitTest:
   artifacts:
     when: always
     reports:
-      junit: ./UnitTest/report.xml
+      junit: ./report.xml
 
 
 GNU:
