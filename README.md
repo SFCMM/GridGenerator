@@ -1,5 +1,13 @@
 # Grid Generator
 
+## Features
+- Generate Cartesian mesh
+
+
+## License
+- Code is BSD v3 licensed
+- Data and Documentation is CC-BY-NC ![license](https://creativecommons.org/licenses/by-nc/4.0/ "CC-BY-NC)")
+
 ## Requirements
 
 * GNU 10+ or CLang 10+
