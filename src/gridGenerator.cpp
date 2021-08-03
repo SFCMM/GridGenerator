@@ -199,7 +199,6 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     cout << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
   }
 
-  m_grid->setMinLvl(m_partitionLvl);
   m_grid->setMaxLvl(m_maxRefinementLvl);
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
@@ -225,7 +224,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
   // create partitioning grid first, which is done without MPI parallelization
-  m_grid->createPartitioningGrid();
+  m_grid->createPartitioningGrid(m_partitionLvl);
 
   if(!MPI::isSerial()) {
     // todo:implement

@@ -75,11 +75,6 @@ static constexpr inline void fill(T& lhs, U value) {
   }
 }
 
-
-
-
-
-
 inline auto checkDuplicateIds(const std::vector<GInt>& ids) -> std::vector<GInt> {
   std::unordered_map<GInt, GInt> countMap;
 

@@ -5,6 +5,7 @@
 #include "functions.h"
 #include "gridcell_properties.h"
 #include "macros.h"
+#include "cartesian.h"
 
 
 namespace cartesian {
@@ -51,30 +52,30 @@ class Tree {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkChildPos(pos);
       checkBounds(id);
-      return m_childIds.at(id * maxNoChildren<NDIM>() + pos);
+      return m_childIds.at(id * cartesian::maxNoChildren<NDIM>() + pos);
     }
     // no bound checking
-    return m_childIds[id * maxNoChildren<NDIM>() + pos];
+    return m_childIds[id * cartesian::maxNoChildren<NDIM>() + pos];
   }
 
   [[nodiscard]] inline auto child(const GInt id, const GInt pos) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkChildPos(pos);
       checkBounds(id);
-      return m_childIds.at(id * maxNoChildren<NDIM>() + pos);
+      return m_childIds.at(id * cartesian::maxNoChildren<NDIM>() + pos);
     }
     // no bound checking
-    return m_childIds[id * maxNoChildren<NDIM>() + pos];
+    return m_childIds[id * cartesian::maxNoChildren<NDIM>() + pos];
   }
 
   [[nodiscard]] inline auto hasChild(const GInt id, const GInt pos) const -> GBool {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkChildPos(pos);
       checkBounds(id);
-      return m_childIds.at(id * maxNoChildren<NDIM>() + pos) > -1;
+      return m_childIds.at(id * cartesian::maxNoChildren<NDIM>() + pos) > -1;
     }
     // no bound checking
-    return m_childIds[id * maxNoChildren<NDIM>() + pos] > -1;
+    return m_childIds[id * cartesian::maxNoChildren<NDIM>() + pos] > -1;
   }
 
   [[nodiscard]] inline auto hasChildren(const GInt id) const -> GBool {
@@ -88,8 +89,8 @@ class Tree {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
     }
-    return std::count_if(&m_childIds[id * maxNoChildren<NDIM>() + 0],
-                         &m_childIds[id * maxNoChildren<NDIM>() + maxNoChildren<NDIM>()],
+    return std::count_if(&m_childIds[id * cartesian::maxNoChildren<NDIM>() + 0],
+                         &m_childIds[id * cartesian::maxNoChildren<NDIM>() + cartesian::maxNoChildren<NDIM>()],
                          [](const GInt childId) { return childId > -1; });
   }
 
@@ -364,7 +365,7 @@ class Tree {
       // Parent
       if(hasParent(i)) {
         const GInt p = parent(i);
-        for(GInt j = 0; j < maxNoChildren<NDIM>(); j++) {
+        for(GInt j = 0; j < cartesian::maxNoChildren<NDIM>(); j++) {
           if(child(p, j) == i) {
             child(p, j) = -1;
           }
@@ -372,7 +373,7 @@ class Tree {
       }
 
       // Children
-      for(GInt j = 0; j < maxNoChildren<NDIM>(); j++) {
+      for(GInt j = 0; j < cartesian::maxNoChildren<NDIM>(); j++) {
         if(hasChild(i, j)) {
           parent(child(i, j)) = -1;
         }
@@ -404,7 +405,7 @@ class Tree {
         if(inMovedRange(p)) {
           parent(destination) += distance;
         } else {
-          for(GInt j = 0; j < maxNoChildren<NDIM>(); ++j) {
+          for(GInt j = 0; j < cartesian::maxNoChildren<NDIM>(); ++j) {
             if(child(p, j) == from) {
               child(p, j) = destination;
             }
@@ -413,7 +414,7 @@ class Tree {
       }
 
       // Children
-      for(GInt j = 0; j < maxNoChildren<NDIM>(); ++j) {
+      for(GInt j = 0; j < cartesian::maxNoChildren<NDIM>(); ++j) {
         if(hasChild(destination, j)) {
           const GInt c = child(destination, j);
           if(inMovedRange(c)) {
@@ -445,7 +446,7 @@ class Tree {
   }
 
   void checkChildPos(const GInt pos) const {
-    if(pos > maxNoChildren<NDIM>() || pos < 0) {
+    if(pos > cartesian::maxNoChildren<NDIM>() || pos < 0) {
       TERMM(-1, "Invalid child position");
     }
   }

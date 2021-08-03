@@ -7,22 +7,9 @@
 #include "gtree.h"
 #include "IO.h"
 #include "macros.h"
-#include "timer.h"
 #include "math/hilbert.h"
-
-namespace cartesian {
-static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
-  return 2 * (dir / 2) + 1 - (dir % 2);
-  // 0 = 1 ok
-  // 1 = 0 ok
-  // 2 = 3 ok
-  //...
-  // 5 = 4 ok
-  // 6 = 7 ok
-  // 7 = 6 ok
-}
-} // namespace cartesian
-
+#include "timer.h"
+#include "cartesian.h"
 
 struct LevelOffsetType {
  public:
@@ -37,20 +24,20 @@ using Point = VectorD<NDIM>;
 
 template <GInt NDIM>
 struct /*alignas(64)*/ NeighborList {
-  std::array<GInt, maxNoNghbrs<NDIM>()> n{INVALID_CELLID};
+  std::array<GInt, cartesian::maxNoNghbrs<NDIM>()> n{INVALID_CELLID};
 };
 
 template <GInt NDIM>
 struct /*alignas(64)*/ ChildList {
-  std::array<GInt, maxNoChildren<NDIM>()> c{INVALID_CELLID};
+  std::array<GInt, cartesian::maxNoChildren<NDIM>()> c{INVALID_CELLID};
 };
 
 class GridInterface {
  public:
-  GridInterface()                     = default;
-  virtual ~GridInterface()            = default;
+  GridInterface()          = default;
+  virtual ~GridInterface() = default;
 
-  //deleted constructors not needed
+  // deleted constructors not needed
   GridInterface(const GridInterface&) = delete;
   GridInterface(GridInterface&&)      = delete;
   auto operator=(const GridInterface&) -> GridInterface& = delete;
@@ -64,66 +51,70 @@ class GridInterface {
 
   /// Set the maximum number of cells that this grid can use. Can only be called once!
   /// \param capacity The capacity of this grid object to store cells.
-  virtual void setCapacity(GInt capacity)                = 0;
-
-  // todo: remove this function and provide the value in createPartitioningGrid()
-  virtual void setMinLvl(const GInt minLvl)              = 0;
+  virtual void setCapacity(GInt capacity) = 0;
 
   /// Maximum possible level of the grid to store.
   /// \param maxLvl The maximum possible level the grid object can store.
-  virtual void setMaxLvl(const GInt maxLvl)              = 0;
+  virtual void setMaxLvl(const GInt maxLvl) = 0;
 
   //// Getter functions.
 
   /// Get the center of gravity of the grid.
   /// \return Center of gravity of the grid.
-  [[nodiscard]] virtual inline auto cog() const -> std::vector<GDouble>          = 0;
+  [[nodiscard]] virtual inline auto cog() const -> std::vector<GDouble> = 0;
 
-  //todo: rename
+  // todo: rename
   /// Geometric extent of the grid.
   /// \return Geometric extent.
-  [[nodiscard]] virtual inline auto geomExtent() const -> std::vector<GDouble>   = 0;
+  [[nodiscard]] virtual inline auto geomExtent() const -> std::vector<GDouble> = 0;
 
   /// The bounding box of the grid.
   /// \return Bounding box.
-  [[nodiscard]] virtual inline auto boundingBox() const -> std::vector<GDouble>  = 0;
+  [[nodiscard]] virtual inline auto boundingBox() const -> std::vector<GDouble> = 0;
 
-  //todo: rename
+  // todo: rename
   /// Direction of the largest extent of the bounding box.
   /// \return Direction of largest extent.
-  [[nodiscard]] virtual inline auto decisiveDirection() const -> GInt         = 0;
+  [[nodiscard]] virtual inline auto decisiveDirection() const -> GInt = 0;
 
   /// The length of the cell at a given level.
   /// \param lvl The level of the cell length.
   /// \return The length of a cell at the provided level.
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
 
-  //todo: rename
-  ///
-  /// \return
-  [[nodiscard]] virtual inline auto minLvl() const -> GInt                       = 0;
+  /// Get the partition level of the grid.
+  /// \return Partition level.
+  [[nodiscard]] virtual inline auto partitionLvl() const -> GInt = 0;
+
+  /// Set the partition level of the grid.
+  /// \return Partition level.
+  virtual inline auto partitionLvl() -> GInt& = 0;
 
   /// The maximum level supported by this grid.
   /// \return The maximum level this grid can possibly have.
-  [[nodiscard]] virtual inline auto maxLvl() const -> GInt                       = 0;
+  [[nodiscard]] virtual inline auto maxLvl() const -> GInt = 0;
 
-  //todo: add function to get the currently highest level.
+  /// Get the currently highest level present in the grid.
+  /// \return Return currently highest level.
+  [[nodiscard]] virtual inline auto currentHighestLvl() const -> GInt = 0;
+
 
   //// Grid Generation specific
   /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
   /// configuration file. The grid up to this level is always produced on a single MPI rank.
-  virtual void createPartitioningGrid()                      = 0;
+  /// \param partioningLvl Level of the partitioing grid.
+  virtual void createPartitioningGrid(const GInt partioningLvl) = 0;
 
   /// Uniformly refine the grid up to the provided level.
   /// \param uniformLvl Level of uniform refinement.
-  virtual void uniformRefineGrid(const GInt uniformLvl)      = 0;
+  virtual void uniformRefineGrid(const GInt uniformLvl) = 0;
 
   /// Refine the cells that have been marked for refinement.
   /// \param noCellsToRefine The number of cells that have been marked.
   virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
 
 
-  //todo: add the filename as an argument
+  // todo: add the filename as an argument
   ////IO
   /// Save the grid to a file.
   virtual void save() = 0;
@@ -158,12 +149,9 @@ class BaseCartesianGrid : public GridInterface {
       m_lengthOnLevel.at(l) = HALF * m_lengthOnLevel.at(l - 1);
     }
   }
-  void setMinLvl(const GInt minLvl) override {
-    gridgen_log << "set minLVL " << minLvl << std::endl;
-    m_minLvl = minLvl;
-  }
+
   void setMaxLvl(const GInt maxLvl) override {
-    gridgen_log << "set maxLVL " << maxLvl << std::endl;
+    gridgen_log << "set maximum grid level " << maxLvl << std::endl;
     m_maxLvl = maxLvl;
   }
 
@@ -177,7 +165,10 @@ class BaseCartesianGrid : public GridInterface {
     return std::vector<GDouble>(m_boundingBox.begin(), m_boundingBox.end());
   };
   [[nodiscard]] inline auto decisiveDirection() const -> GInt override { return m_decisiveDirection; };
-  [[nodiscard]] inline auto minLvl() const -> GInt override { return m_minLvl; };
+  [[nodiscard]] inline auto partitionLvl() const -> GInt override { return m_partitioningLvl; };
+  inline auto partitionLvl() -> GInt& override {
+    return m_partitioningLvl;
+  }
   [[nodiscard]] inline auto maxLvl() const -> GInt override { return m_maxLvl; };
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -185,10 +176,18 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_lengthOnLevel[lvl]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
   };
+  [[nodiscard]] inline auto currentHighestLvl() const -> GInt override {return m_currentHighestLvl;}
+
+ protected:
+  inline void increaseCurrentHighestLvl() {
+    ASSERT(m_currentHighestLvl <= m_maxLvl, "Level increased over maximum level!");
+    ++m_currentHighestLvl;
+  }
 
  private:
-  GInt m_minLvl = 1;
-  GInt m_maxLvl = 1;
+  GInt m_currentHighestLvl = 0;
+  GInt m_partitioningLvl   = 0;
+  GInt m_maxLvl = 0;
 
   // box containing the whole geometry
   std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
@@ -226,14 +225,16 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
  public:
-  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::minLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::partitionLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::maxLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::lengthOnLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::cog;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::increaseCurrentHighestLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
 
   using PropertyBitsetType = gridgen::cell::BitsetType;
   using CellProperties     = GridGenCellProperties;
-  using ChildListType      = std::array<GInt, maxNoChildren<NDIM>()>;
+  using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
 
   CartesianGridGen()                        = default;
   ~CartesianGridGen() override              = default;
@@ -257,36 +258,41 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_level.resize(capacity);
     m_capacity = capacity;
   }
-  void setMinLvl(const GInt _minLvl) override {
-    m_levelOffsets.resize(_minLvl + 1);
-    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMinLvl(_minLvl);
-  }
+
   void setMaxLvl(const GInt _maxLvl) override {
     m_levelOffsets.resize(_maxLvl + 1);
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
 
-  void createPartitioningGrid() override {
+  void createPartitioningGrid(const GInt partitioningLvl) override {
     RECORD_TIMER_START(TimeKeeper[Timers::GridPart]);
     if(m_capacity < 1) {
       TERMM(-1, "Invalid grid capacity.");
     }
 
-    gridgen_log << SP1 << "Create partitioning grid with level " << minLvl() << std::endl;
-    std::cout << SP1 << "Create partitioning grid with level " << minLvl() << std::endl;
+    gridgen_log << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
+    std::cout << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
 
     gridgen_log << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
     std::cout << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
 
+    //make sure we have set some level...
+    if(partitioningLvl >maxLvl()){
+      cerr0 << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
+      gridgen_log << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
+      setMaxLvl(partitioningLvl);
+    }
+    partitionLvl() = partitioningLvl;
+
     // use lazy initialization for grid generation and make sure final partitioning grid starts in the beginning
-    if(isEven(minLvl())) {
+    if(isEven(partitionLvl())) {
       // initial cell placed in the beginning
       m_levelOffsets[0] = {0, 1};
-      m_levelOffsets[1] = {m_capacity - maxNoChildren<NDIM>(), m_capacity};
+      m_levelOffsets[1] = {m_capacity - cartesian::maxNoChildren<NDIM>(), m_capacity};
     } else {
       // initial cell placed at the end
       m_levelOffsets[0] = {m_capacity - 1, m_capacity};
-      m_levelOffsets[1] = {0, maxNoChildren<NDIM>()};
+      m_levelOffsets[1] = {0, cartesian::maxNoChildren<NDIM>()};
     }
 
     const GInt begin                         = m_levelOffsets[0].begin;
@@ -296,7 +302,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_size                                   = 1;
 
     //  Refine to min level
-    for(GInt l = 0; l < minLvl(); l++) {
+    for(GInt l = 0; l < partitionLvl(); l++) {
       const GInt prevLevelBegin   = m_levelOffsets[l].begin;
       const GInt prevLevelEnd     = m_levelOffsets[l].end;
       const GInt prevLevelNoCells = prevLevelEnd - prevLevelBegin;
@@ -306,16 +312,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
 
       if(m_levelOffsets[l].begin == 0) {
-        // m_capacity - (prevLevelNoCells) * maxNoChildren<NDIM>()
+        // m_capacity - (prevLevelNoCells) * cartesian::maxNoChildren<NDIM>()
         // from the end - maximum number of cells at the current level
-        const GInt newLevelBegin = m_capacity - (prevLevelNoCells)*maxNoChildren<NDIM>();
+        const GInt newLevelBegin = m_capacity - (prevLevelNoCells)*cartesian::maxNoChildren<NDIM>();
         m_levelOffsets[l + 1]    = {newLevelBegin, m_capacity};
 
         if(prevLevelEnd > newLevelBegin) {
           outOfMemory(l + 1);
         }
       } else {
-        const GInt newLevelEnd = (prevLevelNoCells)*maxNoChildren<NDIM>();
+        const GInt newLevelEnd = (prevLevelNoCells)*cartesian::maxNoChildren<NDIM>();
         // from the start to the maximum number of cells at the current level
         m_levelOffsets.at(l + 1) = {0, newLevelEnd};
 
@@ -327,7 +333,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       refineGrid(m_levelOffsets, l);
       findChildLevelNghbrs(m_levelOffsets, l);
       deleteOutsideCells(l + 1);
-      m_currentHighestLvl++;
+      increaseCurrentHighestLvl();
     }
 
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
@@ -341,14 +347,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     gridgen_log << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
     std::cout << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
 
-    m_currentHighestLvl = uniformLevel;
-
-    if(minLvl() == uniformLevel) {
+    if(partitionLvl() == uniformLevel) {
       return;
     }
 
-    for(GInt l = minLvl(); l < uniformLevel; l++) {
-      m_levelOffsets[l + 1] = {m_size, m_size + levelSize(m_levelOffsets[l]) * maxNoChildren<NDIM>()};
+    for(GInt l = partitionLvl(); l < uniformLevel; l++) {
+      m_levelOffsets[l + 1] = {m_size, m_size + levelSize(m_levelOffsets[l]) * cartesian::maxNoChildren<NDIM>()};
       if(m_levelOffsets[l + 1].end > m_capacity) {
         outOfMemory(l + 1);
       }
@@ -378,6 +382,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
 
       m_size = m_levelOffsets[l + 1].end;
+      increaseCurrentHighestLvl();
     }
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
   }
@@ -387,12 +392,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       return;
     }
 
-    gridgen_log << SP1 << "Refining marked cells to level " << m_currentHighestLvl + 1 << std::endl;
-    std::cout << SP1 << "Refining marked cells to level " << m_currentHighestLvl + 1 << std::endl;
+    gridgen_log << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
+    std::cout << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
     // update the offsets
-    m_levelOffsets[m_currentHighestLvl + 1] = {m_size, m_size + noCellsToRefine * maxNoChildren<NDIM>()};
-    if(m_levelOffsets[m_currentHighestLvl + 1].end > m_capacity) {
-      outOfMemory(m_currentHighestLvl + 1);
+    m_levelOffsets[currentHighestLvl() + 1] = {m_size, m_size + noCellsToRefine * cartesian::maxNoChildren<NDIM>()};
+    if(m_levelOffsets[currentHighestLvl() + 1].end > m_capacity) {
+      outOfMemory(currentHighestLvl() + 1);
     }
     gridgen_log << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
     std::cout << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
@@ -407,17 +412,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // todo:implement
     //    refineMarkedCells(m_currentHighestLvl);
 
-    ++m_currentHighestLvl;
+    increaseCurrentHighestLvl();
   }
 
   void save() override {
     std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) {
-      return std::to_integer<GInt>(m_level[cellId]) == m_currentHighestLvl;
+      return std::to_integer<GInt>(m_level[cellId]) == currentHighestLvl();
     };
 
-    std::function<GBool(GInt)> isLeaf = [&](GInt cellId) {
-      return m_noChildren[cellId] == 0;
-    };
+    std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return m_noChildren[cellId] == 0; };
 
     std::vector<GString>              index = {"Level", "NoChildren"};
     std::vector<std::vector<GString>> values;
@@ -456,7 +459,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GInt m_capacity{0};
   GInt m_size{0};
-  GInt m_currentHighestLvl{0};
 
   void outOfMemory(GInt level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
@@ -485,7 +487,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // refine all cells on the given level
     GInt cellCount = 0;
     for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
-      refineCell(cellId, levelOffset[level + 1].begin + cellCount * maxNoChildren<NDIM>());
+      refineCell(cellId, levelOffset[level + 1].begin + cellCount * cartesian::maxNoChildren<NDIM>());
       ++cellCount;
     }
   }
@@ -497,10 +499,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     const GInt    refinedLvl       = std::to_integer<GInt>(m_level[cellId]) + 1;
     const GDouble refinedLvlLength = lengthOnLvl(refinedLvl);
 
-    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+    for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
       const GInt childCellId = offset + childId;
       // todo: replace childDir with constant expression function
-      m_center[childCellId]   = m_center[cellId] + HALF * Point<NDIM>(childDir[childId].data()) * refinedLvlLength;
+      m_center[childCellId]   = m_center[cellId] + HALF * Point<NDIM>(cartesian::childDir[childId].data()) * refinedLvlLength;
       m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
       m_parentId[childCellId] = cellId;
       m_globalId[childCellId] = childCellId;
@@ -532,7 +534,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // check all children at the given level
     for(GInt parentId = levelOffset[level].begin; parentId < levelOffset[level].end; ++parentId) {
       const GInt* __restrict children = &m_childIds[parentId].c[0];
-      for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+      for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
         if(children[childId] == INVALID_CELLID) {
           // no child
           continue;
@@ -540,17 +542,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
         // check all neighbors
         GInt* __restrict neighbors = &m_nghbrIds[children[childId]].n[0];
-        for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
+        for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
           // neighbor direction not set
           if(neighbors[dir] == INVALID_CELLID) {
             // todo: replace nghbrInside by const expression function
-            const GInt nghbrId = nghbrInside[childId][dir];
+            const GInt nghbrId = cartesian::nghbrInside[childId][dir];
             // neighbor is within the same parent cell
             if(nghbrId != INVALID_CELLID) {
               neighbors[dir] = nghbrId;
             } else {
               // todo: replace nghbrParentChildId by const expression function
-              const GInt parentLvlNeighborChildId = nghbrParentChildId[childId][dir];
+              const GInt parentLvlNeighborChildId = cartesian::nghbrParentChildId[childId][dir];
               ASSERT(parentLvlNeighborChildId > INVALID_CELLID, "The definition of nghbrParentChildId is wrong! "
                                                                 "childId: "
                                                                     + std::to_string(childId) + " dir "
@@ -586,7 +588,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         --m_noChildren[parentId];
 
         // remove from neighbors
-        for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
+        for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
           const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
           if(nghbrCellId != INVALID_CELLID) {
             m_nghbrIds[nghbrCellId].n[cartesian::oppositeDir(dir)] = INVALID_CELLID;
@@ -624,7 +626,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void floodCells(GInt cellId) {
     const GBool inside = property(cellId, CellProperties::IsInside);
-    for(GInt id = 0; id < maxNoNghbrs<NDIM>(); ++id) {
+    for(GInt id = 0; id < cartesian::maxNoNghbrs<NDIM>(); ++id) {
       const GInt nghbrId = m_nghbrIds[cellId].n[id];
       if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::TmpMarker)) {
         if(!property(nghbrId, CellProperties::IsBndry)) {
@@ -663,7 +665,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_childIds[to]   = m_childIds[from];
     m_noChildren[to] = m_noChildren[from];
 
-    for(GInt dir = 0; dir < maxNoNghbrs<NDIM>(); ++dir) {
+    for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
       if(m_nghbrIds[to].n[dir] != INVALID_CELLID) {
         m_nghbrIds[m_nghbrIds[to].n[dir]].n[cartesian::oppositeDir(dir)] = to;
       }
@@ -673,7 +675,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       updateParent(m_parentId[to], from, to);
     }
 
-    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+    for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
       if(m_childIds[to].c[childId] != INVALID_CELLID) {
         m_parentId[m_childIds[to].c[childId]] = to;
       }
@@ -688,7 +690,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void updateParent(const GInt parentId, const GInt oldChildCellId, const GInt newChildCellId) {
     ASSERT(parentId >= 0, "Invalid parentId!");
-    for(GInt childId = 0; childId < maxNoChildren<NDIM>(); ++childId) {
+    for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
       if(m_childIds[parentId].c[childId] == oldChildCellId) {
         m_childIds[parentId].c[childId] = newChildCellId;
         return;
@@ -710,7 +712,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::iota(pos.begin(), pos.end(), 0);
     std::iota(rev.begin(), rev.end(), 0);
 
-    GInt hilbertLevel = minLvl();
+    GInt hilbertLevel = partitionLvl();
     for(GInt cellId = 0; cellId < m_size; ++cellId) {
       // Normalization to unit cube
       // array() since there is no scalar addition for vectors...
