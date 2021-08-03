@@ -43,7 +43,7 @@
 ## On-going
 
 - Add CMake build presets for all build types.
-- Add analytical geometries cube, box and sphere(x).
+- Add configuration options for geometries.
 
 
 ## Done:
@@ -51,6 +51,7 @@
 - Add option to generate initial doxygen documentation.
 - Increase buffer size to 64kb.
 - Run unit test from CI.
+- Add analytical geometries cube, box and sphere.
 
 
 

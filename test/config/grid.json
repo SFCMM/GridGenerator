@@ -3,7 +3,7 @@
   "dim": 3,
   "partitionLevel": 7,
   "uniformLevel": 8,
-  "maxNoCells": 5000000,
+  "maxNoCells": 7000000,
   "boundingBox": [
     -1.0,
     1.0,

@@ -4,6 +4,7 @@
 #include <memory>
 #include <mpi.h>
 #include <vector>
+#include "macros.h"
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
@@ -53,6 +54,7 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
     return (x - m_center).norm() < m_radius + GDoubleEps;
   }
+
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
     return (cellCenter - m_center).norm()
            < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
@@ -66,17 +68,57 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
+  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) {}
+
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      if(m_A[dir] > x[dir] && m_B[dir] < x[dir]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      if(m_A[dir] > cellCenter[dir] - cellLength && m_B[dir] < cellCenter[dir] + cellLength) {
+        return false;
+      }
+    }
+    return true;
+  }
+
  private:
-  Point<NDIM> m_A{NAN};
-  Point<NDIM> m_B{NAN};
+  Point<NDIM> m_A;
+  Point<NDIM> m_B;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
+  GeomCube(const Point<NDIM>& center, const GDouble length) : m_center(center), m_length(length){};
+
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      if(abs(x[dir] - m_center[dir]) > m_length) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      if(abs(cellCenter[dir] - m_center[dir]) > m_length + cellLength) {
+        return false;
+      }
+    }
+    return true;
+  }
+
  private:
   Point<NDIM> m_center{NAN};
-  GDouble     length = 0;
+  GDouble     m_length = 0;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -92,7 +134,19 @@ class GeometryManager : public GeometryInterface {
     Point<NDIM> center2;
     center2.fill(0);
     center2[0] = 0.5;
-    m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(center2, 0.5));
+    m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(center2, 0.5));
+
+    Point<NDIM> A;
+    A.fill(0);
+    A[0] = -0.5;
+    Point<NDIM> B;
+    B.fill(0);
+    B[0] = -1;
+    if(NDIM == 3) {
+      B[1] = -1;
+      B[2] = -1;
+    }
+    m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(A, B));
   }
 
   [[nodiscard]] auto inline pointIsInside(const GDouble* x) const -> GBool override {
