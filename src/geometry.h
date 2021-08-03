@@ -2,6 +2,7 @@
 #define GRIDGENERATOR_GEOMETRY_H
 
 #include <memory>
+#include <mpi.h>
 #include <vector>
 
 template <GInt NDIM>
@@ -85,8 +86,13 @@ class GeometryManager : public GeometryInterface {
 
   void setup() override {
     // for testing setup sphere
-    Point<NDIM> center{0};
+    Point<NDIM> center;
+    center.fill(0);
     m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(center, 0.5));
+    Point<NDIM> center2;
+    center2.fill(0);
+    center2[0] = 0.5;
+    m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(center2, 0.5));
   }
 
   [[nodiscard]] auto inline pointIsInside(const GDouble* x) const -> GBool override {
