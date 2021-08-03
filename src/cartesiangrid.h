@@ -3,14 +3,14 @@
 
 #include <gcem.hpp>
 
+#include "cartesian.h"
+#include "geometry.h"
 #include "globaltimers.h"
 #include "gtree.h"
 #include "IO.h"
 #include "macros.h"
 #include "math/hilbert.h"
 #include "timer.h"
-#include "cartesian.h"
-#include "geometry.h"
 
 struct LevelOffsetType {
  public:
@@ -172,9 +172,7 @@ class BaseCartesianGrid : public GridInterface {
   };
   [[nodiscard]] inline auto largestDir() const -> GInt override { return m_decisiveDirection; };
   [[nodiscard]] inline auto partitionLvl() const -> GInt override { return m_partitioningLvl; };
-  inline auto partitionLvl() -> GInt& override {
-    return m_partitioningLvl;
-  }
+  inline auto               partitionLvl() -> GInt& override { return m_partitioningLvl; }
   [[nodiscard]] inline auto maxLvl() const -> GInt override { return m_maxLvl; };
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -182,7 +180,7 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_lengthOnLevel[lvl]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
   };
-  [[nodiscard]] inline auto currentHighestLvl() const -> GInt override {return m_currentHighestLvl;}
+  [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
 
  protected:
   inline void increaseCurrentHighestLvl() {
@@ -190,19 +188,15 @@ class BaseCartesianGrid : public GridInterface {
     ++m_currentHighestLvl;
   }
 
-  inline auto geometry() {
-    return m_geometry;
-  }
-  inline auto geometry() const{
-    return m_geometry;
-  }
+  inline auto geometry() { return m_geometry; }
+  inline auto geometry() const { return m_geometry; }
 
  private:
   std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
 
   GInt m_currentHighestLvl = 0;
   GInt m_partitioningLvl   = 0;
-  GInt m_maxLvl = 0;
+  GInt m_maxLvl            = 0;
 
   // box containing the whole geometry
   std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
@@ -293,8 +287,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     gridgen_log << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
     std::cout << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
 
-    //make sure we have set some level...
-    if(partitioningLvl >maxLvl()){
+    // make sure we have set some level...
+    if(partitioningLvl > maxLvl()) {
       cerr0 << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
       gridgen_log << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
       setMaxLvl(partitioningLvl);
@@ -518,7 +512,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
       const GInt childCellId = offset + childId;
       // todo: replace childDir with constant expression function
-      m_center[childCellId]   = m_center[cellId] + HALF * Point<NDIM>(cartesian::childDir[childId].data()) * refinedLvlLength;
+      m_center[childCellId] =
+          m_center[cellId] + HALF * Point<NDIM>(cartesian::childDir[childId].data()) * refinedLvlLength;
       m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
       m_parentId[childCellId] = cellId;
       m_globalId[childCellId] = childCellId;
@@ -656,15 +651,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  [[nodiscard]] auto pointIsInside(const Point<NDIM>& x) const -> GBool {
-    //todo: get rid of casting...
-    return geometry()->pointIsInside(&x[0]);
-  }
+  [[nodiscard]] auto pointIsInside(const Point<NDIM>& x) const -> GBool { return geometry()->pointIsInside(x); }
 
   [[nodiscard]] auto cellHasCut(GInt cellId) const -> GBool {
-    //todo: get rid of casting...
     const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(m_level[cellId]));
-    return geometry()->cutWithCell(&m_center[cellId][0], cellLength);
+    return geometry()->cutWithCell(m_center[cellId], cellLength);
   }
 
   void copyCell(const GInt from, const GInt to) {
