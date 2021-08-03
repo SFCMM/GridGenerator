@@ -17,7 +17,7 @@
 - Add more complex porosity options.
 - Add CMD to load test configuration file.
 
-# V0.0.3
+# V0.0.3 (~22.8.21)
 ## Planned
 - Generate porous mesh provided with some porosity value.
 - Save svg of the mesh.
@@ -31,8 +31,7 @@
 - Setup valgrind and sanitize tests
 - Run coverage within CI
 
-
-# V0.0.2
+# V0.0.2 (~8.8.21)
 ## Planned
 - Boundary refinement.
 - Write out VTK Point file (Binary/ASCII).
@@ -42,8 +41,9 @@
 - Build CI Pipeline from presets
 
 ## On-going
+
 - Add CMake build presets for all build types.
-- Add analytical geometries cube, box and sphere.
+- Add analytical geometries cube, box and sphere(x).
 
 
 ## Done:
