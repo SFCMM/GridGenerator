@@ -203,8 +203,11 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
 
-  cout << SP1 << "Reading Geometry" << endl;
-  m_geometry = std::make_unique<Geometry<NDIM>>(MPI_COMM_WORLD);
+  cout << SP1 << "Reading GeometryManager" << endl;
+  m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);
+  m_geometry->setup();
+  m_grid->setGeometryManager(m_geometry);
+
   // todo: implement
   //  m_noBndIdsPerSolver.reserve(m_geometry->noNodes());
   //  for(MInt solver = 0; solver < m_geometry->noNodes(); solver++) {

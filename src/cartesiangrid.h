@@ -10,6 +10,7 @@
 #include "math/hilbert.h"
 #include "timer.h"
 #include "cartesian.h"
+#include "geometry.h"
 
 struct LevelOffsetType {
  public:
@@ -56,6 +57,8 @@ class GridInterface {
   /// Maximum possible level of the grid to store.
   /// \param maxLvl The maximum possible level the grid object can store.
   virtual void setMaxLvl(const GInt maxLvl) = 0;
+
+  virtual void setGeometryManager(std::shared_ptr<GeometryInterface> geom) = 0;
 
   //// Getter functions.
 
@@ -153,6 +156,11 @@ class BaseCartesianGrid : public GridInterface {
     m_maxLvl = maxLvl;
   }
 
+  void setGeometryManager(std::shared_ptr<GeometryInterface> geom) override {
+    // we cast this here since we don't want to cast all the time to get rid of NDIM...
+    m_geometry = std::static_pointer_cast<GeometryManager<DEBUG_LEVEL, NDIM>>(geom);
+  }
+
   [[nodiscard]] inline auto cog() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_centerOfGravity.begin(), m_centerOfGravity.end());
   };
@@ -182,7 +190,16 @@ class BaseCartesianGrid : public GridInterface {
     ++m_currentHighestLvl;
   }
 
+  inline auto geometry() {
+    return m_geometry;
+  }
+  inline auto geometry() const{
+    return m_geometry;
+  }
+
  private:
+  std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
+
   GInt m_currentHighestLvl = 0;
   GInt m_partitioningLvl   = 0;
   GInt m_maxLvl = 0;
@@ -229,6 +246,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::cog;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::increaseCurrentHighestLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::geometry;
 
   using PropertyBitsetType = gridgen::cell::BitsetType;
   using CellProperties     = GridGenCellProperties;
@@ -638,15 +656,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  [[nodiscard]] auto pointIsInside(const Point<NDIM>& center) const -> GBool {
-    // todo: implement properly
-    return center.norm() < 0.75 + GDoubleEps;
+  [[nodiscard]] auto pointIsInside(const Point<NDIM>& x) const -> GBool {
+    //todo: get rid of casting...
+    return geometry()->pointIsInside(&x[0]);
   }
 
   [[nodiscard]] auto cellHasCut(GInt cellId) const -> GBool {
-    // todo: implement properly
+    //todo: get rid of casting...
     const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(m_level[cellId]));
-    return m_center[cellId].norm() < (0.75 + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
+    return geometry()->cutWithCell(&m_center[cellId][0], cellLength);
   }
 
   void copyCell(const GInt from, const GInt to) {

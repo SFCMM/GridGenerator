@@ -68,7 +68,7 @@ class GridGenerator {
   GString                            m_outGridFilename      = "grid";
   std::unique_ptr<WeightMethod>      m_weightMethod;
   std::unique_ptr<GridInterface>     m_grid;
-  std::unique_ptr<GeometryInterface> m_geometry;
+  std::shared_ptr<GeometryInterface> m_geometry;
 };
 
 #endif // GRIDGENERATOR_GRIDGENERATOR_H

@@ -43,7 +43,7 @@
 
 ## On-going
 - Add CMake build presets for all build types.
-- Add analytical geometries cube, rectangular and sphere.
+- Add analytical geometries cube, box and sphere.
 
 
 ## Done:
