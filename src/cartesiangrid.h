@@ -63,19 +63,17 @@ class GridInterface {
   /// \return Center of gravity of the grid.
   [[nodiscard]] virtual inline auto cog() const -> std::vector<GDouble> = 0;
 
-  // todo: rename
-  /// Geometric extent of the grid.
-  /// \return Geometric extent.
-  [[nodiscard]] virtual inline auto geomExtent() const -> std::vector<GDouble> = 0;
+  /// Length of the sides of the bounding box.
+  /// \return Bounding box size.
+  [[nodiscard]] virtual inline auto lengthOfBoundingBox() const -> std::vector<GDouble> = 0;
 
   /// The bounding box of the grid.
   /// \return Bounding box.
   [[nodiscard]] virtual inline auto boundingBox() const -> std::vector<GDouble> = 0;
 
-  // todo: rename
-  /// Direction of the largest extent of the bounding box.
-  /// \return Direction of largest extent.
-  [[nodiscard]] virtual inline auto decisiveDirection() const -> GInt = 0;
+  /// Direction of the largest length of the bounding box.
+  /// \return Direction of largest length of the bounding box..
+  [[nodiscard]] virtual inline auto largestDir() const -> GInt = 0;
 
   /// The length of the cell at a given level.
   /// \param lvl The level of the cell length.
@@ -158,13 +156,13 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto cog() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_centerOfGravity.begin(), m_centerOfGravity.end());
   };
-  [[nodiscard]] inline auto geomExtent() const -> std::vector<GDouble> override {
+  [[nodiscard]] inline auto lengthOfBoundingBox() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_geometryExtents.begin(), m_geometryExtents.end());
   };
   [[nodiscard]] inline auto boundingBox() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_boundingBox.begin(), m_boundingBox.end());
   };
-  [[nodiscard]] inline auto decisiveDirection() const -> GInt override { return m_decisiveDirection; };
+  [[nodiscard]] inline auto largestDir() const -> GInt override { return m_decisiveDirection; };
   [[nodiscard]] inline auto partitionLvl() const -> GInt override { return m_partitioningLvl; };
   inline auto partitionLvl() -> GInt& override {
     return m_partitioningLvl;
@@ -270,6 +268,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Invalid grid capacity.");
     }
 
+    partitionLvl() = partitioningLvl;
     gridgen_log << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
     std::cout << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
 
@@ -282,7 +281,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       gridgen_log << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
       setMaxLvl(partitioningLvl);
     }
-    partitionLvl() = partitioningLvl;
 
     // use lazy initialization for grid generation and make sure final partitioning grid starts in the beginning
     if(isEven(partitionLvl())) {

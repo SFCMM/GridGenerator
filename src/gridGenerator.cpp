@@ -218,8 +218,8 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 
   gridgen_log << "\n";
   gridgen_log << SP2 << "+ m_center of gravity: " << strStreamify<NDIM>(m_grid->cog()).str() << "\n";
-  gridgen_log << SP2 << "+ decisive direction: " << m_grid->decisiveDirection() << "\n";
-  gridgen_log << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->geomExtent()).str() << "\n";
+  gridgen_log << SP2 << "+ decisive direction: " << m_grid->largestDir() << "\n";
+  gridgen_log << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->lengthOfBoundingBox()).str() << "\n";
   gridgen_log << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
