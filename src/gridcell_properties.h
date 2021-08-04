@@ -1,6 +1,6 @@
 #ifndef GRIDGENERATOR_GRIDCELL_PROPERTIES_H
 #define GRIDGENERATOR_GRIDCELL_PROPERTIES_H
-//todo: merge both of these enum classes since the bits don't matter!
+// todo: merge both of these enum classes since the bits don't matter!
 
 /// Grid cell properties. (Until 63 bits are used this does not increase memory!)
 // bitsets are initialized to 0!

@@ -46,10 +46,9 @@ TimerProfiling::~TimerProfiling() {
       if(s_functionTiming.getInitCpuTime() < m_initCpuTime) {
         continue;
       }
-      const GDouble relCpuTime = 100.0 * getCpuTimeSecs(s_functionTiming.getDeltaCpuTime())
-                                 / max(1e-15, getCpuTimeSecs(exitCpuTime - m_initCpuTime));
-      const GDouble relWallTime =
-          100.0 * s_functionTiming.getDeltaWallTime() / max(1e-15, (exitWallTime - m_initWallTime));
+      const GDouble relCpuTime =
+          100.0 * getCpuTimeSecs(s_functionTiming.getDeltaCpuTime()) / max(1e-15, getCpuTimeSecs(exitCpuTime - m_initCpuTime));
+      const GDouble relWallTime = 100.0 * s_functionTiming.getDeltaWallTime() / max(1e-15, (exitWallTime - m_initWallTime));
       if(relCpuTime < thresholdPercentage) {
         supCounter++;
         continue;
@@ -62,8 +61,8 @@ TimerProfiling::~TimerProfiling() {
       counter++;
     }
     if(supCounter > 0) {
-      gridgen_log << "  .....     .....   (" << supCounter << " shorter timings with CPU<" << thresholdPercentage
-                  << "% were suppressed)" << endl;
+      gridgen_log << "  .....     .....   (" << supCounter << " shorter timings with CPU<" << thresholdPercentage << "% were suppressed)"
+                  << endl;
     }
   }
   if(counter == 0) {

@@ -22,9 +22,9 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
                            const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
   ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
-  ofstream pointFile;
-  static constexpr unsigned int N = 64;
-  static constexpr unsigned int buffer_size = 1024*N;
+  ofstream                      pointFile;
+  static constexpr unsigned int N           = 64;
+  static constexpr unsigned int buffer_size = 1024 * N;
   std::array<char, buffer_size> buffer{};
   pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
   pointFile.open(fileName + ".csv");

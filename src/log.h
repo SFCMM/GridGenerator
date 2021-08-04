@@ -36,14 +36,7 @@ class Log_buffer : public std::stringbuf {
   virtual void flushBuffer() = 0;
 
  public:
-  Log_buffer()
-    : m_rootOnly(false),
-      m_domainId(0),
-      m_noDomains(1),
-      m_minFlushSize(0),
-      m_prefixMessage(),
-      m_suffixMessage(),
-      m_tmpBuffer() {}
+  Log_buffer() : m_rootOnly(false), m_domainId(0), m_noDomains(1), m_minFlushSize(0), m_prefixMessage(), m_suffixMessage(), m_tmpBuffer() {}
 
   Log_buffer(const GInt argc, GChar** argv)
     : m_rootOnly(false),
@@ -112,7 +105,7 @@ class Log : public std::ostream {
 
  public:
 #ifdef CLANG_COMPILER
-  #pragma clang diagnostic push
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
 #endif
   Log() : std::ostream(m_buffer.get()){};
@@ -121,48 +114,45 @@ class Log : public std::ostream {
 #endif
   virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;
 
-/** \brief Adds an attribute to the prefix of the XML string.
- * \author Andreas Lintermann, Sven Berger
- * \date 13.08.2012
- *
- * \param[in] att The attribute to add, consists of a pair of MStrings.
- * \return The location of the attribute in the vector of pairs.
- */
-  auto         addAttribute(const std::pair<GString, const GString>& att) -> GInt{
+  /** \brief Adds an attribute to the prefix of the XML string.
+   * \author Andreas Lintermann, Sven Berger
+   * \date 13.08.2012
+   *
+   * \param[in] att The attribute to add, consists of a pair of MStrings.
+   * \return The location of the attribute in the vector of pairs.
+   */
+  auto addAttribute(const std::pair<GString, const GString>& att) -> GInt {
     m_buffer->m_prefixAttributes.emplace_back(att);
     m_buffer->createPrefixMessage();
     return static_cast<GInt>(m_buffer->m_prefixAttributes.size() - 1);
   }
 
-/** \brief Erases an attribute from the prefix of the XML string.
- * \author Andreas Lintermann, Sven Berger
- * \date 13.08.2012
- *
- *  \param[in] attId The ID of the attribute to delete.
- */
-  void         eraseAttribute(GInt attId){
+  /** \brief Erases an attribute from the prefix of the XML string.
+   * \author Andreas Lintermann, Sven Berger
+   * \date 13.08.2012
+   *
+   *  \param[in] attId The ID of the attribute to delete.
+   */
+  void eraseAttribute(GInt attId) {
     m_buffer->m_prefixAttributes.erase(m_buffer->m_prefixAttributes.begin() + attId);
     m_buffer->createPrefixMessage();
   }
 
-/** \brief Modifies an attribute of the prefix of the XML string.
- * \author Andreas Lintermann, Sven Berger
- * \date 13.08.2012
- *
- *  \param[in] attId The ID of the attribute to modify.
- *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
- */
-  void         modifyAttribute(GInt attId, const std::pair<GString, GString>& att){
+  /** \brief Modifies an attribute of the prefix of the XML string.
+   * \author Andreas Lintermann, Sven Berger
+   * \date 13.08.2012
+   *
+   *  \param[in] attId The ID of the attribute to modify.
+   *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
+   */
+  void modifyAttribute(GInt attId, const std::pair<GString, GString>& att) {
     m_buffer->m_prefixAttributes[attId] = att;
     m_buffer->createPrefixMessage();
   }
 
-  inline auto buffer() -> std::unique_ptr<Log_buffer>&{
-    return m_buffer;
-  }
-  inline auto buffer() const-> const std::unique_ptr<Log_buffer>&{
-    return m_buffer;
-  }
+  inline auto buffer() -> std::unique_ptr<Log_buffer>& { return m_buffer; }
+  inline auto buffer() const -> const std::unique_ptr<Log_buffer>& { return m_buffer; }
+
  private:
   std::unique_ptr<Log_buffer> m_buffer;
 };
@@ -203,8 +193,7 @@ class LogFile : public Log {
   auto operator=(const LogFile&) -> LogFile& = delete;
   auto operator=(LogFile&&) -> LogFile& = delete;
 
-  void open(const GString& filename, const GBool rootOnlyHardwired, const GInt argc, GChar** argv,
-            MPI_Comm mpiComm = MPI_COMM_WORLD);
+  void open(const GString& filename, const GBool rootOnlyHardwired, const GInt argc, GChar** argv, MPI_Comm mpiComm = MPI_COMM_WORLD);
   void close(GBool forceClose = false);
   auto setRootOnly(GBool rootOnly = true) -> GBool override;
   auto setMinFlushSize(GInt minFlushSize) -> GInt;

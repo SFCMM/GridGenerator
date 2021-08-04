@@ -17,41 +17,41 @@
 #include "math/mathfunctions.h"
 
 
-#define NEW_TIMER_GROUP(id, groupName) const GInt id = timers().newGroup(groupName)
-#define NEW_TIMER(id, timerName, groupId) const GInt id = timers().newGroupTimer(timerName, groupId)
-#define NEW_SUB_TIMER(id, timerName, timerId) const GInt id = timers().newSubTimer(timerName, timerId)
-#define NEW_TIMER_GROUP_STATIC(id, groupName) static const GInt id = timers().newGroup(groupName)
-#define NEW_TIMER_STATIC(id, timerName, groupId) static const GInt id = timers().newGroupTimer(timerName, groupId)
-#define NEW_SUB_TIMER_STATIC(id, timerName, timerId) static const GInt id = timers().newSubTimer(timerName, timerId)
-#define NEW_TIMER_GROUP_NOCREATE(id, groupName) id = timers().newGroup(groupName)
-#define NEW_TIMER_NOCREATE(id, timerName, groupId) id = timers().newGroupTimer(timerName, groupId)
+#define NEW_TIMER_GROUP(id, groupName)                 const GInt id = timers().newGroup(groupName)
+#define NEW_TIMER(id, timerName, groupId)              const GInt id = timers().newGroupTimer(timerName, groupId)
+#define NEW_SUB_TIMER(id, timerName, timerId)          const GInt id = timers().newSubTimer(timerName, timerId)
+#define NEW_TIMER_GROUP_STATIC(id, groupName)          static const GInt id = timers().newGroup(groupName)
+#define NEW_TIMER_STATIC(id, timerName, groupId)       static const GInt id = timers().newGroupTimer(timerName, groupId)
+#define NEW_SUB_TIMER_STATIC(id, timerName, timerId)   static const GInt id = timers().newSubTimer(timerName, timerId)
+#define NEW_TIMER_GROUP_NOCREATE(id, groupName)        id = timers().newGroup(groupName)
+#define NEW_TIMER_NOCREATE(id, timerName, groupId)     id = timers().newGroupTimer(timerName, groupId)
 #define NEW_SUB_TIMER_NOCREATE(id, timerName, timerId) id = timers().newSubTimer(timerName, timerId)
-#define START_TIMER(timerId) timers().startTimer(timerId)
-#define RECORD_TIMER_START(timerId) timers().recordTimerStart(timerId, AT_)
-#define RECORD_TIMER_STOP(timerId) timers().recordTimerStop(timerId, AT_)
-#define RETURN_TIMER(timerId) timers().returnTimer(timerId)
-#define RETURN_TIMER_TIME(timerId) timers().returnTimerTime(timerId)
-#define STOP_TIMER(timerId) timers().stopTimer(timerId)
-#define STOP_ALL_TIMERS() timers().stopAllTimers()
-#define RECORD_TIMER(timerId) timers().recordTimer(timerId)
-#define RECORD_TIMERS() timers().recordTimers()
-#define RECORD_ALL_TIMER() timers().recordAllTimer()
-#define STOP_ALL_RECORD_TIMERS() timers().stopAllRecordTimers()
-#define DISPLAY_TIMER(timerId) timers().displayTimer(timerId)
-#define DISPLAY_TIMER_INTERM(timerId) timers().displayTimerNoToggleDisplayed(timerId)
-#define DISPLAY_TIMER_OFFSET(timerId, ivl)                                                                             \
-  if(globalTimeStep % ivl == 0) {                                                                                      \
-    timers().recordTimerStop(timerId);                                                                                 \
-    timers().displayTimerNoToggleDisplayed(timerId);                                                                   \
-    timers().recordTimerStart(timerId);                                                                                \
+#define START_TIMER(timerId)                           timers().startTimer(timerId)
+#define RECORD_TIMER_START(timerId)                    timers().recordTimerStart(timerId, AT_)
+#define RECORD_TIMER_STOP(timerId)                     timers().recordTimerStop(timerId, AT_)
+#define RETURN_TIMER(timerId)                          timers().returnTimer(timerId)
+#define RETURN_TIMER_TIME(timerId)                     timers().returnTimerTime(timerId)
+#define STOP_TIMER(timerId)                            timers().stopTimer(timerId)
+#define STOP_ALL_TIMERS()                              timers().stopAllTimers()
+#define RECORD_TIMER(timerId)                          timers().recordTimer(timerId)
+#define RECORD_TIMERS()                                timers().recordTimers()
+#define RECORD_ALL_TIMER()                             timers().recordAllTimer()
+#define STOP_ALL_RECORD_TIMERS()                       timers().stopAllRecordTimers()
+#define DISPLAY_TIMER(timerId)                         timers().displayTimer(timerId)
+#define DISPLAY_TIMER_INTERM(timerId)                  timers().displayTimerNoToggleDisplayed(timerId)
+#define DISPLAY_TIMER_OFFSET(timerId, ivl)                                                                                                 \
+  if(globalTimeStep % ivl == 0) {                                                                                                          \
+    timers().recordTimerStop(timerId);                                                                                                     \
+    timers().displayTimerNoToggleDisplayed(timerId);                                                                                       \
+    timers().recordTimerStart(timerId);                                                                                                    \
   }
 #define DISPLAY_ALL_GROUP_TIMERS(groupId) timers().displayAllTimers(groupId)
-#define DISPLAY_ALL_TIMERS() timers().displayAllTimers()
-#define RESET_TIMER(timerId) timers().resetTimer(timerId)
-#define RESET_TIMERS() timers().resetTimers()
-#define RESET_RECORD(timerId) timers().resetRecord(timerId)
-#define RESET_ALL_RECORDS() timers().resetRecords()
-#define SET_TIMER(timeValue, timerId) timers().setTimer(timeValue, timerId)
+#define DISPLAY_ALL_TIMERS()              timers().displayAllTimers()
+#define RESET_TIMER(timerId)              timers().resetTimer(timerId)
+#define RESET_TIMERS()                    timers().resetTimers()
+#define RESET_RECORD(timerId)             timers().resetRecord(timerId)
+#define RESET_ALL_RECORDS()               timers().resetRecords()
+#define SET_TIMER(timeValue, timerId)     timers().setTimer(timeValue, timerId)
 
 
 /// \brief TimerManager manages all Timers and allows primitive profiling.
@@ -146,13 +146,10 @@ class TimerManager {
   using TIt = std::vector<Timer>::iterator;
 
 
-  static inline auto        time() -> chronoTimePoint;
-  inline void               displayTimer_(const GInt    timerId,
-                                          const GBool   toggleDisplayed = true,
-                                          const GInt    tIndent         = 0,
-                                          const GDouble superTime       = -1.0);
-  inline void               displayTimerHeader_();
-  inline void               displayTimerGroupHeader_(const GInt groupId);
+  static inline auto time() -> chronoTimePoint;
+  inline void displayTimer_(const GInt timerId, const GBool toggleDisplayed = true, const GInt tIndent = 0, const GDouble superTime = -1.0);
+  inline void displayTimerHeader_();
+  inline void displayTimerGroupHeader_(const GInt groupId);
   [[nodiscard]] inline GInt indent(const GInt pIndent) const { return pIndent + 2; };
 };
 
@@ -311,10 +308,7 @@ inline void TimerManager::stopAllRecordTimers() {
 }
 
 
-inline void TimerManager::displayTimer_(const GInt    timerId,
-                                        const GBool   toggleDisplayed,
-                                        const GInt    tIndent,
-                                        const GDouble superTime) {
+inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDisplayed, const GInt tIndent, const GDouble superTime) {
   GBool running = false;
   if(m_timers[timerId].displayed) {
     return;
@@ -344,8 +338,8 @@ inline void TimerManager::displayTimer_(const GInt    timerId,
   }
 
   indentedName << std::string(tIndent, ' ');
-  indentedName << "[" << std::fixed << std::setprecision(1) << std::setw(4) << std::setfill('0') << std::right
-               << percentage << std::left << "%] ";
+  indentedName << "[" << std::fixed << std::setprecision(1) << std::setw(4) << std::setfill('0') << std::right << percentage << std::left
+               << "%] ";
   indentedName << m_timers[timerId].name;
   gridgen_log << indentedName.str() << std::right;
   gridgen_log.precision(6);
@@ -447,14 +441,11 @@ auto operator<(const FunctionTiming& a, const FunctionTiming& b) -> GBool;
 
 class TimerProfiling {
  public:
-  explicit TimerProfiling(std::string name)
-    : m_initCpuTime(cpuTime()), m_initWallTime(wallTime()), m_name(std::move(name)) {}
+  explicit TimerProfiling(std::string name) : m_initCpuTime(cpuTime()), m_initWallTime(wallTime()), m_name(std::move(name)) {}
   ~TimerProfiling();
   static auto getTimingId(const std::string& name) -> GInt;
-  static auto getCpuTimeSecs(clock_t cput) -> GDouble {
-    return (static_cast<GDouble>(cput) / static_cast<GDouble>(CLOCKS_PER_SEC));
-  }
-  static auto                        printTime(GDouble secs) -> GString;
+  static auto getCpuTimeSecs(clock_t cput) -> GDouble { return (static_cast<GDouble>(cput) / static_cast<GDouble>(CLOCKS_PER_SEC)); }
+  static auto printTime(GDouble secs) -> GString;
   static std::vector<FunctionTiming> s_functionTimings;
 
  private:

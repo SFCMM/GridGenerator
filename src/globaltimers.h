@@ -26,8 +26,7 @@ struct Timers_ {
 };
 } // namespace gridgenerator
 
-inline std::array<GInt, gridgenerator::Timers_::_count>
-    TimeKeeper{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+inline std::array<GInt, gridgenerator::Timers_::_count> TimeKeeper{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 using Timers = gridgenerator::Timers_;
 
 #endif // GRIDGENERATOR_GLOBALTIMERS_H

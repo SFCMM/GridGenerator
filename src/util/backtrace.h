@@ -6,7 +6,7 @@
 #include <sstream>
 #include "common/compiler_config.h"
 
-//todo: activate
+// todo: activate
 
 #ifdef GCC_COMPILER
 // Needed for stack trace
@@ -25,13 +25,13 @@
 #endif
 #include "llvm/Support/raw_ostream.h"
 
-#define BACKTRACE()                                                                                                    \
-  do {                                                                                                                 \
-    debug::backtrace();                                                                                                \
+#define BACKTRACE()                                                                                                                        \
+  do {                                                                                                                                     \
+    debug::backtrace();                                                                                                                    \
   } while(false)
 #else
-#define BACKTRACE()                                                                                                    \
-  do {                                                                                                                 \
+#define BACKTRACE()                                                                                                                        \
+  do {                                                                                                                                     \
   } while(false)
 #endif
 

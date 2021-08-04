@@ -1,7 +1,7 @@
 #ifndef MATHFUNCTIONS_H
 #define MATHFUNCTIONS_H
-#include <gcem.hpp>
 #include <cmath>
+#include <gcem.hpp>
 
 namespace detail_ {
 template <class T, class U>
@@ -40,4 +40,4 @@ constexpr inline auto approx<float, float>(const float& a, const float& b, const
   return gcem::abs(a - b) < eps;
 }
 
-#endif //MATHFUNCTIONS_H
+#endif // MATHFUNCTIONS_H

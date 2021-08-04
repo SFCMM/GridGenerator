@@ -51,13 +51,10 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
   GeomSphere(const Point<NDIM>& center, GDouble radius) : m_center(center), m_radius(radius){};
 
-  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
-    return (x - m_center).norm() < m_radius + GDoubleEps;
-  }
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool { return (x - m_center).norm() < m_radius + GDoubleEps; }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
-    return (cellCenter - m_center).norm()
-           < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
+    return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
   }
 
  private:

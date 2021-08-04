@@ -39,6 +39,8 @@
 - Add bench cmd command.
 - Add documentation in Readme.md of all configuration options.
 - Build CI Pipeline from presets
+- define geometries as inside or outside
+- calculate bounding box
 
 ## On-going
 

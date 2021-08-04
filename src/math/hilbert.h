@@ -37,7 +37,7 @@ inline auto index(const VectorD<NDIM>& x, const GInt hilbertLevel) -> GInt {
     index += multiplier * hilbertLUT[hilbertLUTId];
 
     // rescale to new unit cube of half the size!
-    for(GInt dir = 0; dir < NDIM; ++dir){
+    for(GInt dir = 0; dir < NDIM; ++dir) {
       position[dir] = 2 * position[dir] - quadrant[dir];
     }
   }

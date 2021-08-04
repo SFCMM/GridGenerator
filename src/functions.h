@@ -37,8 +37,7 @@ static inline auto toStringVector(const std::vector<T>& in, GInt size = -1) -> s
     size = in.size();
   }
 
-  std::transform(in.begin(), in.begin() + size, std::back_inserter(string_vector),
-                 [](T b) -> GString { return std::to_string(b); });
+  std::transform(in.begin(), in.begin() + size, std::back_inserter(string_vector), [](T b) -> GString { return std::to_string(b); });
   return string_vector;
 }
 

@@ -13,7 +13,6 @@ using namespace std;
 // todo: add tests
 
 
-
 /**
  * \brief Parses the string input and returns the string with XML entities escaped
  * \author Michael Schlottke, Sven Berger
@@ -365,8 +364,7 @@ inline void Log_simpleFileBuffer::flushBuffer() {
  * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
  *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
  */
-void LogFile::open(const GString& filename, const GBool rootOnlyHardwired, const GInt argc, GChar** argv,
-                   MPI_Comm mpiComm) {
+void LogFile::open(const GString& filename, const GBool rootOnlyHardwired, const GInt argc, GChar** argv, MPI_Comm mpiComm) {
   // Only open file if it was not yet opened
   if(!m_isOpen) {
     // Open a simple file

@@ -37,6 +37,8 @@ using GUint = uint64_t;
 
 template <GInt NDIM>
 using VectorD = Eigen::Matrix<GDouble, NDIM, 1>;
+template <GInt NDIM>
+using VectorI = Eigen::Matrix<GInt, NDIM, 1>;
 
 class NullBuffer : public std::streambuf {
  public:
