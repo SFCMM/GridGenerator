@@ -41,22 +41,22 @@
 - Build CI Pipeline from presets
 - define geometries as inside or outside
 - calculate bounding box
+- additional output of geometry definition
 
 ## On-going
 
 - Add CMake build presets for all build types.
-- Add configuration options for geometries.
-
 
 ## Done:
+
 - Add Cmake preset
 - Add option to generate initial doxygen documentation.
 - Increase buffer size to 64kb.
 - Run unit test from CI.
 - Add analytical geometries cube, box and sphere.
-
-
+- Add configuration options for geometries.
 
 # V0.0.1
+
 - Generate basic uniform grid
 - Write out as ASCII Point file

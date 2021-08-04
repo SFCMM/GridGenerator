@@ -146,8 +146,8 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   if(MPI::isRoot()) {
     std::ifstream configFileStream(m_configurationFileName);
     configFileStream >> m_config;
-    // range-based for
-    for(auto& element : m_config.items()) {
+    // put all available keys in map to keep track of usage
+    for(const auto& element : m_config.items()) {
       m_configKeys.emplace(element.key(), false);
     }
     configFileStream.close();
@@ -165,6 +165,7 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   m_dryRun          = opt_config_value<GBool>("dry-run", m_dryRun);
   m_outputDir       = opt_config_value<GString>("outputDir", m_outputDir);
   m_maxNoOffsprings = opt_config_value<GInt>("maxNoOffsprings", m_maxNoOffsprings);
+  m_geometryConfig  = opt_config_value<json>("geometry", "");
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
 }
 
@@ -200,11 +201,6 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   m_grid->setMaxLvl(m_maxRefinementLvl);
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
-
-  cout << SP1 << "Reading GeometryManager" << endl;
-  m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);
-  m_geometry->setup();
-  m_grid->setGeometryManager(m_geometry);
 
   // todo: implement
   //  m_noBndIdsPerSolver.reserve(m_geometry->noNodes());
@@ -270,12 +266,19 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   }
 
   m_outGridFilename = opt_config_value<GString>("gridFileName", m_outGridFilename);
+
+  cout << SP1 << "Reading Geometry" << endl;
+  m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);
+  m_geometry->setup(m_geometryConfig);
+  m_grid->setGeometryManager(m_geometry);
+
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 template <typename T>
 auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T {
+  // todo: check for types
   if(m_config.template contains(key)) {
     m_configKeys[key] = true;
     return static_cast<T>(m_config[key]);
@@ -286,6 +289,7 @@ auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T 
 template <Debug_Level DEBUG_LEVEL>
 template <typename T>
 auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& defaultValue) -> T {
+  // todo: check for types
   if(m_config.template contains(key)) {
     m_configKeys[key] = true;
     return static_cast<T>(m_config[key]);
@@ -295,10 +299,7 @@ auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& d
 
 template <Debug_Level DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::has_config_value(const GString& key) -> GBool {
-  if(m_config.template contains(key)) {
-    return true;
-  }
-  TERMM(-1, "The required configuration value is missing: " + key);
+  return m_config.template contains(key);
 }
 
 

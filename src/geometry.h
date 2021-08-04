@@ -1,6 +1,7 @@
 #ifndef GRIDGENERATOR_GEOMETRY_H
 #define GRIDGENERATOR_GEOMETRY_H
 
+#include <json.h>
 #include <memory>
 #include <mpi.h>
 #include <vector>
@@ -9,12 +10,14 @@
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
 
+using json = nlohmann::json;
+
 class GeometryInterface {
  public:
   GeometryInterface(const MPI_Comm comm) : m_comm(comm){};
   virtual ~GeometryInterface() = default;
 
-  virtual void        setup()                                                                         = 0;
+  virtual void        setup(const json& geometry)                                                     = 0;
   virtual inline auto pointIsInside(const GDouble* x) const -> GBool                                  = 0;
   virtual inline auto cutWithCell(const GDouble* cellCenter, const GDouble cellLength) const -> GBool = 0;
 
@@ -50,6 +53,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
   GeomSphere(const Point<NDIM>& center, GDouble radius) : m_center(center), m_radius(radius){};
+  GeomSphere(const json& sphere) : m_center(static_cast<std::vector<GDouble>>(sphere["center"]).data()), m_radius(sphere["radius"]){};
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool { return (x - m_center).norm() < m_radius + GDoubleEps; }
 
@@ -66,6 +70,8 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
   GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) {}
+  GeomBox(const json& box)
+    : m_A(static_cast<std::vector<GDouble>>(box["A"]).data()), m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {}
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -94,6 +100,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
   GeomCube(const Point<NDIM>& center, const GDouble length) : m_center(center), m_length(length){};
+  GeomCube(const json& cube) : m_center(static_cast<std::vector<GDouble>>(cube["center"]).data()), m_length(cube["length"]){};
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -123,27 +130,58 @@ class GeometryManager : public GeometryInterface {
  public:
   GeometryManager(const MPI_Comm comm) : GeometryInterface(comm){};
 
-  void setup() override {
-    // for testing setup sphere
-    Point<NDIM> center;
-    center.fill(0);
-    m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(center, 0.5));
-    Point<NDIM> center2;
-    center2.fill(0);
-    center2[0] = 0.5;
-    m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(center2, 0.5));
-
-    Point<NDIM> A;
-    A.fill(0);
-    A[0] = -0.5;
-    Point<NDIM> B;
-    B.fill(0);
-    B[0] = -1;
-    if(NDIM == 3) {
-      B[1] = -1;
-      B[2] = -1;
+  void setup(const json& geometry) override {
+    for(const auto& object : geometry.items()) {
+      switch(resolveGeomType(object.key())) {
+        case GeomType::sphere:
+          {
+            gridgen_log << SP2 << "+ Adding Sphere geometry" << std::endl;
+            m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(geometry["sphere"]));
+            break;
+          }
+        case GeomType::box:
+          {
+            gridgen_log << SP2 << "+ Adding Box geometry" << std::endl;
+            m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(geometry["box"]));
+            break;
+          }
+        case GeomType::cube:
+          {
+            gridgen_log << SP2 << "+ Adding Cube geometry" << std::endl;
+            m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(geometry["cube"]));
+            break;
+          }
+        case GeomType::unknown:
+          [[fallthrough]];
+        default:
+          {
+            gridgen_log << SP2 << "Unknown geometry type" << object.key() << std::endl;
+            break;
+          }
+      }
     }
-    m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(A, B));
+
+
+    //    // for testing setup sphere
+    //    Point<NDIM> center;
+    //    center.fill(0);
+    //    m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(center, 0.5));
+    //    Point<NDIM> center2;
+    //    center2.fill(0);
+    //    center2[0] = 0.5;
+    //    m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(center2, 0.5));
+    //
+    //    Point<NDIM> A;
+    //    A.fill(0);
+    //    A[0] = -0.5;
+    //    Point<NDIM> B;
+    //    B.fill(0);
+    //    B[0] = -1;
+    //    if(NDIM == 3) {
+    //      B[1] = -1;
+    //      B[2] = -1;
+    //    }
+    //    m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(A, B));
   }
 
   [[nodiscard]] auto inline pointIsInside(const GDouble* x) const -> GBool override {

@@ -69,6 +69,7 @@ class GridGenerator {
   std::unique_ptr<WeightMethod>      m_weightMethod;
   std::unique_ptr<GridInterface>     m_grid;
   std::shared_ptr<GeometryInterface> m_geometry;
+  json                               m_geometryConfig;
 };
 
 #endif // GRIDGENERATOR_GRIDGENERATOR_H

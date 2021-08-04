@@ -12,5 +12,35 @@
     -1.0,
     1.0
   ],
+  "geometry": {
+    "sphere": {
+      "center": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "radius": 0.5
+    },
+    "cube": {
+      "center": [
+        -0.5,
+        0.0,
+        0.0
+      ],
+      "length": 0.5
+    },
+    "box": {
+      "A": [
+        -0.5,
+        0,
+        0
+      ],
+      "B": [
+        -1,
+        -1,
+        -1
+      ]
+    }
+  },
   "unused-value": "unused dummy"
 }
