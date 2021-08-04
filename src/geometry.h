@@ -30,14 +30,26 @@ class GeometryInterface {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryRepresentation {
  public:
+  // todo: move functions from gridgenerator.cpp and use them here
+  GeometryRepresentation(const json& geom) : m_inside(geom.template contains("inside") ? static_cast<GBool>(geom["inside"]) : true){};
   GeometryRepresentation()          = default;
   virtual ~GeometryRepresentation() = default;
 
   [[nodiscard]] virtual inline auto pointIsInside(const Point<NDIM>& x) const -> GBool                        = 0;
   [[nodiscard]] virtual inline auto cutWithCell(const Point<NDIM>& center, GDouble cellLength) const -> GBool = 0;
   [[nodiscard]] virtual inline auto getBoundingBox() const -> std::vector<GDouble>                            = 0;
+  [[nodiscard]] inline auto         type() const -> GeomType { return m_type; }
+  [[nodiscard]] inline auto         name() const -> GString { return m_name; }
+  [[nodiscard]] inline auto         inside() const -> GBool { return m_inside; }
+
+ protected:
+  inline auto type() -> GeomType& { return m_type; }
+  inline auto name() -> GString& { return m_name; }
 
  private:
+  GeomType m_type   = GeomType::unknown;
+  GString  m_name   = "undefined";
+  GBool    m_inside = true;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -49,16 +61,30 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryAnalytical : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
  public:
+  GeometryAnalytical() = default;
+  GeometryAnalytical(const json& geom) : GeometryRepresentation<DEBUG_LEVEL, NDIM>(geom){};
+
  private:
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomSphere(const Point<NDIM>& center, GDouble radius) : m_center(center), m_radius(radius){};
-  GeomSphere(const json& sphere) : m_center(static_cast<std::vector<GDouble>>(sphere["center"]).data()), m_radius(sphere["radius"]){};
+  GeomSphere(const Point<NDIM>& center, GDouble radius) : m_center(center), m_radius(radius) {
+    name() = "Sphere";
+    type() = GeomType::sphere;
+  };
+  GeomSphere(const json& sphere)
+    : GeometryAnalytical<DEBUG_LEVEL, NDIM>(sphere),
+      m_center(static_cast<std::vector<GDouble>>(sphere["center"]).data()),
+      m_radius(sphere["radius"]) {
+    name() = "Sphere";
+    type() = GeomType::sphere;
+  };
 
-  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool { return (x - m_center).norm() < m_radius + GDoubleEps; }
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
+    return (x - m_center).norm() < m_radius + GDoubleEps ? inside() : !inside();
+  }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
     return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
@@ -75,6 +101,10 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   }
 
  private:
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
+
   Point<NDIM> m_center{NAN};
   GDouble     m_radius = 0;
 };
@@ -82,19 +112,27 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) { checkValid(); }
+  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) {
+    name() = "Box";
+    type() = GeomType::box;
+    checkValid();
+  }
   GeomBox(const json& box)
-    : m_A(static_cast<std::vector<GDouble>>(box["A"]).data()), m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {
+    : GeometryAnalytical<DEBUG_LEVEL, NDIM>(box),
+      m_A(static_cast<std::vector<GDouble>>(box["A"]).data()),
+      m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {
+    name() = "Box";
+    type() = GeomType::box;
     checkValid();
   }
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(m_A[dir] > x[dir] || m_B[dir] < x[dir]) {
-        return false;
+        return !inside();
       }
     }
-    return true;
+    return inside();
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
@@ -118,6 +156,11 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   }
 
  private:
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
+
+
   void checkValid() const {
     for(GInt dir = 0; dir < NDIM; dir++) {
       if(m_A[dir] > m_B[dir]) {
@@ -132,16 +175,25 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomCube(const Point<NDIM>& center, const GDouble length) : m_center(center), m_length(length){};
-  GeomCube(const json& cube) : m_center(static_cast<std::vector<GDouble>>(cube["center"]).data()), m_length(cube["length"]){};
+  GeomCube(const Point<NDIM>& center, const GDouble length) : m_center(center), m_length(length) {
+    name() = "Cube";
+    type() = GeomType::cube;
+  };
+  GeomCube(const json& cube)
+    : GeometryAnalytical<DEBUG_LEVEL, NDIM>(cube),
+      m_center(static_cast<std::vector<GDouble>>(cube["center"]).data()),
+      m_length(cube["length"]) {
+    name() = "Cube";
+    type() = GeomType::cube;
+  };
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(abs(x[dir] - m_center[dir]) > m_length) {
-        return false;
+        return !inside();
       }
     }
-    return true;
+    return inside();
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
@@ -166,6 +218,11 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 
 
  private:
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
+
+
   Point<NDIM> m_center{NAN};
   GDouble     m_length = 0;
 };

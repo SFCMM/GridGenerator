@@ -1,14 +1,29 @@
+# V1.1.0
+
+## Planned:
+
+- Add gui based on schema
+- Add Paraview-Plugin for HDF5 format
+
 # V1.0.0
+
+## Planned:
+
 - Increase coverage to >90%
 - Add schema check for the json file.
 
-# V0.2.0
+# V0.2.0  (~Q4/21)
+
+## Planned:
+
 - Save as unstructured VTK grid.
 - Fix duplicate points in STLs.
 - Add option to scale and translate STls.
 
-# V0.1.0
-## Planned
+# V0.1.0 (~Q3/21)
+
+## Planned:
+
 - Save HDF5 grid format.
 - Patch refinement.
 - Add python bindings.
@@ -17,14 +32,19 @@
 - Add more complex porosity options.
 - Add CMD to load test configuration file.
 
-# V0.0.3 (~22.8.21)
-## Planned
-- Generate porous mesh provided with some porosity value.
-- Save svg of the mesh.
+### Moved from V0.0.3:
+
 - Implement MPI communication.
-- Open STL files.
+- Save svg of the mesh.
 - Add python script to analyse performance.
 - Add error for documentation
+
+# V0.0.3 (~22.8.21)
+
+## Planned:
+
+- Generate porous mesh provided with some porosity value.
+- Open STL files.
 - Add doxygen generation to CI
 - (Optimize IO speed by manual buffering.)
 - Split out common sim libs
@@ -33,14 +53,18 @@
 - introduce type for bounding boxes
 - check geometries are touching
 
+### Moved from V0.0.2:
+
+- Add OpenMP parallelization.
+- Add documentation in Readme.md of all configuration options.
+- Boundary refinement.
+
 # V0.0.2 (~8.8.21)
+
 ## Planned
 
-- Boundary refinement.
 - Write out VTK Point file (Binary/ASCII).
-- Add OpenMP parallelization.
 - Add bench cmd command.
-- Add documentation in Readme.md of all configuration options.
 - Build CI Pipeline from presets
 - additional output of geometry definition
 - make output filter settable
@@ -49,7 +73,6 @@
 ## On-going:
 
 - Add CMake build presets for all build types.
-- define geometries as inside or outside
 
 ## Done:
 
@@ -60,6 +83,7 @@
 - Add analytical geometries cube, box and sphere.
 - Add configuration options for geometries.
 - calculate bounding box
+- define geometries as inside or outside
 
 # V0.0.1
 
