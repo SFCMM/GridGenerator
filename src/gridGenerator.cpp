@@ -202,16 +202,6 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   // todo: allow setting the weighting method
   m_weightMethod = std::make_unique<WeightUniform>();
 
-  // todo: implement
-  //  m_noBndIdsPerSolver.reserve(m_geometry->noNodes());
-  //  for(MInt solver = 0; solver < m_geometry->noNodes(); solver++) {
-  //    m_noBndIdsPerSolver[solver] = m_geometry->noSegmentsOfNode(solver);
-  //  }
-  //  m_bndCutInfo.reserve(m_geometry->noNodes());
-  //  if(!has_config_value("has_config_value")){
-  //    m_grid->setBoundingBox(m_geometry->boundingBox());
-  //  }
-
 
   gridgen_log << "\n";
   gridgen_log << SP2 << "+ m_center of gravity: " << strStreamify<NDIM>(m_grid->cog()).str() << "\n";
@@ -257,8 +247,6 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
     TERMM(-1, "Invalid definition of grid level partitionLevel >= uniformLevel");
   }
 
-  m_grid->setBoundingBox(opt_config_value<std::vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim - 1)));
-
   m_maxRefinementLvl = m_uniformLvl;
   m_maxRefinementLvl = opt_config_value<GInt>("maxRfnmtLvl", m_maxRefinementLvl);
   if(m_maxRefinementLvl < m_uniformLvl) {
@@ -271,6 +259,13 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);
   m_geometry->setup(m_geometryConfig);
   m_grid->setGeometryManager(m_geometry);
+
+  if(m_geometry->noObjects() == 0 || has_config_value("boundingBox")) {
+    m_grid->setBoundingBox(opt_config_value<std::vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim - 1)));
+  } else {
+    m_grid->setBoundingBox(m_geometry->getBoundingBox());
+  }
+
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
 }

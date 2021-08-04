@@ -17,9 +17,11 @@ class GeometryInterface {
   GeometryInterface(const MPI_Comm comm) : m_comm(comm){};
   virtual ~GeometryInterface() = default;
 
-  virtual void        setup(const json& geometry)                                                     = 0;
-  virtual inline auto pointIsInside(const GDouble* x) const -> GBool                                  = 0;
-  virtual inline auto cutWithCell(const GDouble* cellCenter, const GDouble cellLength) const -> GBool = 0;
+  virtual void                      setup(const json& geometry)                                                     = 0;
+  virtual inline auto               pointIsInside(const GDouble* x) const -> GBool                                  = 0;
+  virtual inline auto               cutWithCell(const GDouble* cellCenter, const GDouble cellLength) const -> GBool = 0;
+  [[nodiscard]] virtual inline auto noObjects() const -> GInt                                                       = 0;
+  [[nodiscard]] virtual inline auto getBoundingBox() const -> std::vector<GDouble>                                  = 0;
 
  private:
   MPI_Comm m_comm;
@@ -33,6 +35,7 @@ class GeometryRepresentation {
 
   [[nodiscard]] virtual inline auto pointIsInside(const Point<NDIM>& x) const -> GBool                        = 0;
   [[nodiscard]] virtual inline auto cutWithCell(const Point<NDIM>& center, GDouble cellLength) const -> GBool = 0;
+  [[nodiscard]] virtual inline auto getBoundingBox() const -> std::vector<GDouble>                            = 0;
 
  private:
 };
@@ -61,6 +64,16 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
   }
 
+  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
+    std::vector<GDouble> bbox(2 * NDIM);
+    std::fill(bbox.begin(), bbox.end(), 0);
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      bbox[2 * dir]     = m_center[dir] - m_radius;
+      bbox[2 * dir + 1] = m_center[dir] + m_radius;
+    }
+    return bbox;
+  }
+
  private:
   Point<NDIM> m_center{NAN};
   GDouble     m_radius = 0;
@@ -69,13 +82,15 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) {}
+  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) { checkValid(); }
   GeomBox(const json& box)
-    : m_A(static_cast<std::vector<GDouble>>(box["A"]).data()), m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {}
+    : m_A(static_cast<std::vector<GDouble>>(box["A"]).data()), m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {
+    checkValid();
+  }
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      if(m_A[dir] > x[dir] && m_B[dir] < x[dir]) {
+      if(m_A[dir] > x[dir] || m_B[dir] < x[dir]) {
         return false;
       }
     }
@@ -84,14 +99,32 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      if(m_A[dir] > cellCenter[dir] - cellLength && m_B[dir] < cellCenter[dir] + cellLength) {
+      if((m_A[dir] > cellCenter[dir] || m_B[dir] < cellCenter[dir]) // cellCenter is within the box
+         && abs(m_A[dir] - cellCenter[dir]) > cellLength && abs(m_B[dir] - cellCenter[dir]) > cellLength /*cellcenter cuts the box*/) {
         return false;
       }
     }
     return true;
   }
 
+  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
+    std::vector<GDouble> bbox(2 * NDIM);
+    std::fill(bbox.begin(), bbox.end(), 0);
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      bbox[2 * dir]     = m_A[dir];
+      bbox[2 * dir + 1] = m_B[dir];
+    }
+    return bbox;
+  }
+
  private:
+  void checkValid() const {
+    for(GInt dir = 0; dir < NDIM; dir++) {
+      if(m_A[dir] > m_B[dir]) {
+        TERMM(-1, "ERROR: The specification of the box is invalid " + std::to_string(m_A[dir]) + " > " + std::to_string(m_B[dir]));
+      }
+    }
+  }
   Point<NDIM> m_A;
   Point<NDIM> m_B;
 };
@@ -120,6 +153,18 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     return true;
   }
 
+  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
+    std::vector<GDouble> bbox(2 * NDIM);
+    std::fill(bbox.begin(), bbox.end(), 0);
+    GDouble cicumference_radius = gcem::sqrt(NDIM) * m_length;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      bbox[2 * dir]     = m_center[dir] - cicumference_radius;
+      bbox[2 * dir + 1] = m_center[dir] + cicumference_radius;
+    }
+    return bbox;
+  }
+
+
  private:
   Point<NDIM> m_center{NAN};
   GDouble     m_length = 0;
@@ -133,55 +178,29 @@ class GeometryManager : public GeometryInterface {
   void setup(const json& geometry) override {
     for(const auto& object : geometry.items()) {
       switch(resolveGeomType(object.key())) {
-        case GeomType::sphere:
-          {
-            gridgen_log << SP2 << "+ Adding Sphere geometry" << std::endl;
-            m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(geometry["sphere"]));
-            break;
-          }
-        case GeomType::box:
-          {
-            gridgen_log << SP2 << "+ Adding Box geometry" << std::endl;
-            m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(geometry["box"]));
-            break;
-          }
-        case GeomType::cube:
-          {
-            gridgen_log << SP2 << "+ Adding Cube geometry" << std::endl;
-            m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(geometry["cube"]));
-            break;
-          }
+        case GeomType::sphere: {
+          gridgen_log << SP2 << "+ Adding Sphere geometry" << std::endl;
+          m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(geometry["sphere"]));
+          break;
+        }
+        case GeomType::box: {
+          gridgen_log << SP2 << "+ Adding Box geometry" << std::endl;
+          m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(geometry["box"]));
+          break;
+        }
+        case GeomType::cube: {
+          gridgen_log << SP2 << "+ Adding Cube geometry" << std::endl;
+          m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(geometry["cube"]));
+          break;
+        }
         case GeomType::unknown:
           [[fallthrough]];
-        default:
-          {
-            gridgen_log << SP2 << "Unknown geometry type" << object.key() << std::endl;
-            break;
-          }
+        default: {
+          gridgen_log << SP2 << "Unknown geometry type" << object.key() << std::endl;
+          break;
+        }
       }
     }
-
-
-    //    // for testing setup sphere
-    //    Point<NDIM> center;
-    //    center.fill(0);
-    //    m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(center, 0.5));
-    //    Point<NDIM> center2;
-    //    center2.fill(0);
-    //    center2[0] = 0.5;
-    //    m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(center2, 0.5));
-    //
-    //    Point<NDIM> A;
-    //    A.fill(0);
-    //    A[0] = -0.5;
-    //    Point<NDIM> B;
-    //    B.fill(0);
-    //    B[0] = -1;
-    //    if(NDIM == 3) {
-    //      B[1] = -1;
-    //      B[2] = -1;
-    //    }
-    //    m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(A, B));
   }
 
   [[nodiscard]] auto inline pointIsInside(const GDouble* x) const -> GBool override {
@@ -213,6 +232,29 @@ class GeometryManager : public GeometryInterface {
     }
     return false;
   }
+
+  [[nodiscard]] auto inline noObjects() const -> GInt override { return m_geomObj.size(); }
+
+  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
+    std::vector<GDouble> bbox(2 * NDIM);
+    std::fill(bbox.begin(), bbox.end(), 0);
+
+    for(GInt objId = 0; objId < static_cast<GInt>(m_geomObj.size()); ++objId) {
+      const auto& obj       = m_geomObj.at(objId);
+      const auto  temp_bbox = obj->getBoundingBox();
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        // set the bounding box to the values of the first object for initialization
+        if(bbox[2 * dir] > temp_bbox[2 * dir] || objId == 0) {
+          bbox[2 * dir] = temp_bbox[2 * dir];
+        }
+        if(bbox[2 * dir + 1] < temp_bbox[2 * dir + 1] || objId == 0) {
+          bbox[2 * dir + 1] = temp_bbox[2 * dir + 1];
+        }
+      }
+    }
+    return bbox;
+  }
+
 
  private:
   std::vector<std::unique_ptr<GeometryRepresentation<DEBUG_LEVEL, NDIM>>> m_geomObj;

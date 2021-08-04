@@ -230,7 +230,7 @@ TabWidth: 2
 # Do not use tabs. EVER!
 UseTab: Never
 
-IndentCaseBlocks: true
+IndentCaseBlocks: false
 AlignConsecutiveBitFields: AcrossComments
 AlignConsecutiveMacros: AcrossComments
 

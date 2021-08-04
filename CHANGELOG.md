@@ -30,22 +30,26 @@
 - Split out common sim libs
 - Setup valgrind and sanitize tests
 - Run coverage within CI
+- introduce type for bounding boxes
+- check geometries are touching
 
 # V0.0.2 (~8.8.21)
 ## Planned
+
 - Boundary refinement.
 - Write out VTK Point file (Binary/ASCII).
 - Add OpenMP parallelization.
 - Add bench cmd command.
 - Add documentation in Readme.md of all configuration options.
 - Build CI Pipeline from presets
-- define geometries as inside or outside
-- calculate bounding box
 - additional output of geometry definition
+- make output filter settable
+- add UnitTest and testcases for grid generation
 
-## On-going
+## On-going:
 
 - Add CMake build presets for all build types.
+- define geometries as inside or outside
 
 ## Done:
 
@@ -55,6 +59,7 @@
 - Run unit test from CI.
 - Add analytical geometries cube, box and sphere.
 - Add configuration options for geometries.
+- calculate bounding box
 
 # V0.0.1
 
