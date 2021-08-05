@@ -6,6 +6,7 @@
 #include <mpi.h>
 #include <vector>
 #include "macros.h"
+#include "util/string_helper.h"
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
@@ -38,9 +39,11 @@ class GeometryRepresentation {
   [[nodiscard]] virtual inline auto pointIsInside(const Point<NDIM>& x) const -> GBool                        = 0;
   [[nodiscard]] virtual inline auto cutWithCell(const Point<NDIM>& center, GDouble cellLength) const -> GBool = 0;
   [[nodiscard]] virtual inline auto getBoundingBox() const -> std::vector<GDouble>                            = 0;
-  [[nodiscard]] inline auto         type() const -> GeomType { return m_type; }
-  [[nodiscard]] inline auto         name() const -> GString { return m_name; }
-  [[nodiscard]] inline auto         inside() const -> GBool { return m_inside; }
+  [[nodiscard]] virtual inline auto str() const -> GString                                                    = 0;
+
+  [[nodiscard]] inline auto type() const -> GeomType { return m_type; }
+  [[nodiscard]] inline auto name() const -> GString { return m_name; }
+  [[nodiscard]] inline auto inside() const -> GBool { return m_inside; }
 
  protected:
   inline auto type() -> GeomType& { return m_type; }
@@ -82,11 +85,11 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     type() = GeomType::sphere;
   };
 
-  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     return (x - m_center).norm() < m_radius + GDoubleEps ? inside() : !inside();
   }
 
-  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
     return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
   }
 
@@ -98,6 +101,15 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
       bbox[2 * dir + 1] = m_center[dir] + m_radius;
     }
     return bbox;
+  }
+
+  [[nodiscard]] inline auto str() const -> GString override {
+    std::stringstream ss;
+    ss << SP1 << "Sphere"
+       << "\n";
+    ss << SP7 << "Center: " << strStreamify<NDIM>(m_center).str() << "\n";
+    ss << SP7 << "Radius: " << m_radius << "\n";
+    return ss.str();
   }
 
  private:
@@ -153,6 +165,15 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
       bbox[2 * dir + 1] = m_B[dir];
     }
     return bbox;
+  }
+
+  [[nodiscard]] inline auto str() const -> GString override {
+    std::stringstream ss;
+    ss << SP1 << "Box"
+       << "\n";
+    ss << SP7 << "Point A: " << strStreamify<NDIM>(m_A).str() << "\n";
+    ss << SP7 << "Point B: " << strStreamify<NDIM>(m_B).str() << "\n";
+    return ss.str();
   }
 
  private:
@@ -216,6 +237,15 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     return bbox;
   }
 
+  [[nodiscard]] inline auto str() const -> GString override {
+    std::stringstream ss;
+    ss << SP1 << "Cube"
+       << "\n";
+    ss << SP7 << "Center: " << strStreamify<NDIM>(m_center).str() << "\n";
+    ss << SP7 << "Length: " << m_length << "\n";
+    return ss.str();
+  }
+
 
  private:
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
@@ -236,17 +266,14 @@ class GeometryManager : public GeometryInterface {
     for(const auto& object : geometry.items()) {
       switch(resolveGeomType(object.key())) {
         case GeomType::sphere: {
-          gridgen_log << SP2 << "+ Adding Sphere geometry" << std::endl;
           m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(geometry["sphere"]));
           break;
         }
         case GeomType::box: {
-          gridgen_log << SP2 << "+ Adding Box geometry" << std::endl;
           m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(geometry["box"]));
           break;
         }
         case GeomType::cube: {
-          gridgen_log << SP2 << "+ Adding Cube geometry" << std::endl;
           m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(geometry["cube"]));
           break;
         }
@@ -257,6 +284,7 @@ class GeometryManager : public GeometryInterface {
           break;
         }
       }
+      gridgen_log << m_geomObj.back()->str() << std::endl;
     }
   }
 

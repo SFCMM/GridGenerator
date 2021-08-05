@@ -58,38 +58,62 @@
 - allow defining the output values
 - define more output filters (targetLvl etc.)
 - add performance testing results to CI
+- set filenames and paths
+- add tutorial
+- activate profile guided optimization
+- activate lto?
 
 ### Moved from V0.0.2:
 
 - Add OpenMP parallelization.
 - Add documentation in Readme.md of all configuration options.
 - Boundary refinement.
+- Add bench cmd command.
 
 # V0.0.2 (~8.8.21)
 
 ## Planned
 
-- Write out VTK Point file (Binary/ASCII).
-- Add bench cmd command.
+### Buildsystem:
 - Build CI Pipeline from presets
-- additional output of geometry definition
+
+### Testing:
 - add UnitTest and testcases for grid generation
 
 ## On-going:
 
 - Add CMake build presets for all build types.
+- Write out VTK Point file (Binary/ASCII).
 
 ## Done:
 
-- Add Cmake preset
-- Add option to generate initial doxygen documentation.
-- Increase buffer size to 64kb.
-- Run unit test from CI.
+### Features
 - Add analytical geometries cube, box and sphere.
+- Define geometries as inside or outside
+
+### Buildsystem
+- Add Cmake preset
+
+### Testing
+- Run unit test from CI.
+
+### Usability
 - Add configuration options for geometries.
-- calculate bounding box
-- define geometries as inside or outside
-- make output filter settable
+- Calculate bounding box
+- Make output filter settable
+- Additional output of geometry definition
+
+
+### IO
+
+### Performance
+- Increase IO buffer size to 64kb.
+
+### Bugs
+
+### Documentation
+- Add option to generate initial doxygen documentation.
+
 
 # V0.0.1
 

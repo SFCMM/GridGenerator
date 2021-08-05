@@ -61,7 +61,12 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
 
 } // namespace ASCII
 
-namespace VTK {}
+namespace VTK {
+template <GInt DIM>
+inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
+                           const std::vector<GString>& index = {}, const std::vector<std::vector<GString>>& values = {},
+                           const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {}
+} // namespace VTK
 
 namespace HDF5 {}
 
