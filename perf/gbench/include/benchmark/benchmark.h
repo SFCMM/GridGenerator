@@ -1642,6 +1642,8 @@ inline const char* GetTimeUnitString(TimeUnit unit) {
       return "us";
     case kNanosecond:
       return "ns";
+    default:
+      return "s";
   }
   BENCHMARK_UNREACHABLE();
 }
@@ -1656,6 +1658,8 @@ inline double GetTimeUnitMultiplier(TimeUnit unit) {
       return 1e6;
     case kNanosecond:
       return 1e9;
+    default:
+      return 1;
   }
   BENCHMARK_UNREACHABLE();
 }

@@ -3,6 +3,7 @@ project(gridgenerator)
 project(gridgenerator VERSION "0.0.1")
 
 add_subdirectory(UnitTest)
+add_subdirectory(perf)
 
 configure_file(src/config.h.in config.h @ONLY)
 
@@ -12,8 +13,8 @@ set(CMAKE_CXX_STANDARD 17)
 #todo: move to presets file
 include_directories(/home/svenb/build/omp411/include)
 link_directories(/home/svenb/build/omp411/lib)
-find_package(MPI REQUIRED)
-include_directories(${MPI_CXX_INCLUDE_PATH})
+#find_package(MPI REQUIRED)
+#include_directories(${MPI_CXX_INCLUDE_PATH})
 
 include_directories(external)
 include_directories(src)
@@ -26,8 +27,8 @@ add_executable(gridgenerator
         src/gridcell_properties.h src/WeightMethod.h src/geometry.h src/functions.h src/IO.h src/cartesian.h src/util/string_helper.h)
 
 
-#TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
-target_link_libraries(gridgenerator PUBLIC MPI::MPI_CXX)
+TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
+#target_link_libraries(gridgenerator PUBLIC MPI::MPI_CXX)
 
 option(BUILD_DOC "Build documentation" OFF)
 # check if Doxygen is installed

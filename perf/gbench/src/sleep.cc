@@ -48,7 +48,7 @@ void SleepForMicroseconds(int microseconds) {
   while (usleep(sleepTime.rem) == -1 && errno == EINTR)
     ;
 #else
-  struct timespec sleep_time;
+  timespec sleep_time{};
   sleep_time.tv_sec = microseconds / kNumMicrosPerSecond;
   sleep_time.tv_nsec = (microseconds % kNumMicrosPerSecond) * kNumNanosPerMicro;
   while (nanosleep(&sleep_time, &sleep_time) != 0 && errno == EINTR)

@@ -1,7 +1,7 @@
 project(UnitTest)
 add_subdirectory(lib)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} ${gmock_SOURCE_DIR}/include ${gmock_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/src)
+        ${CMAKE_SOURCE_DIR}/external ${CMAKE_SOURCE_DIR}/src)
 
 # openmpi
 include_directories(/home/svenb/build/omp411/include)

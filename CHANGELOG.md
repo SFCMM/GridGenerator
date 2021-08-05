@@ -57,6 +57,7 @@
 - add more geometries pyramid, cone, tube
 - allow defining the output values
 - define more output filters (targetLvl etc.)
+- add performance testing results to CI
 
 ### Moved from V0.0.2:
 

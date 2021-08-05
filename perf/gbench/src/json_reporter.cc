@@ -240,6 +240,8 @@ void JSONReporter::PrintRunData(Run const& run) {
         return "iteration";
       case BenchmarkReporter::Run::RT_Aggregate:
         return "aggregate";
+      default:
+        return "error default case";
     }
     BENCHMARK_UNREACHABLE();
   }()) << ",\n";

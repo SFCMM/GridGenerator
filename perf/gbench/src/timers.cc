@@ -79,7 +79,7 @@ double MakeTime(FILETIME const& kernel_time, FILETIME const& user_time) {
          1e-7;
 }
 #elif !defined(BENCHMARK_OS_FUCHSIA)
-double MakeTime(struct rusage const& ru) {
+double MakeTime(rusage const& ru) {
   return (static_cast<double>(ru.ru_utime.tv_sec) +
           static_cast<double>(ru.ru_utime.tv_usec) * 1e-6 +
           static_cast<double>(ru.ru_stime.tv_sec) +
@@ -95,7 +95,7 @@ double MakeTime(thread_basic_info_data_t const& info) {
 }
 #endif
 #if defined(CLOCK_PROCESS_CPUTIME_ID) || defined(CLOCK_THREAD_CPUTIME_ID)
-double MakeTime(struct timespec const& ts) {
+double MakeTime(timespec const& ts) {
   return ts.tv_sec + (static_cast<double>(ts.tv_nsec) * 1e-9);
 }
 #endif
@@ -127,7 +127,7 @@ double ProcessCPUUsage() {
 #elif defined(CLOCK_PROCESS_CPUTIME_ID) && !defined(BENCHMARK_OS_MACOSX)
   // FIXME We want to use clock_gettime, but its not available in MacOS 10.11. See
   // https://github.com/google/benchmark/pull/292
-  struct timespec spec;
+  timespec spec;
   if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &spec) == 0)
     return MakeTime(spec);
   DiagnoseAndExit("clock_gettime(CLOCK_PROCESS_CPUTIME_ID, ...) failed");
@@ -171,7 +171,7 @@ double ThreadCPUUsage() {
   if (getrusage(RUSAGE_LWP, &ru) == 0) return MakeTime(ru);
   DiagnoseAndExit("getrusage(RUSAGE_LWP, ...) failed");
 #elif defined(CLOCK_THREAD_CPUTIME_ID)
-  struct timespec ts;
+  timespec ts;
   if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == 0) return MakeTime(ts);
   DiagnoseAndExit("clock_gettime(CLOCK_THREAD_CPUTIME_ID, ...) failed");
 #else

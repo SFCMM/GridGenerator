@@ -52,7 +52,7 @@ BenchmarkInstance::BenchmarkInstance(Benchmark* benchmark, int family_idx,
 
   if (benchmark_.iterations_ != 0) {
     name_.iterations = StrFormat(
-        "iterations:%lu", static_cast<unsigned long>(benchmark_.iterations_));
+        "iterations:%lu", benchmark_.iterations_);
   }
 
   if (benchmark_.repetitions_ != 0) {
