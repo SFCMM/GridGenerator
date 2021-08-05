@@ -13,8 +13,8 @@ set(CMAKE_CXX_STANDARD 17)
 #todo: move to presets file
 include_directories(/home/svenb/build/omp411/include)
 link_directories(/home/svenb/build/omp411/lib)
-#find_package(MPI REQUIRED)
-#include_directories(${MPI_CXX_INCLUDE_PATH})
+find_package(MPI REQUIRED)
+include_directories(${MPI_CXX_INCLUDE_PATH})
 
 include_directories(external)
 include_directories(src)

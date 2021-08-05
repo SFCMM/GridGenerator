@@ -101,7 +101,7 @@
 - Add configuration options for geometries.
 - Calculate bounding box
 - Make output filter settable
-- Additional output of geometry definition
+- Additional output geometry
 
 
 ### IO
