@@ -94,7 +94,7 @@
 - Define geometries as inside or outside
 
 ### Buildsystem
-- Add Cmake preset
+- Add Cmake presets
 
 ### Testing
 - Run unit test from CI.

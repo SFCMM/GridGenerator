@@ -27,8 +27,8 @@ add_executable(gridgenerator
         src/gridcell_properties.h src/WeightMethod.h src/geometry.h src/functions.h src/IO.h src/cartesian.h src/util/string_helper.h)
 
 
-TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
-#target_link_libraries(gridgenerator PUBLIC MPI::MPI_CXX)
+#TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
+target_link_libraries(gridgenerator PUBLIC MPI::MPI_CXX)
 
 option(BUILD_DOC "Build documentation" OFF)
 # check if Doxygen is installed
