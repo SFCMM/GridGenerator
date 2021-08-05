@@ -93,7 +93,7 @@ Index QuickSplit(VectorV &row, VectorI &ind, Index ncut)
   * See the Eigen mailing list archive, thread: ILUT, date: July 8, 2012:
   *   http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2012/07/msg00064.html
   * alternatively, on GMANE:
-  *   http://comments.gmane.org/gmane.comp.lib.eigen/3302
+  *   http://comments.gmane.org/gmane.comp.external.eigen/3302
   */
 template <typename _Scalar, typename _StorageIndex = int>
 class IncompleteLUT : public SparseSolverBase<IncompleteLUT<_Scalar, _StorageIndex> >

@@ -15,7 +15,7 @@ link_directories(/home/svenb/build/omp411/lib)
 find_package(MPI REQUIRED)
 include_directories(${MPI_CXX_INCLUDE_PATH})
 
-include_directories(lib)
+include_directories(external)
 include_directories(src)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
