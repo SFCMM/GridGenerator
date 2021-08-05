@@ -116,10 +116,10 @@ class GridInterface {
   virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
 
 
-  // todo: add the filename as an argument
   ////IO
   /// Save the grid to a file.
-  virtual void save() = 0;
+  /// \param gridOutConfig Json configuration object containing the configuration options of the output format.
+  virtual void save(const json& gridOutConfig) = 0;
 
  private:
 };
@@ -426,18 +426,43 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     increaseCurrentHighestLvl();
   }
 
-  void save() override {
+  void save(const json& gridOutConfig) override {
+    // Cell filter functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // only output the highest level
     std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == currentHighestLvl(); };
 
+    // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return m_noChildren[cellId] == 0; };
+
+
+    // Grid output configuration
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    GString filter = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
+    GString format = config::opt_config_value(gridOutConfig, "format", GString("ASCII"));
+    GString type   = config::opt_config_value(gridOutConfig, "type", GString("point"));
+
+    std::function<GBool(GInt)>& outputFilter = isLeaf;
+    if(filter == "highestLvl") {
+      outputFilter = isHighestLevel;
+    } else if(filter == "leafCells") {
+      outputFilter = isLeaf;
+    } else {
+      TERMM(-1, "Unknown output filter " + filter);
+    }
 
     std::vector<GString>              index = {"Level", "NoChildren"};
     std::vector<std::vector<GString>> values;
     values.emplace_back(toStringVector(m_level, m_size));
     values.emplace_back(toStringVector(m_noChildren, m_size));
 
-
-    ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values, isHighestLevel);
+    if(format == "ASCII") {
+      ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values, outputFilter);
+    } else {
+      TERMM(-1, "Unknown output format " + format);
+    }
   }
 
   static constexpr auto memorySizePerCell() -> GInt {

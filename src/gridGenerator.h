@@ -35,6 +35,8 @@ class GridGenerator {
   GString m_exe;
 
   json                               m_config;
+  json                               m_geometryConfig;
+  json                               m_gridOutConfig;
   std::unordered_map<GString, GBool> m_configKeys{};
 
   void initTimers();
@@ -69,7 +71,6 @@ class GridGenerator {
   std::unique_ptr<WeightMethod>      m_weightMethod;
   std::unique_ptr<GridInterface>     m_grid;
   std::shared_ptr<GeometryInterface> m_geometry;
-  json                               m_geometryConfig;
 };
 
 #endif // GRIDGENERATOR_GRIDGENERATOR_H

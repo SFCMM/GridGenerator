@@ -4,6 +4,11 @@
   "partitionLevel": 7,
   "uniformLevel": 8,
   "maxNoCells": 7000000,
+  "gridOutput": {
+    "format": "ASCII",
+    "cellFilter": "highestLvl",
+    "type": "points"
+  },
   "geometry": {
     "sphere": {
       "center": [
