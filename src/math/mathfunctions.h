@@ -2,6 +2,7 @@
 #define MATHFUNCTIONS_H
 #include <cmath>
 #include <gcem.hpp>
+#include "common/types.h"
 
 namespace detail_ {
 template <class T, class U>
@@ -38,6 +39,15 @@ constexpr inline auto approx<double, double>(const double& a, const double& b, c
 template <>
 constexpr inline auto approx<float, float>(const float& a, const float& b, const float& eps) -> bool {
   return gcem::abs(a - b) < eps;
+}
+
+/// Check if a value is even.
+/// \tparam T Integer type
+/// \param num Number to be checked to be even
+/// \return True if it is an even number
+template <class T>
+[[nodiscard]] static constexpr inline auto isEven(T num) -> bool {
+  return num % 2 == 0;
 }
 
 #endif // MATHFUNCTIONS_H

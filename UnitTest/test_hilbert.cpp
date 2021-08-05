@@ -1,5 +1,5 @@
-#include "math/hilbert.h"
 #include "gtest/gtest.h"
+#include "math/hilbert.h"
 
 TEST(HilbertIndex2D, HandlesZeroInput) {
   VectorD<2> quadrant0 = {0, 0};
@@ -91,9 +91,9 @@ TEST(HilbertIndex3D, HandlesZeroInput) {
   EXPECT_EQ(hilbert::index<3>(quadrant7, 3), 511);
   EXPECT_EQ(hilbert::index<3>(quadrant7, 4), 4095);
 
-  //quadrants with close coordinates!
-  // quadrant spacing level 1 0.5 <- identical id on level 1
-  // quadrant spacing level 2 0.25 <- different id on level 2
+  // quadrants with close coordinates!
+  //  quadrant spacing level 1 0.5 <- identical id on level 1
+  //  quadrant spacing level 2 0.25 <- different id on level 2
   VectorD<3> quadrantA = {0.375, 0.125, 0.625};
   VectorD<3> quadrantB = {0.375, 0.125, 0.875};
   EXPECT_EQ(hilbert::index<3>(quadrantA, 1), 5);
@@ -101,8 +101,8 @@ TEST(HilbertIndex3D, HandlesZeroInput) {
   EXPECT_EQ(hilbert::index<3>(quadrantB, 1), 5);
   EXPECT_EQ(hilbert::index<3>(quadrantB, 2), 44);
 
-  VectorD<3> quadrantC = {  0.875, 0.125, 0.875};
-  VectorD<3> quadrantD = { 0.625, 0.375, 0.875};
+  VectorD<3> quadrantC = {0.875, 0.125, 0.875};
+  VectorD<3> quadrantD = {0.625, 0.375, 0.875};
   EXPECT_EQ(hilbert::index<3>(quadrantC, 1), 4);
   EXPECT_EQ(hilbert::index<3>(quadrantC, 2), 36);
   EXPECT_EQ(hilbert::index<3>(quadrantD, 1), 4);
@@ -158,9 +158,9 @@ TEST(HilbertIndex4D, HandlesZeroInput) {
   EXPECT_EQ(hilbert::index<4>(quadrant7, 3), 1911);
   EXPECT_EQ(hilbert::index<4>(quadrant7, 4), 30583);
 
-  //quadrants with close coordinates!
-  // quadrant spacing level 1 0.5 <- identical id on level 1
-  // quadrant spacing level 2 0.25 <- different id on level 2
+  // quadrants with close coordinates!
+  //  quadrant spacing level 1 0.5 <- identical id on level 1
+  //  quadrant spacing level 2 0.25 <- different id on level 2
   VectorD<4> quadrantA = {0.375, 0.125, 0.625, 0.875};
   VectorD<4> quadrantB = {0.375, 0.125, 0.875, 0.875};
 
@@ -169,10 +169,10 @@ TEST(HilbertIndex4D, HandlesZeroInput) {
   EXPECT_EQ(hilbert::index<4>(quadrantB, 1), 15);
   EXPECT_EQ(hilbert::index<4>(quadrantB, 2), 254);
 
-  VectorD<4> quadrantC = {  0.875, 0.125, 0.875, 0.375};
-  VectorD<4> quadrantD = { 0.625, 0.375, 0.875, 0.375};
-  VectorD<4> quadrantE = { 0.125, 0.625, 0.625, 0.125};
-  VectorD<4> quadrantF = { 0.625, 0.125, 0.875, 0.375};
+  VectorD<4> quadrantC = {0.875, 0.125, 0.875, 0.375};
+  VectorD<4> quadrantD = {0.625, 0.375, 0.875, 0.375};
+  VectorD<4> quadrantE = {0.125, 0.625, 0.625, 0.125};
+  VectorD<4> quadrantF = {0.625, 0.125, 0.875, 0.375};
 
   EXPECT_EQ(hilbert::index<4>(quadrantD, 1), 4);
   EXPECT_EQ(hilbert::index<4>(quadrantD, 2), 76);

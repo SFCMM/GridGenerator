@@ -11,6 +11,7 @@
 #include "macros.h"
 #include "math/hilbert.h"
 #include "timer.h"
+#include "util/string_helper.h"
 
 struct LevelOffsetType {
  public:
