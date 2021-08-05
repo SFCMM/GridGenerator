@@ -462,9 +462,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values, outputFilter);
     } else if(format == "VTK") {
       VTK::writePoints<NDIM>("Test", m_size, m_center, index, values, outputFilter);
-    }
-
-    else {
+    } else {
       TERMM(-1, "Unknown output format " + format);
     }
   }

@@ -5,7 +5,7 @@
   "uniformLevel": 8,
   "maxNoCells": 7000000,
   "gridOutput": {
-    "format": "ASCII",
+    "format": "VTK",
     "cellFilter": "highestLvl",
     "type": "points"
   },

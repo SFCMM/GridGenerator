@@ -62,6 +62,7 @@
 - add tutorial
 - activate profile guided optimization
 - activate lto?
+- cleanup vtk io code
 
 ### Moved from V0.0.2:
 
@@ -69,6 +70,8 @@
 - Add documentation in Readme.md of all configuration options.
 - Boundary refinement.
 - Add bench cmd command.
+- Write out VTK Point file (Binary).
+
 
 # V0.0.2 (~8.8.21)
 
@@ -83,7 +86,6 @@
 ## On-going:
 
 - Add CMake build presets for all build types.
-- Write out VTK Point file (Binary/ASCII).
 
 ## Done:
 
@@ -105,6 +107,7 @@
 
 
 ### IO
+- Write out VTK Point file
 
 ### Performance
 - Increase IO buffer size to 64kb.
