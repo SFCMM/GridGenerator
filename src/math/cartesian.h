@@ -1,6 +1,13 @@
 #ifndef GRIDGENERATOR_CARTESIAN_H
 #define GRIDGENERATOR_CARTESIAN_H
+
+#include <gcem.hpp>
+
 namespace cartesian {
+
+/// The direction opposite to the given dir.
+/// \param dir Direction for which to obtain opposite direction.
+/// \return The opposite direction to dir.
 static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
   return 2 * (dir / 2) + 1 - (dir % 2);
   // 0 = 1 ok
@@ -12,12 +19,16 @@ static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
   // 7 = 6 ok
 }
 /// Return maximum number of children per cell
+/// \tparam NDIM Number of dimension of the Cartesian grid
+/// \return The maximum number of children for a NDIM Cartesian mesh
 template <GInt NDIM>
 static constexpr inline auto maxNoChildren() -> GInt {
   return gcem::pow(2, NDIM);
 }
 
 /// Return maximum number of Neighbors per cell
+/// \tparam NDIM Number of dimensions of the Cartesian grid
+/// \return The maximum number of same level neighbors at the given NDIM.
 template <GInt NDIM>
 static constexpr inline auto maxNoNghbrs() -> GInt {
   return 2 * NDIM;
@@ -25,6 +36,7 @@ static constexpr inline auto maxNoNghbrs() -> GInt {
 
 
 // todo: replace with constant expression function
+/// Given the childId gives the "direction" of this child relative to the center of a cell.
 static constexpr std::array<std::array<GDouble, MAX_DIM>, cartesian::maxNoChildren<MAX_DIM>()> childDir = {{
     //-> 2D
     // -x,-y, -z
@@ -57,6 +69,7 @@ static constexpr std::array<std::array<GDouble, MAX_DIM>, cartesian::maxNoChildr
 }};
 
 // todo: replace with constant expression function
+/// Given the childId gives the neighboring childIds(and existence ==-1 -> doesnot exist)
 static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>()>, cartesian::maxNoChildren<MAX_DIM>()> nghbrInside = {{
     //-x +x -y +y -z +z -zz +zz
     {{-1, 1, -1, 2, -1, 4, -1, 8}},  // 0
@@ -81,6 +94,7 @@ static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>(
 }};
 
 // todo: replace with constant expression function
+/// Given the childId obtain the possible neighbors in a neighboring cell that doesnot have the same parent
 static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>()>, cartesian::maxNoChildren<MAX_DIM>()>
     nghbrParentChildId = {{
         //-x +x -y +y -z +z -zz +zz

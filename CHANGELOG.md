@@ -63,6 +63,7 @@
 - activate profile guided optimization
 - activate lto?
 - cleanup vtk io code
+- activate backtrace
 
 ### Moved from V0.0.2:
 

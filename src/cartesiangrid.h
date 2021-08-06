@@ -3,12 +3,12 @@
 
 #include <gcem.hpp>
 
-#include "cartesian.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gtree.h"
 #include "IO.h"
 #include "macros.h"
+#include "math/cartesian.h"
 #include "math/hilbert.h"
 #include "timer.h"
 #include "util/string_helper.h"
