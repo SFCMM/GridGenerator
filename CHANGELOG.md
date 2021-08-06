@@ -71,14 +71,11 @@
 - Boundary refinement.
 - Add bench cmd command.
 - Write out VTK Point file (Binary).
+- add UnitTest and testcases for grid generation
+
 
 
 # V0.0.2 (~8.8.21)
-
-### Testing:
-- add UnitTest and testcases for grid generation
-
-## Done:
 
 ### Features
 - Add analytical geometries cube, box and sphere.

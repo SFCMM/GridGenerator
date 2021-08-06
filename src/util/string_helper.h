@@ -43,14 +43,14 @@ static inline auto strStreamify(const std::array<T, LENGTH>& in) -> std::strings
 /// \param in array to be stringstreamed
 /// \return std::stringstream of the in array.
 template <GInt LENGTH>
-    static inline auto strStreamify(const VectorD<LENGTH>& in) -> std::stringstream {
-      std::stringstream str;
-      str << in[0];
-      for(GInt i = 1; i < LENGTH; i++) {
-        str << " " << in[i];
-      }
-      return str;
-    }
+static inline auto strStreamify(const VectorD<LENGTH>& in) -> std::stringstream {
+  std::stringstream str;
+  str << in[0];
+  for(GInt i = 1; i < LENGTH; i++) {
+    str << " " << in[i];
+  }
+  return str;
+}
 
 /// Convert an input vector to a string vector of the same size or as per the given optional argument size.
 /// \tparam T Type of the vector.
