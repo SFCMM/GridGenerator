@@ -7,6 +7,7 @@
 #include <vector>
 #include "macros.h"
 #include "util/string_helper.h"
+#include "functions.h"
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
@@ -17,6 +18,10 @@ class GeometryInterface {
  public:
   GeometryInterface(const MPI_Comm comm) : m_comm(comm){};
   virtual ~GeometryInterface() = default;
+  GeometryInterface(const GeometryInterface&) = delete;
+  GeometryInterface(GeometryInterface&&)      = delete;
+  auto operator=(const GeometryInterface&) -> GeometryInterface& = delete;
+  auto operator=(GeometryInterface&&) -> GeometryInterface& = delete;
 
   virtual void                      setup(const json& geometry)                                                     = 0;
   virtual inline auto               pointIsInside(const GDouble* x) const -> GBool                                  = 0;
@@ -31,10 +36,13 @@ class GeometryInterface {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryRepresentation {
  public:
-  // todo: move functions from gridgenerator.cpp and use them here
-  GeometryRepresentation(const json& geom) : m_inside(geom.template contains("inside") ? static_cast<GBool>(geom["inside"]) : true){};
+  GeometryRepresentation(const json& geom) : m_inside(config::opt_config_value(geom, "inside", true)){};
   GeometryRepresentation()          = default;
   virtual ~GeometryRepresentation() = default;
+  GeometryRepresentation(const GeometryRepresentation&) = delete;
+  GeometryRepresentation(GeometryRepresentation&&)      = delete;
+  auto operator=(const GeometryRepresentation&) -> GeometryRepresentation& = delete;
+  auto operator=(GeometryRepresentation&&) -> GeometryRepresentation& = delete;
 
   [[nodiscard]] virtual inline auto pointIsInside(const Point<NDIM>& x) const -> GBool                        = 0;
   [[nodiscard]] virtual inline auto cutWithCell(const Point<NDIM>& center, GDouble cellLength) const -> GBool = 0;
@@ -138,7 +146,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     checkValid();
   }
 
-  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(m_A[dir] > x[dir] || m_B[dir] < x[dir]) {
         return !inside();
@@ -147,7 +155,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     return inside();
   }
 
-  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if((m_A[dir] > cellCenter[dir] || m_B[dir] < cellCenter[dir]) // cellCenter is within the box
          && abs(m_A[dir] - cellCenter[dir]) > cellLength && abs(m_B[dir] - cellCenter[dir]) > cellLength /*cellcenter cuts the box*/) {
@@ -208,7 +216,7 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     type() = GeomType::cube;
   };
 
-  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool {
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(abs(x[dir] - m_center[dir]) > m_length) {
         return !inside();
@@ -217,7 +225,7 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     return inside();
   }
 
-  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool {
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(abs(cellCenter[dir] - m_center[dir]) > m_length + cellLength) {
         return false;
