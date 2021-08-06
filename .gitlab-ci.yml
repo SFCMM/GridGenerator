@@ -10,7 +10,7 @@ stages:
   script:
     - mkdir build-$ccompiler
     - cd build-$ccompiler
-    - cmake -DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" ..
+    - cmake -DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" --preset $buildtype ..
     - make gridgenerator -j 2
 
 UnitTest:
@@ -18,7 +18,7 @@ UnitTest:
   script:
     - mkdir build-$ccompiler
     - cd build-$ccompiler
-    - cmake -DCMAKE_C_COMPILER="gcc-10" -DCMAKE_CXX_COMPILER="g++-10" ..
+    - cmake -DCMAKE_C_COMPILER="gcc-10" -DCMAKE_CXX_COMPILER="g++-10" --preset relwdb-gnu ..
     - make UnitTest -j 2
     - cd UnitTest
     - ./UnitTest --gtest_output="xml:report.xml"
@@ -38,9 +38,26 @@ GNU:
   variables:
     ccompiler: "gcc-10"
     cxxcompiler: "g++-10"
+    buildtype: "debug-gnu"
 
 CLANG:
   extends: .buildTemplate
   variables:
     ccompiler: "clang-10"
     cxxcompiler: "clang++-10"
+    buildtype: "debug-clang"
+
+GNU-Release:
+  extends: .buildTemplate
+  variables:
+    ccompiler: "gcc-10"
+    cxxcompiler: "g++-10"
+    buildtype: "release-gnu"
+
+CLANG-Release:
+  extends: .buildTemplate
+  variables:
+    ccompiler: "clang-10"
+    cxxcompiler: "clang++-10"
+    buildtype: "release-clang"
+
