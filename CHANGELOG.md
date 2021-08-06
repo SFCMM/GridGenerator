@@ -75,17 +75,8 @@
 
 # V0.0.2 (~8.8.21)
 
-## Planned
-
-### Buildsystem:
-- Build CI Pipeline from presets
-
 ### Testing:
 - add UnitTest and testcases for grid generation
-
-## On-going:
-
-- Add CMake build presets for all build types.
 
 ## Done:
 
@@ -98,6 +89,8 @@
 
 ### Testing
 - Run unit test from CI.
+- Build CI Pipeline from presets
+
 
 ### Usability
 - Add configuration options for geometries.
