@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(gridgenerator)
-project(gridgenerator VERSION "0.0.1")
+project(gridgenerator VERSION "0.0.2")
 
 add_subdirectory(UnitTest)
 add_subdirectory(perf)
