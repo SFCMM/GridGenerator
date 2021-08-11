@@ -133,16 +133,6 @@ FunctionTiming::FunctionTiming(string name)
 
 FunctionTiming::~FunctionTiming() { m_name = "<deleted>"; }
 
-FunctionTiming& FunctionTiming::operator=(const FunctionTiming& t) {
-  m_initCpuTime   = t.m_initCpuTime;
-  m_deltaCpuTime  = t.m_deltaCpuTime;
-  m_tmpCpuTime    = t.m_tmpCpuTime;
-  m_initWallTime  = t.m_initWallTime;
-  m_deltaWallTime = t.m_deltaWallTime;
-  m_tmpWallTime   = t.m_tmpWallTime;
-  m_name          = t.m_name;
-  return *this;
-}
 
 void FunctionTiming::in() {
   m_tmpCpuTime  = cpuTime();

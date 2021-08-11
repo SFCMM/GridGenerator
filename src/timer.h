@@ -6,12 +6,12 @@
 #include <cmath>
 #include <ctime>
 #include <iomanip>
-#include <sfcmm_common.h>
 #include <string>
 #include <sys/times.h>
 #include <unistd.h>
 #include <utility>
 #include <vector>
+#include <sfcmm_common.h>
 #include "constants.h"
 
 
@@ -51,6 +51,24 @@
 #define RESET_ALL_RECORDS()               timers().resetRecords()
 #define SET_TIMER(timeValue, timerId)     timers().setTimer(timeValue, timerId)
 
+using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
+
+class Timer {
+ public:
+  Timer(std::string n, const GInt g, const GInt id, const GInt p)
+    : name(std::move(n)), group(g), timerId(id), parent(p), recordedTime(0), status(Timer::Uninitialized), subTimers(0), displayed(false) {}
+  std::string     name;  ///< Timer Name
+  GInt            group; ///< Group Id
+  GInt            timerId = -1;
+  GInt            parent  = -1; ///< Parent timer id
+  chronoTimePoint cpuTime;      ///< CPU time
+  chronoTimePoint oldCpuTime;   ///< Old CPU time (for timer restart)
+  GDouble         recordedTime; ///< Time recorded on the timer.
+  GInt            status;       ///< Timer's status, see enum:
+  enum { Uninitialized = 0, Running = 1, Stopped = 0 };
+  std::vector<GInt> subTimers{};
+  GBool             displayed;
+};
 
 /// \brief TimerManager manages all Timers and allows primitive profiling.
 ///
@@ -79,13 +97,11 @@
 /// DISPLAY_TIMER(myTimer);
 ///
 ///
-using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
-
 class TimerManager {
-  friend TimerManager& timers();
+  friend auto timers() -> TimerManager&;
 
  public:
-  inline auto newGroup(const std::string groupName) -> GInt;
+  inline auto newGroup(const std::string& groupName) -> GInt;
   inline auto newGroupTimer(const std::string& timerName, const GInt groupId) -> GInt;
   inline auto newSubTimer(const std::string& timerName, const GInt timerId) -> GInt;
   inline auto returnTimer(const GInt timerId) -> GDouble;
@@ -109,35 +125,14 @@ class TimerManager {
 
   // delete: copy construction, and copy assignment
   TimerManager(TimerManager&) = delete;
-  TimerManager& operator=(const TimerManager&) = delete;
+  auto operator=(const TimerManager&) -> TimerManager& = delete;
+  auto operator=(TimerManager&&) -> TimerManager& = delete;
+  TimerManager(const TimerManager&)               = delete;
+  TimerManager(TimerManager&&)                    = delete;
 
  private:
   TimerManager()  = default;
   ~TimerManager() = default;
-
-
-  struct Timer {
-    Timer(std::string n, const GInt g, const GInt id, const GInt p)
-      : name(std::move(n)),
-        group(g),
-        timerId(id),
-        parent(p),
-        recordedTime(0),
-        status(Timer::Uninitialized),
-        subTimers(0),
-        displayed(false) {}
-    std::string     name;  ///< Timer Name
-    GInt            group; ///< Group Id
-    GInt            timerId = -1;
-    GInt            parent  = -1; ///< Parent timer id
-    chronoTimePoint cpuTime;      ///< CPU time
-    chronoTimePoint oldCpuTime;   ///< Old CPU time (for timer restart)
-    GDouble         recordedTime; ///< Time recorded on the timer.
-    GInt            status;       ///< Timer's status, see enum:
-    enum { Uninitialized = 0, Running = 1, Stopped = 0 };
-    std::vector<GInt> subTimers{};
-    GBool             displayed;
-  };
 
   std::vector<std::string> m_groups;
   std::vector<Timer>       m_timers;
@@ -148,7 +143,7 @@ class TimerManager {
   inline void displayTimer_(const GInt timerId, const GBool toggleDisplayed = true, const GInt tIndent = 0, const GDouble superTime = -1.0);
   inline void displayTimerHeader_();
   inline void displayTimerGroupHeader_(const GInt groupId);
-  [[nodiscard]] inline GInt indent(const GInt pIndent) const { return pIndent + 2; };
+  [[nodiscard]] static inline auto indent(const GInt pIndent) -> GInt { return pIndent + 2; };
 };
 
 auto timers() -> TimerManager&;
@@ -181,7 +176,7 @@ inline void TimerManager::recordTimerStop(const GInt timerId, const GString& pos
 inline void TimerManager::recordTimer(const GInt timerId) { m_timers[timerId].recordedTime += returnTimer(timerId); }
 inline void TimerManager::recordTimers() {
   for(std::size_t timerId = 0, e = m_timers.size(); timerId != e; ++timerId) {
-    recordTimer(timerId);
+    recordTimer(static_cast<GInt>(timerId));
   }
 }
 
@@ -189,21 +184,21 @@ inline void TimerManager::resetTimer(const GInt timerId) { m_timers[timerId].sta
 
 inline void TimerManager::resetTimers() {
   for(std::size_t timerId = 0, e = m_timers.size(); timerId != e; ++timerId) {
-    resetTimer(timerId);
+    resetTimer(static_cast<GInt>(timerId));
   }
 }
 
 /// Creates a new timer group and returns its groupId.
-inline auto TimerManager::newGroup(const std::string name) -> GInt {
+inline auto TimerManager::newGroup(const std::string& name) -> GInt {
   m_groups.push_back(name);
-  return m_groups.size() - 1;
+  return static_cast<GInt>(m_groups.size() - 1);
 }
 
 /// Creates a new timer and returns its timerId.
 inline auto TimerManager::newGroupTimer(const std::string& name, const GInt groupId) -> GInt {
   ASSERT(static_cast<std::size_t>(groupId) < m_groups.size() && groupId > -1,
          "groupId: " + std::to_string(groupId) + " does not exists | name: " + name);
-  const GInt newTimerId = m_timers.size();
+  const GInt newTimerId = static_cast<GInt>(m_timers.size());
   m_timers.emplace_back(name, groupId, newTimerId, -1);
   return newTimerId;
 }
@@ -218,7 +213,7 @@ inline auto TimerManager::newSubTimer(const std::string& name, const GInt timerI
          "timerId " + std::to_string(timerId) + " does not exist when trying to create subtimer with name " + name);
 
   const GInt groupId    = m_timers[timerId].group;
-  const GInt newTimerId = m_timers.size();
+  const GInt newTimerId = static_cast<GInt>(m_timers.size());
   m_timers.emplace_back(name, groupId, newTimerId, timerId);
   m_timers[timerId].subTimers.push_back(newTimerId);
   return newTimerId;
@@ -254,7 +249,7 @@ inline auto TimerManager::returnTimer(const GInt timerId) -> GDouble {
   const GDouble t       = m_timers[timerId].cpuTime.time_since_epoch().count();
   GDouble       tmp_rcv = 0.0;
   MPI_Reduce(&t, &tmp_rcv, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  return tmp_rcv / MPI::globalNoDomains();
+  return tmp_rcv / static_cast<GDouble>(MPI::globalNoDomains());
 #else
   return m_timers[timerId].cpuTime.time_since_epoch().count();
 #endif
@@ -294,7 +289,7 @@ inline void TimerManager::stopAllTimers() {
 // Stops all timers and record the timers that were stopped
 inline void TimerManager::stopAllRecordTimers() {
   // for(std::size_t i = 0, e = m_timers.size(); i != e; ++i) {
-  for(GInt i = m_timers.size() - 1; i >= 0; i--) {
+  for(GInt i = static_cast<GInt>(m_timers.size() - 1); i >= 0; i--) {
     if(m_timers[i].status == Timer::Running) {
 #ifdef TIMER_SYNC
       MPI_Barrier(MPI_COMM_WORLD);
@@ -343,7 +338,9 @@ inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDi
   logger.precision(6);
   logger.width(20);
   logger << m_timers[timerId].recordedTime << std::left << " [sec]";
-  if(toggleDisplayed) m_timers[timerId].displayed = true;
+  if(toggleDisplayed) {
+    m_timers[timerId].displayed = true;
+  }
   logger << std::endl;
   for(std::size_t sub = 0, last = m_timers[timerId].subTimers.size(); sub < last; ++sub) {
     const GInt new_indent = indent(tIndent);
@@ -369,25 +366,25 @@ inline void TimerManager::displayTimerGroupHeader_(const GInt groupId) {
 inline void TimerManager::displayAllTimers() {
   ASSERT(!m_timers.empty(), "ERROR: no timers have been created!");
   for(std::size_t groupId = 0, e = m_groups.size(); groupId != e; ++groupId) {
-    displayAllTimers(groupId);
+    displayAllTimers(static_cast<GInt>(groupId));
   }
 }
 
 inline void TimerManager::displayAllTimers(const GInt groupId) {
-  ASSERT(m_timers.size() > 0, "ERROR: no timers have been created!");
+  ASSERT(static_cast<GInt>(m_timers.size()) > 0, "ERROR: no timers have been created!");
   ASSERT(static_cast<std::size_t>(groupId) < m_groups.size() && groupId > -1, "ERROR: groupId does not exists");
-  for(std::size_t timerId = 0, e = m_timers.size(); timerId != e; ++timerId) {
-    m_timers[timerId].displayed = false;
+  for(auto& m_timer : m_timers) {
+    m_timer.displayed = false;
   }
   displayTimerGroupHeader_(groupId);
   displayTimerHeader_();
   for(std::size_t timerId = 0, e = m_timers.size(); timerId != e; ++timerId) {
     if(m_timers[timerId].group == groupId) {
-      displayTimer_(timerId);
+      displayTimer_(static_cast<GInt>(timerId));
     }
   }
-  for(std::size_t timerId = 0, e = m_timers.size(); timerId != e; ++timerId) {
-    m_timers[timerId].displayed = false;
+  for(auto& m_timer : m_timers) {
+    m_timer.displayed = false;
   }
 }
 
@@ -415,7 +412,13 @@ class FunctionTiming {
  public:
   explicit FunctionTiming(std::string name);
   ~FunctionTiming();
-  auto               operator=(const FunctionTiming& t) -> FunctionTiming&;
+  auto operator=(const FunctionTiming& t) -> FunctionTiming& = default;
+  auto operator=(FunctionTiming&&) -> FunctionTiming& = default;
+  FunctionTiming(FunctionTiming&)                     = default;
+  FunctionTiming(const FunctionTiming&)               = default;
+  FunctionTiming(FunctionTiming&&)                    = default;
+
+
   void               in();
   void               out();
   [[nodiscard]] auto getInitCpuTime() const -> clock_t { return m_initCpuTime; }
@@ -441,6 +444,12 @@ class TimerProfiling {
  public:
   explicit TimerProfiling(std::string name) : m_initCpuTime(cpuTime()), m_initWallTime(wallTime()), m_name(std::move(name)) {}
   ~TimerProfiling();
+  auto operator=(const TimerProfiling& t) -> TimerProfiling& = delete;
+  auto operator=(TimerProfiling&&) -> TimerProfiling& = delete;
+  TimerProfiling(TimerProfiling&)                     = delete;
+  TimerProfiling(const TimerProfiling&)               = delete;
+  TimerProfiling(TimerProfiling&&)                    = delete;
+
   static auto getTimingId(const std::string& name) -> GInt;
   static auto getCpuTimeSecs(clock_t cput) -> GDouble { return (static_cast<GDouble>(cput) / static_cast<GDouble>(CLOCKS_PER_SEC)); }
   static auto printTime(GDouble secs) -> GString;
