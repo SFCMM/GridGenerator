@@ -98,7 +98,10 @@ class Timer {
 ///
 ///
 class TimerManager {
-  friend auto timers() -> TimerManager&;
+  friend auto timers() -> TimerManager& {
+    static TimerManager timers;
+    return timers;
+  }
 
  public:
   inline auto newGroup(const std::string& groupName) -> GInt;
@@ -410,8 +413,15 @@ inline auto wallTime() -> GDouble { return MPI_Wtime(); }
 
 class FunctionTiming {
  public:
-  explicit FunctionTiming(std::string name);
-  ~FunctionTiming();
+  explicit FunctionTiming(std::string name)
+    : m_initCpuTime(cpuTime()),
+      m_deltaCpuTime(0),
+      m_tmpCpuTime(0),
+      m_initWallTime(wallTime()),
+      m_deltaWallTime(0.0),
+      m_tmpWallTime(-1.0),
+      m_name(std::move(name)){};
+  ~FunctionTiming() { m_name = "<deleted>"; };
   auto operator=(const FunctionTiming& t) -> FunctionTiming& = default;
   auto operator=(FunctionTiming&&) -> FunctionTiming& = default;
   FunctionTiming(FunctionTiming&)                     = default;
@@ -419,8 +429,22 @@ class FunctionTiming {
   FunctionTiming(FunctionTiming&&)                    = default;
 
 
-  void               in();
-  void               out();
+  void in() {
+    m_tmpCpuTime  = cpuTime();
+    m_tmpWallTime = wallTime();
+  }
+
+  void out() {
+    if(m_tmpCpuTime > 0) {
+      m_deltaCpuTime += (cpuTime() - m_tmpCpuTime);
+    }
+    if(m_tmpWallTime > 0.0) {
+      m_deltaWallTime += (wallTime() - m_tmpWallTime);
+    }
+    m_tmpCpuTime  = -1;
+    m_tmpWallTime = -1.0;
+  }
+
   [[nodiscard]] auto getInitCpuTime() const -> clock_t { return m_initCpuTime; }
   [[nodiscard]] auto getDeltaCpuTime() const -> clock_t { return m_deltaCpuTime; }
   [[nodiscard]] auto getInitWallTime() const -> GDouble { return m_initWallTime; }
@@ -437,23 +461,125 @@ class FunctionTiming {
   std::string m_name;
 };
 
-auto operator<(const FunctionTiming& a, const FunctionTiming& b) -> GBool;
-
+inline auto operator<(const FunctionTiming& a, const FunctionTiming& b) -> GBool {
+  if(a.getDeltaCpuTime() == b.getDeltaCpuTime()) {
+    return (a.getInitCpuTime() < b.getInitCpuTime());
+  }
+  return (a.getDeltaCpuTime() < b.getDeltaCpuTime());
+}
 
 class TimerProfiling {
  public:
   explicit TimerProfiling(std::string name) : m_initCpuTime(cpuTime()), m_initWallTime(wallTime()), m_name(std::move(name)) {}
-  ~TimerProfiling();
+  ~TimerProfiling() {
+    using namespace std;
+
+    const clock_t exitCpuTime         = cpuTime();
+    const GDouble exitWallTime        = wallTime();
+    const GDouble thresholdPercentage = 0.5;
+    stringstream  sstream;
+    sstream << "    CPU      WALL   FUNCTION                    >> profile: '" << m_name << "' <<";
+    const string header = sstream.str();
+    for(std::size_t i = 0; i < header.size(); i++) {
+      logger << "_";
+    }
+    logger << endl;
+    logger << header << endl;
+    for(std::size_t i = 0; i < header.size(); i++) {
+      logger << "-";
+    }
+    logger << endl;
+    GInt counter    = 0;
+    GInt supCounter = 0;
+    if(!s_functionTimings.empty()) {
+      sort(s_functionTimings.begin(), s_functionTimings.end());
+      reverse(s_functionTimings.begin(), s_functionTimings.end());
+      for(auto& s_functionTiming : s_functionTimings) {
+        if(s_functionTiming.getInitCpuTime() < m_initCpuTime) {
+          continue;
+        }
+        const GDouble relCpuTime =
+            100.0 * getCpuTimeSecs(s_functionTiming.getDeltaCpuTime()) / max(1e-15, getCpuTimeSecs(exitCpuTime - m_initCpuTime));
+        const GDouble relWallTime = 100.0 * s_functionTiming.getDeltaWallTime() / max(1e-15, (exitWallTime - m_initWallTime));
+        if(relCpuTime < thresholdPercentage) {
+          supCounter++;
+          continue;
+        }
+        char buffer[7];
+        sprintf(buffer, "%6.2f", relCpuTime);
+        char buffer2[7];
+        sprintf(buffer2, "%6.2f", relWallTime);
+        logger << buffer << "%   " << buffer2 << "%   " << s_functionTiming.getName() << endl;
+        counter++;
+      }
+      if(supCounter > 0) {
+        logger << "  .....     .....   (" << supCounter << " shorter timings with CPU<" << thresholdPercentage << "% were suppressed)"
+               << endl;
+      }
+    }
+    if(counter == 0) {
+      logger << "No timings recorded for timer '" << m_name << "'." << endl;
+    }
+    for(std::size_t i = 0; i < header.size(); i++) {
+      logger << "-";
+    }
+    logger << endl;
+    logger << "Total cpu time:  " << printTime(getCpuTimeSecs(exitCpuTime - m_initCpuTime)) << endl;
+    logger << "Total wall time: " << printTime(exitWallTime - m_initWallTime) << endl;
+    for(std::size_t i = 0; i < header.size(); i++) {
+      logger << "_";
+    }
+    logger << endl;
+  }
+
   auto operator=(const TimerProfiling& t) -> TimerProfiling& = delete;
   auto operator=(TimerProfiling&&) -> TimerProfiling& = delete;
   TimerProfiling(TimerProfiling&)                     = delete;
   TimerProfiling(const TimerProfiling&)               = delete;
   TimerProfiling(TimerProfiling&&)                    = delete;
 
-  static auto getTimingId(const std::string& name) -> GInt;
+  static auto getTimingId(const std::string& name) -> GInt {
+    GInt tId = -1;
+    if(!s_functionTimings.empty()) {
+      for(std::vector<FunctionTiming>::size_type i = 0; i < s_functionTimings.size(); i++) {
+        if(s_functionTimings[i].getName() == name) {
+          tId = i;
+        }
+      }
+    }
+    if(tId < 0) {
+      tId = static_cast<GInt>(s_functionTimings.size());
+      s_functionTimings.emplace_back(name);
+    }
+    ASSERT(tId > -1, "Non-existing timer");
+    return tId;
+  }
+
   static auto getCpuTimeSecs(clock_t cput) -> GDouble { return (static_cast<GDouble>(cput) / static_cast<GDouble>(CLOCKS_PER_SEC)); }
-  static auto printTime(GDouble secs) -> GString;
-  static std::vector<FunctionTiming> s_functionTimings;
+
+  static auto printTime(GDouble secs) -> GString {
+    std::stringstream time;
+    time.str("");
+    GDouble rem = secs;
+    if(rem > 86400.0) {
+      const GDouble div = floor(rem / 86400.0);
+      time << (static_cast<GInt>(div)) << " days, ";
+      rem -= div * 86400.0;
+    }
+    if(rem > 3600.0) {
+      const GDouble div = floor(rem / 3600.0);
+      time << (static_cast<GInt>(div)) << " hours, ";
+      rem -= div * 3600.0;
+    }
+    if(rem > 60.0) {
+      const GDouble div = floor(rem / 60.0);
+      time << (static_cast<GInt>(div)) << " mins, ";
+      rem -= div * 60.0;
+    }
+    time << rem << " secs";
+    return time.str();
+  }
+  inline static std::vector<FunctionTiming> s_functionTimings;
 
  private:
   const clock_t     m_initCpuTime;
