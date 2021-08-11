@@ -1,11 +1,11 @@
 #ifndef GRIDGENERATOR_STRING_HELPER_H
 #define GRIDGENERATOR_STRING_HELPER_H
+#include "common/sfcmm_types.h"
 #include <bitset>
 #include <gcem.hpp>
 #include <iostream>
 #include <map>
 #include <sstream>
-#include "common/types.h"
 
 /// Get a stringstream from a given std::vector. Type needs to overload "<<".
 /// \tparam LENGTH Length of the vector to be streamed.

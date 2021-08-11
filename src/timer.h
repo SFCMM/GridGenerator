@@ -6,15 +6,14 @@
 #include <cmath>
 #include <ctime>
 #include <iomanip>
+#include <sfcmm_common.h>
 #include <string>
 #include <sys/times.h>
 #include <unistd.h>
 #include <utility>
 #include <vector>
-#include "common/types.h"
 #include "constants.h"
 #include "macros.h"
-#include "math/mathfunctions.h"
 
 
 #define NEW_TIMER_GROUP(id, groupName)                 const GInt id = timers().newGroup(groupName)

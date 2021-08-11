@@ -2,10 +2,10 @@
 #define GRIDGENERATOR_GTREE_H
 
 #include <bitset>
+#include <sfcmm_common.h>
 #include "functions.h"
 #include "gridcell_properties.h"
 #include "macros.h"
-#include "math/cartesian.h"
 
 
 namespace cartesian {

@@ -3,15 +3,13 @@
 
 #include <gcem.hpp>
 
+#include <sfcmm_common.h>
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gtree.h"
 #include "IO.h"
 #include "macros.h"
-#include "math/cartesian.h"
-#include "math/hilbert.h"
 #include "timer.h"
-#include "util/string_helper.h"
 
 struct LevelOffsetType {
  public:

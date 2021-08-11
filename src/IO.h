@@ -2,7 +2,7 @@
 #define GRIDGENERATOR_IO_H
 #include <fstream>
 #include <iostream>
-#include "common/types.h"
+#include <sfcmm_common.h>
 #include "constants.h"
 #include "macros.h"
 //#include <csv/csv.hpp>

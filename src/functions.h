@@ -5,8 +5,8 @@
 #include <iostream>
 #include <json.h>
 #include <map>
+#include <sfcmm_common.h>
 #include <sstream>
-#include "common/types.h"
 #include "constants.h"
 #include "macros.h"
 

@@ -4,10 +4,10 @@
 #include <json.h>
 #include <memory>
 #include <mpi.h>
+#include <sfcmm_common.h>
 #include <vector>
-#include "macros.h"
-#include "util/string_helper.h"
 #include "functions.h"
+#include "macros.h"
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
@@ -17,7 +17,7 @@ using json = nlohmann::json;
 class GeometryInterface {
  public:
   GeometryInterface(const MPI_Comm comm) : m_comm(comm){};
-  virtual ~GeometryInterface() = default;
+  virtual ~GeometryInterface()                = default;
   GeometryInterface(const GeometryInterface&) = delete;
   GeometryInterface(GeometryInterface&&)      = delete;
   auto operator=(const GeometryInterface&) -> GeometryInterface& = delete;
@@ -37,8 +37,8 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryRepresentation {
  public:
   GeometryRepresentation(const json& geom) : m_inside(config::opt_config_value(geom, "inside", true)){};
-  GeometryRepresentation()          = default;
-  virtual ~GeometryRepresentation() = default;
+  GeometryRepresentation()                              = default;
+  virtual ~GeometryRepresentation()                     = default;
   GeometryRepresentation(const GeometryRepresentation&) = delete;
   GeometryRepresentation(GeometryRepresentation&&)      = delete;
   auto operator=(const GeometryRepresentation&) -> GeometryRepresentation& = delete;

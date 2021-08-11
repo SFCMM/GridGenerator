@@ -4,8 +4,8 @@
 #include <json.h>
 #include <ostream>
 
+#include <sfcmm_common.h>
 #include "cartesiangrid.h"
-#include "common/types.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"

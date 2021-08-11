@@ -3,14 +3,14 @@
 #include <mpi.h>
 #include <utility>
 
-#include "common/globalmpi.h"
+#include <sfcmm_common.h>
+
 #include "config.h"
 #include "constants.h"
 #include "functions.h"
 #include "geometry.h"
 #include "gridGenerator.h"
 #include "timer.h"
-#include "util/sys.h"
 
 #ifdef _OPENMP
 #include <omp.h>

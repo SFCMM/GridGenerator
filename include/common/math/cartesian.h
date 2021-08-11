@@ -34,22 +34,24 @@ static constexpr inline auto maxNoNghbrs() -> GInt {
   return 2 * NDIM;
 }
 
-
 // todo: replace with constant expression function
-/// Given the childId gives the "direction" of this child relative to the center of a cell.
-static constexpr std::array<std::array<GDouble, MAX_DIM>, cartesian::maxNoChildren<MAX_DIM>()> childDir = {{
-    //-> 2D
-    // -x,-y, -z
-    {{-1, -1, -1, -1}}, // 0
-    //+x, -y, -z
-    {{1, -1, -1, -1}}, // 1
-    //-x, +y, -z
-    {{-1, 1, -1, -1}}, // 2
-    //+x, -y, -z
-    {{1, 1, -1, -1}}, // 3
-    //<- 2D
+/// Given the childId gives the "direction" of this child relative to the center
+/// of a cell.
+static constexpr std::array<std::array<GDouble, sfcmm::MAX_DIM>,
+                            cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
+    childDir = {{
+        //-> 2D
+        // -x,-y, -z
+        {{-1, -1, -1, -1}}, // 0
+        //+x, -y, -z
+        {{1, -1, -1, -1}}, // 1
+        //-x, +y, -z
+        {{-1, 1, -1, -1}}, // 2
+        //+x, -y, -z
+        {{1, 1, -1, -1}}, // 3
+        //<- 2D
 
-    //-> 3D (+z)
+        //-> 3D (+z)
     {{-1, -1, 1, -1}}, // 4
     {{1, -1, 1, -1}},  // 5
     {{-1, 1, 1, -1}},  // 6
@@ -69,20 +71,23 @@ static constexpr std::array<std::array<GDouble, MAX_DIM>, cartesian::maxNoChildr
 }};
 
 // todo: replace with constant expression function
-/// Given the childId gives the neighboring childIds(and existence ==-1 -> doesnot exist)
-static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>()>, cartesian::maxNoChildren<MAX_DIM>()> nghbrInside = {{
-    //-x +x -y +y -z +z -zz +zz
-    {{-1, 1, -1, 2, -1, 4, -1, 8}},  // 0
-    {{0, -1, -1, 3, -1, 5, -1, 9}},  // 1
-    {{-1, 3, 0, -1, -1, 6, -1, 10}}, // 2
-    {{2, -1, 1, -1, -1, 7, -1, 11}}, // 3
-    {{-1, 5, -1, 6, 0, -1, -1, 12}}, // 4
-    {{4, -1, -1, 7, 1, -1, -1, 13}}, // 5
-    {{-1, 7, 4, -1, 2, -1, -1, 14}}, // 6
-    {{6, -1, 5, -1, 3, -1, -1, 15}}, // 7
+/// Given the childId gives the neighboring childIds(and existence ==-1 ->
+/// doesnot exist)
+static constexpr std::array<
+    std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MAX_DIM>()>,
+    cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
+    nghbrInside = {{
+        //-x +x -y +y -z +z -zz +zz
+        {{-1, 1, -1, 2, -1, 4, -1, 8}},  // 0
+        {{0, -1, -1, 3, -1, 5, -1, 9}},  // 1
+        {{-1, 3, 0, -1, -1, 6, -1, 10}}, // 2
+        {{2, -1, 1, -1, -1, 7, -1, 11}}, // 3
+        {{-1, 5, -1, 6, 0, -1, -1, 12}}, // 4
+        {{4, -1, -1, 7, 1, -1, -1, 13}}, // 5
+        {{-1, 7, 4, -1, 2, -1, -1, 14}}, // 6
+        {{6, -1, 5, -1, 3, -1, -1, 15}}, // 7
 
-
-    // upper table +8 and last dir = -1
+        // upper table +8 and last dir = -1
     {{-1, 9, -1, 10, -1, 12, 0, -1}},  // 8
     {{8, -1, -1, 11, -1, 13, 1, -1}},  // 9
     {{-1, 11, 8, -1, -1, 14, 2, -1}},  // 10
@@ -94,8 +99,11 @@ static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>(
 }};
 
 // todo: replace with constant expression function
-/// Given the childId obtain the possible neighbors in a neighboring cell that doesnot have the same parent
-static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>()>, cartesian::maxNoChildren<MAX_DIM>()>
+/// Given the childId obtain the possible neighbors in a neighboring cell that
+/// doesnot have the same parent
+static constexpr std::array<
+    std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MAX_DIM>()>,
+    cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
     nghbrParentChildId = {{
         //-x +x -y +y -z +z -zz +zz
         {{1, -1, 2, -1, 4, -1, 8, -1}},  // 0
@@ -106,7 +114,6 @@ static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<MAX_DIM>(
         {{-1, 4, 7, -1, -1, 1, 13, -1}}, // 5
         {{7, -1, -1, 4, -1, 2, 14, -1}}, // 6
         {{-1, 6, -1, 5, -1, 3, 15, -1}}, // 7
-
 
         // upper table +8 and last dir = -1
         {{9, -1, 10, -1, 12, -1, -1, 0}},  // 8

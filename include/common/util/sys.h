@@ -8,7 +8,7 @@
 #include <pwd.h>
 #include <unistd.h>
 
-#include "common/types.h"
+#include "common/sfcmm_types.h"
 
 /// Get the current time as YYYY-MM-DD HH:MM:SS
 /// \return Returns the current time stamp as a string.

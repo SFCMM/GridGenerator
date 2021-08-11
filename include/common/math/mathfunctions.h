@@ -1,8 +1,8 @@
 #ifndef MATHFUNCTIONS_H
 #define MATHFUNCTIONS_H
+#include "common/sfcmm_types.h"
 #include <cmath>
 #include <gcem.hpp>
-#include "common/types.h"
 
 namespace detail_ {
 template <class T, class U>

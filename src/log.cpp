@@ -1,7 +1,7 @@
 #include "log.h"
+#include <sfcmm_common.h>
 #include "config.h"
 #include "macros.h"
-#include "util/sys.h"
 
 #include <array>
 #include <pwd.h>

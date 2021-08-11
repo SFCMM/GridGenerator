@@ -1,8 +1,8 @@
 #ifndef HILBERT_H
 #define HILBERT_H
+#include "common/sfcmm_types.h"
 #include <bitset>
 #include <gcem.hpp>
-#include "common/types.h"
 
 namespace hilbert {
 /// Calculate the Hilbert index of a given coordinate up to the HilberLevel iteration.

@@ -3,10 +3,10 @@
 #include <fstream>
 #include <memory>
 #include <mpi.h>
+#include <sfcmm_common.h>
 #include <sstream>
 #include <vector>
-#include "common/compiler_config.h"
-#include "common/types.h"
+
 
 inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 

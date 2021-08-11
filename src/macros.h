@@ -1,19 +1,17 @@
 #ifndef GRIDGENERATOR_MACROS_H
 #define GRIDGENERATOR_MACROS_H
-#include "common/compiler_config.h"
+
+#include <iostream>
+#include <mpi.h>
+#include <sfcmm_common.h>
+#include <sstream>
+#include "log.h"
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma ide diagnostic   ignored "cppcoreguidelines-macro-usage"
 #endif
-
-#include <iostream>
-#include <mpi.h>
-#include <sstream>
-#include "common/globalmpi.h"
-#include "log.h"
-#include "util/backtrace.h"
 
 
 /// Define macros to stringify literal and expanded macro arguments

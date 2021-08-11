@@ -5,7 +5,7 @@
 #include <iostream>
 #include <mpi.h>
 
-#include "common/types.h"
+#include "common/sfcmm_types.h"
 
 namespace MPI {
 

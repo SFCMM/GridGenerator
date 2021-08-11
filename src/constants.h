@@ -3,8 +3,8 @@
 
 #include <array>
 #include <limits>
+#include <sfcmm_common.h>
 #include <vector>
-#include "common/types.h"
 #include "config.h"
 #include "functions.h"
 
