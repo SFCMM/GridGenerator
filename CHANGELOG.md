@@ -77,7 +77,6 @@
 
 1) Open STL files.
 2) Split out common sim libs
-   1) Refactor log
    2) Refactor timer
    3) Merge enums in gridcell_properties.h
 
@@ -100,6 +99,7 @@
 ### Documentation
 
 ### Refactoring
+- log.h
 
 # V0.0.2 (~8.8.21)
 

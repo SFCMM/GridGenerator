@@ -1,21 +1,21 @@
 #ifndef GRIDGENERATOR_LOG_H
 #define GRIDGENERATOR_LOG_H
+#include "macros.h"
+#include "util/sys.h"
 #include <fstream>
+#include <map>
 #include <memory>
 #include <mpi.h>
 #include <sstream>
 #include <utility>
 #include <vector>
-#include <sfcmm_common.h>
-#include "config.h"
-
 
 // todo: add tests
 
 class Log_buffer : public std::stringbuf {
   friend class Log;
 
- public:
+public:
   Log_buffer() = default;
 
   Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}

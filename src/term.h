@@ -1,6 +1,6 @@
 #ifndef GRIDGENERATOR_TERM_H
 #define GRIDGENERATOR_TERM_H
-#include "log.h"
+#include <sfcmm_common.h>
 
 [[noreturn]] inline void term(const GInt errorCode, const GString& location, const GString& message = "") {
   if(errorCode != 0) {
