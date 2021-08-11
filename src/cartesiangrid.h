@@ -151,7 +151,7 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   void setMaxLvl(const GInt maxLvl) override {
-    gridgen_log << "set maximum grid level " << maxLvl << std::endl;
+    logger << "set maximum grid level " << maxLvl << std::endl;
     m_maxLvl = maxLvl;
   }
 
@@ -280,16 +280,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     partitionLvl() = partitioningLvl;
-    gridgen_log << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
+    logger << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
     std::cout << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
 
-    gridgen_log << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
+    logger << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
     std::cout << SP2 << "+ initial cube length: " << lengthOnLvl(0) << std::endl;
 
     // make sure we have set some level...
     if(partitioningLvl > maxLvl()) {
       cerr0 << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
-      gridgen_log << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
+      logger << "WARNING: No maximum level set -> set to " << partitioningLvl << std::endl;
       setMaxLvl(partitioningLvl);
     }
 
@@ -316,7 +316,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       const GInt prevLevelEnd     = m_levelOffsets[l].end;
       const GInt prevLevelNoCells = prevLevelEnd - prevLevelBegin;
       if(DEBUG_LEVEL > Debug_Level::no_debug) {
-        gridgen_log << "LevelOffset " << l << ":[" << prevLevelBegin << ", " << prevLevelEnd << "]" << std::endl;
+        logger << "LevelOffset " << l << ":[" << prevLevelBegin << ", " << prevLevelEnd << "]" << std::endl;
       }
 
 
@@ -353,7 +353,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void uniformRefineGrid(const GInt uniformLevel) override {
     RECORD_TIMER_START(TimeKeeper[Timers::GridUniform]);
-    gridgen_log << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
+    logger << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
     std::cout << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
 
     if(partitionLvl() == uniformLevel) {
@@ -401,14 +401,14 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       return;
     }
 
-    gridgen_log << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
+    logger << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
     std::cout << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
     // update the offsets
     m_levelOffsets[currentHighestLvl() + 1] = {m_size, m_size + noCellsToRefine * cartesian::maxNoChildren<NDIM>()};
     if(m_levelOffsets[currentHighestLvl() + 1].end > m_capacity) {
       outOfMemory(currentHighestLvl() + 1);
     }
-    gridgen_log << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
+    logger << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
     std::cout << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
 
 
@@ -494,12 +494,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void outOfMemory(GInt level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    gridgen_log << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
+    logger << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
     cerr0 << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
-    gridgen_log << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", " << m_levelOffsets[level - 1].end << "]"
-                << std::endl;
+    logger << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", " << m_levelOffsets[level - 1].end << "]" << std::endl;
     cerr0 << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", " << m_levelOffsets[level - 1].end << "]" << std::endl;
-    gridgen_log << "level " << level << " [" << m_levelOffsets[level].begin << ", " << m_levelOffsets[level].end << "]" << std::endl;
+    logger << "level " << level << " [" << m_levelOffsets[level].begin << ", " << m_levelOffsets[level].end << "]" << std::endl;
     cerr0 << "level " << level << " [" << m_levelOffsets[level].begin << ", " << m_levelOffsets[level].end << "]" << std::endl;
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
@@ -507,7 +506,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void refineGrid(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
-    gridgen_log << SP2 << "+ refining grid on level: " << level << std::endl;
+    logger << SP2 << "+ refining grid on level: " << level << std::endl;
     std::cout << SP2 << "+ refining grid on level: " << level << std::endl;
 
     ASSERT(level + 1 <= maxLvl(), "Invalid refinement level! " + std::to_string(level + 1) + ">" + std::to_string(maxLvl()));
@@ -522,7 +521,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void refineCell(const GInt cellId, const GInt offset) {
     if(DEBUG_LEVEL > Debug_Level::debug) {
-      gridgen_log << "refine cell " << cellId << " with offset " << offset << std::endl;
+      logger << "refine cell " << cellId << " with offset " << offset << std::endl;
     }
     const GInt    refinedLvl       = std::to_integer<GInt>(m_level[cellId]) + 1;
     const GDouble refinedLvlLength = lengthOnLvl(refinedLvl);
@@ -631,7 +630,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
     }
     m_size = levelSize(m_levelOffsets[level]);
-    gridgen_log << SP3 << "* grid has " << m_size << " cells" << std::endl;
+    logger << SP3 << "* grid has " << m_size << " cells" << std::endl;
     std::cout << SP3 << "* grid has " << m_size << " cells" << std::endl;
   }
 
@@ -724,7 +723,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void reorderHilberCurve() {
-    gridgen_log << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
+    logger << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
     std::cout << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
 
     Point<NDIM>       centerOfGravity = Point<NDIM>(cog().data());
@@ -745,7 +744,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       hilbertIds[cellId] = hilbert::index<NDIM>(x, hilbertLevel);
     }
     if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      gridgen_log << "checking duplicated Hilbert Ids" << std::endl;
+      logger << "checking duplicated Hilbert Ids" << std::endl;
       std::vector<GInt> duplicatedIds = checkDuplicateIds(hilbertIds);
       if(!duplicatedIds.empty()) {
         for(auto id : duplicatedIds) {

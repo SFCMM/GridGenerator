@@ -45,15 +45,15 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_fil
   }
 
 #ifndef GRIDGEN_SINGLE_FILE_LOG
-  gridgen_log.open("gridgen_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
+  logger.open("logger" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
   if(DEBUG_LEVEL < Debug_Level::more_debug) {
-    gridgen_log.open("gridgen_log", true, argc, argv, MPI_COMM_WORLD);
+    logger.open("logger", true, argc, argv, MPI_COMM_WORLD);
   } else {
-    gridgen_log.open("gridgen_log", false, argc, argv, MPI_COMM_WORLD);
+    logger.open("logger", false, argc, argv, MPI_COMM_WORLD);
   }
 #endif
-  gridgen_log.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
+  logger.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 
   initTimers();
 }
@@ -79,7 +79,7 @@ template <Debug_Level DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   RECORD_TIMER_START(TimeKeeper[Timers::Init]);
   startupInfo();
-  gridgen_log << "Grid generator started ||>" << endl;
+  logger << "Grid generator started ||>" << endl;
   cout << "Grid generator started ||>" << endl;
   loadConfiguration();
   RECORD_TIMER_STOP(TimeKeeper[Timers::Init]);
@@ -101,7 +101,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
       TERMM(-1, "Invalid number of dimensions 1-4.");
   }
 
-  gridgen_log << "Grid generator finished <||" << endl;
+  logger << "Grid generator finished <||" << endl;
   cout << "Grid generator finished <||" << endl;
 
   unusedConfigValues();
@@ -110,7 +110,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   STOP_ALL_RECORD_TIMERS();
   DISPLAY_ALL_TIMERS();
 
-  gridgen_log.close();
+  logger.close();
   MPI_Finalize();
 
   return 0;
@@ -140,7 +140,7 @@ template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
 
-  gridgen_log << "Loading configuration file [" << m_configurationFileName << "]" << endl;
+  logger << "Loading configuration file [" << m_configurationFileName << "]" << endl;
 
   // 1. open configuration file on root process
   if(MPI::isRoot()) {
@@ -178,26 +178,26 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_START(TimeKeeper[Timers::GridGeneration]);
   RECORD_TIMER_START(TimeKeeper[Timers::GridInit]);
 
-  gridgen_log << "Generating a grid[" << NDIM << "D]" << endl;
+  logger << "Generating a grid[" << NDIM << "D]" << endl;
   m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>();
 
   cout << SP1 << "Reading Grid definition" << endl;
   loadGridDefinition<NDIM>();
   m_grid->setCapacity(m_maxNoCells);
-  gridgen_log << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
+  logger << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
   cout << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
 
   // todo: add function to define memory to be allocated
   // todo: add function to convert to appropriate memory size
   const GDouble memoryConsumptionKB = CartesianGridGen<DEBUG_LEVEL, NDIM>::memorySizePerCell() * m_maxNoCells / DKBIT;
   if(MPI::isSerial()) {
-    gridgen_log << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+    logger << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
     cout << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
   } else {
-    gridgen_log << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+    logger << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
     cout << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
     const GDouble globalMemory = memoryConsumptionKB * static_cast<GDouble>(MPI::globalNoDomains());
-    gridgen_log << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
+    logger << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
     cout << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
   }
 
@@ -206,11 +206,11 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   m_weightMethod = std::make_unique<WeightUniform>();
 
 
-  gridgen_log << "\n";
-  gridgen_log << SP2 << "+ m_center of gravity: " << strStreamify<NDIM>(m_grid->cog()).str() << "\n";
-  gridgen_log << SP2 << "+ decisive direction: " << m_grid->largestDir() << "\n";
-  gridgen_log << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->lengthOfBoundingBox()).str() << "\n";
-  gridgen_log << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
+  logger << "\n";
+  logger << SP2 << "+ m_center of gravity: " << strStreamify<NDIM>(m_grid->cog()).str() << "\n";
+  logger << SP2 << "+ decisive direction: " << m_grid->largestDir() << "\n";
+  logger << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->lengthOfBoundingBox()).str() << "\n";
+  logger << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
   // create partitioning grid first, which is done without MPI parallelization
@@ -304,13 +304,13 @@ auto GridGenerator<DEBUG_LEVEL>::has_config_value(const GString& key) -> GBool {
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
   GInt i = 0;
-  gridgen_log << "The following values in the configuration file are unused:" << endl;
+  logger << "The following values in the configuration file are unused:" << endl;
   for(const auto& configKey : m_configKeys) {
     if(!configKey.second) {
-      gridgen_log << "[" << ++i << "] " << configKey.first << "\n";
+      logger << "[" << ++i << "] " << configKey.first << "\n";
     }
   }
-  gridgen_log << endl;
+  logger << endl;
 }
 
 

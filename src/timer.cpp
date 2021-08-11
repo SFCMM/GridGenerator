@@ -29,14 +29,14 @@ TimerProfiling::~TimerProfiling() {
   sstream << "    CPU      WALL   FUNCTION                    >> profile: '" << m_name << "' <<";
   const string header = sstream.str();
   for(std::size_t i = 0; i < header.size(); i++) {
-    gridgen_log << "_";
+    logger << "_";
   }
-  gridgen_log << endl;
-  gridgen_log << header << endl;
+  logger << endl;
+  logger << header << endl;
   for(std::size_t i = 0; i < header.size(); i++) {
-    gridgen_log << "-";
+    logger << "-";
   }
-  gridgen_log << endl;
+  logger << endl;
   GInt counter    = 0;
   GInt supCounter = 0;
   if(!s_functionTimings.empty()) {
@@ -57,27 +57,27 @@ TimerProfiling::~TimerProfiling() {
       sprintf(buffer, "%6.2f", relCpuTime);
       char buffer2[7];
       sprintf(buffer2, "%6.2f", relWallTime);
-      gridgen_log << buffer << "%   " << buffer2 << "%   " << s_functionTiming.getName() << endl;
+      logger << buffer << "%   " << buffer2 << "%   " << s_functionTiming.getName() << endl;
       counter++;
     }
     if(supCounter > 0) {
-      gridgen_log << "  .....     .....   (" << supCounter << " shorter timings with CPU<" << thresholdPercentage << "% were suppressed)"
-                  << endl;
+      logger << "  .....     .....   (" << supCounter << " shorter timings with CPU<" << thresholdPercentage << "% were suppressed)"
+             << endl;
     }
   }
   if(counter == 0) {
-    gridgen_log << "No timings recorded for timer '" << m_name << "'." << endl;
+    logger << "No timings recorded for timer '" << m_name << "'." << endl;
   }
   for(std::size_t i = 0; i < header.size(); i++) {
-    gridgen_log << "-";
+    logger << "-";
   }
-  gridgen_log << endl;
-  gridgen_log << "Total cpu time:  " << printTime(getCpuTimeSecs(exitCpuTime - m_initCpuTime)) << endl;
-  gridgen_log << "Total wall time: " << printTime(exitWallTime - m_initWallTime) << endl;
+  logger << endl;
+  logger << "Total cpu time:  " << printTime(getCpuTimeSecs(exitCpuTime - m_initCpuTime)) << endl;
+  logger << "Total wall time: " << printTime(exitWallTime - m_initWallTime) << endl;
   for(std::size_t i = 0; i < header.size(); i++) {
-    gridgen_log << "_";
+    logger << "_";
   }
-  gridgen_log << endl;
+  logger << endl;
 }
 
 auto TimerProfiling::getTimingId(const string& name) -> GInt {

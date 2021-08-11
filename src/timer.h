@@ -317,8 +317,8 @@ inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDi
     running = true;
     stopTimer(timerId, AT_);
   }
-  gridgen_log.width(50);
-  gridgen_log.setf(std::ios::left);
+  logger.width(50);
+  logger.setf(std::ios::left);
   std::stringstream indentedName;
 
   // Calculate time relative to the parent timer
@@ -340,12 +340,12 @@ inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDi
   indentedName << "[" << std::fixed << std::setprecision(1) << std::setw(4) << std::setfill('0') << std::right << percentage << std::left
                << "%] ";
   indentedName << m_timers[timerId].name;
-  gridgen_log << indentedName.str() << std::right;
-  gridgen_log.precision(6);
-  gridgen_log.width(20);
-  gridgen_log << m_timers[timerId].recordedTime << std::left << " [sec]";
+  logger << indentedName.str() << std::right;
+  logger.precision(6);
+  logger.width(20);
+  logger << m_timers[timerId].recordedTime << std::left << " [sec]";
   if(toggleDisplayed) m_timers[timerId].displayed = true;
-  gridgen_log << std::endl;
+  logger << std::endl;
   for(std::size_t sub = 0, last = m_timers[timerId].subTimers.size(); sub < last; ++sub) {
     const GInt new_indent = indent(tIndent);
     displayTimer_(m_timers[timerId].subTimers[sub], toggleDisplayed, new_indent, m_timers[timerId].recordedTime);
@@ -358,13 +358,13 @@ inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDi
 inline void TimerManager::displayTimerHeader_() {}
 
 inline void TimerManager::displayTimerGroupHeader_(const GInt groupId) {
-  gridgen_log << "--------------------------------------------------------------------------------" << std::endl;
-  gridgen_log.width(50);
-  gridgen_log.precision(12);
-  gridgen_log.setf(std::ios::left);
-  gridgen_log << "Group";
-  gridgen_log.width(40);
-  gridgen_log << m_groups[groupId] << std::endl;
+  logger << "--------------------------------------------------------------------------------" << std::endl;
+  logger.width(50);
+  logger.precision(12);
+  logger.setf(std::ios::left);
+  logger << "Group";
+  logger.width(40);
+  logger << m_groups[groupId] << std::endl;
 }
 
 inline void TimerManager::displayAllTimers() {

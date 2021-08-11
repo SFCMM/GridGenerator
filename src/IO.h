@@ -23,7 +23,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
   cerr0 << SP1 << "Writing " << fileName << ".csv" << std::endl;
-  gridgen_log << SP1 << "Writing " << fileName << ".csv" << std::endl;
+  logger << SP1 << "Writing " << fileName << ".csv" << std::endl;
 
   ofstream                      pointFile;
   static constexpr unsigned int N           = 64;
@@ -72,7 +72,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
                         const std::vector<GString>& index = {}, const std::vector<std::vector<GString>>& values = {},
                         const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
-  gridgen_log << SP1 << "Writing " << fileName << ".vtp" << std::endl;
+  logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
 
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {

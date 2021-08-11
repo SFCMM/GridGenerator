@@ -288,11 +288,11 @@ class GeometryManager : public GeometryInterface {
         case GeomType::unknown:
           [[fallthrough]];
         default: {
-          gridgen_log << SP2 << "Unknown geometry type" << object.key() << std::endl;
+          logger << SP2 << "Unknown geometry type" << object.key() << std::endl;
           break;
         }
       }
-      gridgen_log << m_geomObj.back()->str() << std::endl;
+      logger << m_geomObj.back()->str() << std::endl;
     }
   }
 

@@ -6,10 +6,203 @@
 #include <sfcmm_common.h>
 #include <sstream>
 #include <vector>
+#include "config.h"
+#include "macros.h"
 
+
+// todo: fix documentation
+// todo: add tests
 
 class Log_buffer : public std::stringbuf {
   friend class Log;
+
+ public:
+  Log_buffer() = default;
+
+  Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}
+
+  /**
+   * \brief Sets interal state of whether only the root domain (rank 0) should write to file.
+   * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
+   * \return The previous internal state (may be stored to return to the previous behavior).
+   */
+  virtual auto setRootOnly(GBool rootOnly = true) -> GBool {
+    GBool previousValue = m_rootOnly;
+    m_rootOnly          = rootOnly;
+    return previousValue;
+  }
+
+  /**
+   * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
+   * \params[in] minFlushSize Minimum buffer length.
+   * \return The previous value of the minimum flush size.
+   */
+  virtual auto setMinFlushSize(GInt minFlushSize) -> GInt {
+    GInt previousValue = m_minFlushSize;
+    m_minFlushSize     = minFlushSize;
+    return previousValue;
+  }
+
+  virtual void close(GBool forceClose = false) = 0;
+
+
+ protected:
+  /**
+   * \brief Parses the string input and returns the string with XML entities escaped
+   * \details This method iterates over each character of the given input string str and replaces relevant XML
+   *          entities with their escaped counterparts.
+   *          This code is adapted from http://www.mdawson.net/misc/xmlescape.php (Matson Dawson, 2009).
+   *
+   * \param[in] str Input string that has characters which need escaping.
+   * \return Modified string with XML entities escaped.
+   */
+  virtual auto encodeXml(const GString& inputStr) -> GString {
+    std::ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
+
+    // Create a for loop that uses an iterator to traverse the complete string
+    for(GString::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
+      // Get current character
+      auto c = static_cast<GChar>(*iter);
+
+      // Use a switch/case statement for the five XML entities
+      switch(c) {
+        case '"':
+          tmpEncodeBuffer << "&quot;";
+          break; // Replace double quotes
+        case '&':
+          tmpEncodeBuffer << "&amp;";
+          break; // Replace ampersand
+        case '\'':
+          tmpEncodeBuffer << "&apos;";
+          break; // Replace single quote
+        case '<':
+          tmpEncodeBuffer << "&lt;";
+          break; // Replace less-than sign
+        case '>':
+          tmpEncodeBuffer << "&gt;";
+          break; // Replace greater-than sign
+        default:
+          tmpEncodeBuffer << c; // By default just append current character
+      }
+    }
+
+    // Return encoded stream as a string
+    return tmpEncodeBuffer.str();
+  }
+
+  /**
+   * \brief Creates an XML prefix using the domain id that is prepended to each message.
+   * Makes use of an array attribute filled by the user to generate the XML string.
+   *
+   */
+  virtual void createPrefixMessage() {
+    // Create temporary stream
+    std::ostringstream tmpStream;
+
+    // Fill stream with formatted domain id
+    tmpStream << "<m d=\"" << m_domainId << "\" ";
+
+    for(auto& m_prefixAttribute : m_prefixAttributes) {
+      tmpStream << m_prefixAttribute.first << "=\"" << m_prefixAttribute.second << "\" ";
+    }
+
+    tmpStream << ">";
+
+    // Set prefix message to tmpBuffer string
+    m_prefixMessage = tmpStream.str();
+
+    // Reset buffer
+    tmpStream.str("");
+  }
+
+  // todo: remove...
+  /**
+   * \brief Creates an XML suffix that is appended to each message.
+   */
+  virtual void createSuffixMessage() { m_suffixMessage = "</m>\n"; }
+
+
+  /**
+   * \brief Return an XML header that should written at the beginning of each log file.
+   * \return The XML header.
+   */
+  virtual auto getXmlHeader() -> GString {
+    using namespace std;
+
+    static constexpr GInt maxNoChars = 1024;
+
+    // Gets the current hostname
+    std::array<GChar, maxNoChars> host{};
+    gethostname(&host[0], maxNoChars - 1);
+    host[maxNoChars - 1] = '\0';
+
+    // Gets the current username
+    GString user;
+
+    passwd* p = getpwuid(getuid());
+    if(p != nullptr) {
+      user = GString(p->pw_name);
+    } else {
+      user = "n/a";
+    }
+
+    // Gets the current executionCommand
+    stringstream executionCommand;
+    executionCommand.str("");
+    executionCommand << m_argv[0];
+    for(GInt n = 1; n < m_argc; n++) {
+      executionCommand << " " << m_argv[n];
+    }
+
+    // Create temporary buffer
+    ostringstream tmpBuffer;
+
+    // Write XML header information to buffer
+    tmpBuffer << R"(<?xml version="1.0" standalone="yes" ?>\n)";
+    tmpBuffer << R"(<root>\n)";
+    tmpBuffer << R"(<meta name="noDomains" content=")" << m_noDomains << "\" />\n";
+    tmpBuffer << R"(<meta name="dateCreation" content=")" << dateString() << "\" />\n";
+    tmpBuffer << R"(<meta name="fileFormatVersion" content=")" << m_fileFormatVersion << "\" />\n";
+    tmpBuffer << R"(<meta name="user" content=")" << user << "\" />\n";
+    tmpBuffer << R"(<meta name="host" content=")" << host.data() << "\" />\n";
+    tmpBuffer << R"(<meta name="dir" content=")" << getCWD() << "\" />\n";
+    tmpBuffer << R"(<meta name="executionCommand" content=")" << executionCommand.str() << "\" />\n";
+    tmpBuffer << R"(<meta name="revision" content=")" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
+    tmpBuffer << R"(<meta name="build" content=")" << XSTRINGIFY(COMPILER_NAME) << " " << XSTRINGIFY(BUILD_TYPE) << " ("
+              << GString(XSTRINGIFY(COMPILER_VER)) << ")"
+              << "\" />\n";
+
+
+    // Return XML header
+    return tmpBuffer.str();
+  }
+
+  /**
+   * \brief Return an XML footer that should written at the end of each log file.
+   * \return The XML footer.
+   */
+  virtual auto getXmlFooter() -> GString {
+    // Create temporary buffer
+    std::ostringstream tmpBuffer;
+
+    // Write XML footer to buffer
+    tmpBuffer << R"(<meta name="dateClosing" content=")" << dateString() << "\" />\n";
+    tmpBuffer << "</root>\n";
+
+    // Return XML footer
+    return tmpBuffer.str();
+  }
+
+  virtual void flushBuffer() = 0;
+
+  [[nodiscard]] auto inline domainId() const -> int { return m_domainId; }
+  auto inline domainId() -> int& { return m_domainId; }
+  [[nodiscard]] auto inline noDomains() const -> int { return m_noDomains; }
+  auto inline noDomains() -> int& { return m_noDomains; }
+
+  [[nodiscard]] auto inline prefixMessage() const -> const GString& { return m_prefixMessage; }
+  [[nodiscard]] auto inline suffixMessage() const -> const GString& { return m_suffixMessage; }
+  [[nodiscard]] auto inline minFlushSize() const -> GInt { return m_minFlushSize; }
 
  private:
   static constexpr GInt m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
@@ -24,32 +217,6 @@ class Log_buffer : public std::stringbuf {
   GChar** m_argv{};
 
   std::vector<std::pair<GString, GString>> m_prefixAttributes;
-
- protected:
-  virtual auto encodeXml(const GString& str) -> GString;
-  virtual auto getXmlHeader() -> GString;
-  virtual auto getXmlFooter() -> GString;
-  virtual void createPrefixMessage();
-  virtual void createSuffixMessage();
-  virtual void flushBuffer() = 0;
-
-  [[nodiscard]] auto inline domainId() const -> int { return m_domainId; }
-  auto inline domainId() -> int& { return m_domainId; }
-  [[nodiscard]] auto inline noDomains() const -> int { return m_noDomains; }
-  auto inline noDomains() -> int& { return m_noDomains; }
-
-  [[nodiscard]] auto inline prefixMessage() const -> const GString& { return m_prefixMessage; }
-  [[nodiscard]] auto inline suffixMessage() const -> const GString& { return m_suffixMessage; }
-  [[nodiscard]] auto inline minFlushSize() const -> GInt { return m_minFlushSize; }
-
- public:
-  Log_buffer() = default;
-
-  Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}
-
-  virtual auto setRootOnly(GBool rootOnly = true) -> GBool;
-  virtual auto setMinFlushSize(GInt minFlushSize) -> GInt;
-  virtual void close(GBool forceClose = false) = 0;
 };
 
 
@@ -193,7 +360,7 @@ class LogFile : public Log {
   auto setRootOnly(GBool rootOnly = true) -> GBool override;
   auto setMinFlushSize(GInt minFlushSize) -> GInt;
 };
-inline LogFile gridgen_log; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+inline LogFile logger; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 
 #endif // GRIDGENERATOR_LOG_H

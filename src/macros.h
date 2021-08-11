@@ -5,7 +5,6 @@
 #include <mpi.h>
 #include <sfcmm_common.h>
 #include <sstream>
-#include "log.h"
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
@@ -43,43 +42,7 @@
   } while(false && (condition))
 #endif
 
-[[noreturn]] inline void term(const GInt errorCode, const GString& location, const GString& message = "") {
-  if(errorCode != 0) {
-    std::stringstream s;
-    s << "\n";
-    s << "Rank " << MPI::globalDomainId() << " threw exit code " << errorCode << "\n";
-    s << "Error in " << location << ": " << message << "\n";
-    s << "\n"
-      << "Program is aborting!!\n";
-    std::cerr << s.str() << std::flush;
-    gridgen_log << s.str() << std::endl;
 
-    // Print backtrace (if enabled)
-    BACKTRACE();
-
-    // Close the log file to make sure that no MPI error occurs from the
-    // unclosed file, and that a proper XML footer is written
-    gridgen_log.close(true);
-    MPI_Abort(MPI_COMM_WORLD, static_cast<int>(errorCode));
-  } else {
-    // memDealloc();
-
-    // Close the log file to make sure that no MPI error occurs from the
-    // unclosed file, and that a proper XML footer is written
-    gridgen_log.close();
-    // Call MPI_Finalize to ensure proper MPI shutdown
-    MPI_Finalize();
-
-    // Exit the program
-    exit(0);
-  }
-  exit(static_cast<int>(errorCode));
-}
-
-#define TERMM(exitval, msg)                                                                                                                \
-  do {                                                                                                                                     \
-    term(exitval, AT_, msg);                                                                                                               \
-  } while(false)
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic pop
