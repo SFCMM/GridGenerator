@@ -1,4 +1,3 @@
-#include <gcem.hpp>
 #include <iostream>
 #include <mpi.h>
 #include <utility>
@@ -7,7 +6,6 @@
 
 #include "config.h"
 #include "constants.h"
-#include "functions.h"
 #include "geometry.h"
 #include "gridGenerator.h"
 #include "timer.h"
@@ -237,6 +235,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridRefinement]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridGeneration]);
+  logger.eraseAttribute("level");
 
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
   m_grid->save(m_gridOutConfig);
