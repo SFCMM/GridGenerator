@@ -343,6 +343,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       findChildLevelNghbrs(m_levelOffsets, l);
       deleteOutsideCells(l + 1);
       increaseCurrentHighestLvl();
+      logger.updateAttributes();
     }
 
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
@@ -392,6 +393,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
       m_size = m_levelOffsets[l + 1].end;
       increaseCurrentHighestLvl();
+      logger.updateAttributes();
     }
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
   }

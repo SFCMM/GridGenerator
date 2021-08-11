@@ -213,6 +213,9 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   logger << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
+  const std::function<GString()> strHighestLvl = [&]() { return to_string(m_grid->currentHighestLvl()); };
+  logger.addAttribute({"level", strHighestLvl});
+
   // create partitioning grid first, which is done without MPI parallelization
   m_grid->createPartitioningGrid(m_partitionLvl);
 
@@ -230,6 +233,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     // todo:implement
     // GInt noCellsToRefine = markCellsForRefinement();
     m_grid->refineMarkedCells(noCellsToRefine);
+    logger.updateAttributes();
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridRefinement]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridGeneration]);

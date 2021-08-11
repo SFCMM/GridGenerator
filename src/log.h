@@ -4,6 +4,7 @@
 #include <memory>
 #include <mpi.h>
 #include <sstream>
+#include <utility>
 #include <vector>
 #include <sfcmm_common.h>
 #include "config.h"
@@ -65,7 +66,7 @@ class Log_buffer : public std::stringbuf {
           tmpEncodeBuffer << "&gt;";
           break; // Replace greater-than sign
         default:
-          tmpEncodeBuffer << c; // By default just append current character
+          tmpEncodeBuffer << c; // By default, just append current character
       }
     }
 
@@ -85,8 +86,8 @@ class Log_buffer : public std::stringbuf {
     // Fill stream with formatted domain id
     tmpStream << "<m d=\"" << m_domainId << "\" ";
 
-    for(auto& m_prefixAttribute : m_prefixAttributes) {
-      tmpStream << m_prefixAttribute.first << "=\"" << m_prefixAttribute.second << "\" ";
+    for(const auto& attribute : m_prefixAttributes) {
+      tmpStream << attribute.first << "=\"" << attribute.second() << "\" ";
     }
 
     tmpStream << ">";
@@ -177,7 +178,7 @@ class Log_buffer : public std::stringbuf {
   GInt    m_argc{};
   GChar** m_argv{};
 
-  std::vector<std::pair<GString, GString>> m_prefixAttributes;
+  std::map<GString, std::function<GString()>> m_prefixAttributes;
 };
 
 
@@ -240,7 +241,7 @@ class Log_simpleFileBuffer : public Log_buffer {
       // Set whether only domain 0 should do any writing (including the creation of a file)
       m_rootOnlyHardwired = rootOnlyHardwired;
 
-      // Only open the file if m_rootOnlyHardwired was not set as true. Otherwise the file state remains closed.
+      // Only open the file if m_rootOnlyHardwired was not set as true. Otherwise, the file state remains closed.
       if(!(m_rootOnlyHardwired && domainId() != 0)) {
         // Set filename
         m_filename = filename;
@@ -369,28 +370,42 @@ class Log : public std::ostream {
    * \param[in] att The attribute to add, consists of a pair of MStrings.
    * \return The location of the attribute in the vector of pairs.
    */
-  auto addAttribute(const std::pair<GString, const GString>& att) -> GInt {
-    m_buffer->m_prefixAttributes.emplace_back(att);
+  auto addAttribute(const std::pair<GString, std::function<GString()>>& att) -> GInt {
+    m_buffer->m_prefixAttributes.emplace(att);
     m_buffer->createPrefixMessage();
     return static_cast<GInt>(m_buffer->m_prefixAttributes.size() - 1);
   }
 
   /** \brief Erases an attribute from the prefix of the XML string.
-   *  \param[in] attId The ID of the attribute to delete.
+   *  \param[in] attName The Name of the attribute to delete.
    */
-  void eraseAttribute(GInt attId) {
-    m_buffer->m_prefixAttributes.erase(m_buffer->m_prefixAttributes.begin() + attId);
+  void eraseAttribute(const GString& attName) {
+    m_buffer->m_prefixAttributes.erase(attName);
     m_buffer->createPrefixMessage();
   }
 
   /** \brief Modifies an attribute of the prefix of the XML string.
-   *  \param[in] attId The ID of the attribute to modify.
+   *  \param[in] attName The Name of the attribute to modify.
    *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
    */
-  void modifyAttribute(GInt attId, const std::pair<GString, GString>& att) {
-    m_buffer->m_prefixAttributes[attId] = att;
+  void modifyAttribute(const GString& attName, const std::pair<GString, std::function<GString()>>& att) {
+    m_buffer->m_prefixAttributes.erase(attName);
+    m_buffer->m_prefixAttributes.emplace(att);
     m_buffer->createPrefixMessage();
   }
+
+  /** \brief Modifies an attribute of the prefix of the XML string.
+   *  \param[in] attName The Name of the attribute to modify.
+   *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
+   */
+  void updateAttributeValue(const GString& attName, std::function<GString()> att) {
+    m_buffer->m_prefixAttributes[attName] = std::move(att);
+    m_buffer->createPrefixMessage();
+  }
+
+  /** \brief  Updates all attributes of the prefix of the XML string..
+   */
+  void updateAttributes() { m_buffer->createPrefixMessage(); }
 
   inline auto buffer() -> std::unique_ptr<Log_buffer>& { return m_buffer; }
   inline auto buffer() const -> const std::unique_ptr<Log_buffer>& { return m_buffer; }
