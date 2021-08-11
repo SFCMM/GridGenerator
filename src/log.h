@@ -10,7 +10,6 @@
 #include "macros.h"
 
 
-// todo: fix documentation
 // todo: add tests
 
 class Log_buffer : public std::stringbuf {
@@ -22,28 +21,12 @@ class Log_buffer : public std::stringbuf {
   Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}
 
   /**
-   * \brief Sets interal state of whether only the root domain (rank 0) should write to file.
-   * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
-   * \return The previous internal state (may be stored to return to the previous behavior).
-   */
-  virtual auto setRootOnly(GBool rootOnly = true) -> GBool {
-    GBool previousValue = m_rootOnly;
-    m_rootOnly          = rootOnly;
-    return previousValue;
-  }
-
-  /**
    * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
    * \params[in] minFlushSize Minimum buffer length.
-   * \return The previous value of the minimum flush size.
    */
-  virtual auto setMinFlushSize(GInt minFlushSize) -> GInt {
-    GInt previousValue = m_minFlushSize;
-    m_minFlushSize     = minFlushSize;
-    return previousValue;
-  }
+  void setMinFlushSize(GInt minFlushSize) { m_minFlushSize = minFlushSize; }
 
-  virtual void close(GBool forceClose = false) = 0;
+  virtual void close() = 0;
 
 
  protected:
@@ -56,7 +39,7 @@ class Log_buffer : public std::stringbuf {
    * \param[in] str Input string that has characters which need escaping.
    * \return Modified string with XML entities escaped.
    */
-  virtual auto encodeXml(const GString& inputStr) -> GString {
+  static auto encodeXml(const GString& inputStr) -> GString {
     std::ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
 
     // Create a for loop that uses an iterator to traverse the complete string
@@ -110,12 +93,8 @@ class Log_buffer : public std::stringbuf {
 
     // Set prefix message to tmpBuffer string
     m_prefixMessage = tmpStream.str();
-
-    // Reset buffer
-    tmpStream.str("");
   }
 
-  // todo: remove...
   /**
    * \brief Creates an XML suffix that is appended to each message.
    */
@@ -128,23 +107,6 @@ class Log_buffer : public std::stringbuf {
    */
   virtual auto getXmlHeader() -> GString {
     using namespace std;
-
-    static constexpr GInt maxNoChars = 1024;
-
-    // Gets the current hostname
-    std::array<GChar, maxNoChars> host{};
-    gethostname(&host[0], maxNoChars - 1);
-    host[maxNoChars - 1] = '\0';
-
-    // Gets the current username
-    GString user;
-
-    passwd* p = getpwuid(getuid());
-    if(p != nullptr) {
-      user = GString(p->pw_name);
-    } else {
-      user = "n/a";
-    }
 
     // Gets the current executionCommand
     stringstream executionCommand;
@@ -163,8 +125,8 @@ class Log_buffer : public std::stringbuf {
     tmpBuffer << R"(<meta name="noDomains" content=")" << m_noDomains << "\" />\n";
     tmpBuffer << R"(<meta name="dateCreation" content=")" << dateString() << "\" />\n";
     tmpBuffer << R"(<meta name="fileFormatVersion" content=")" << m_fileFormatVersion << "\" />\n";
-    tmpBuffer << R"(<meta name="user" content=")" << user << "\" />\n";
-    tmpBuffer << R"(<meta name="host" content=")" << host.data() << "\" />\n";
+    tmpBuffer << R"(<meta name="user" content=")" << userString() << "\" />\n";
+    tmpBuffer << R"(<meta name="host" content=")" << hostString() << "\" />\n";
     tmpBuffer << R"(<meta name="dir" content=")" << getCWD() << "\" />\n";
     tmpBuffer << R"(<meta name="executionCommand" content=")" << executionCommand.str() << "\" />\n";
     tmpBuffer << R"(<meta name="revision" content=")" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
@@ -207,7 +169,6 @@ class Log_buffer : public std::stringbuf {
  private:
   static constexpr GInt m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
   //!< changes that could affect postprocessing tools)
-  GBool   m_rootOnly{false}; //!< Stores whether only the root domain writes a log file
   int     m_domainId{0};     //!< Contains the MPI rank (= domain id) of this process
   int     m_noDomains{1};    //!< Contains the MPI rank count (= number of domains)
   GInt    m_minFlushSize{0}; //!< Minimum length of the internal buffer before flushing
@@ -308,10 +269,7 @@ class Log_simpleFileBuffer : public Log_buffer {
    * \details Any subsequent write statements to the file stream are discarded after this method is called. After
    *          close() is called, an XML footer is written to the file. Then the file is closed.
    */
-  void close(GBool forceClose = false) override {
-    // forceClose is not needed here (only kept for interface consistency reasons)
-    static_cast<void>(forceClose);
-
+  void close() override {
     // Only close file if was opened before
     if(m_isOpen) {
       // Force flushing of the internal buffer
@@ -406,7 +364,6 @@ class Log : public std::ostream {
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic pop
 #endif
-  virtual auto setRootOnly(GBool rootOnly = true) -> GBool = 0;
 
   /** \brief Adds an attribute to the prefix of the XML string.
    * \param[in] att The attribute to add, consists of a pair of MStrings.
@@ -499,10 +456,10 @@ class LogFile : public Log {
    * \brief Pass the close call to the respective internal buffer.
    * \details All attempts to write to the stream after closing it will be discarded.
    */
-  void close(GBool forceClose = false) {
+  void close() {
     // Only close file if was already opened
     if(m_isOpen) {
-      buffer()->close(forceClose); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+      buffer()->close();
 
       // Delete internal buffer to prevent memory leaks
       buffer().reset();
@@ -513,26 +470,16 @@ class LogFile : public Log {
   }
 
   /**
-   * \brief Sets interal state of whether only the root domain (rank 0) should write to file.
-   * \params[in] rootOnly If true, only rank 0 of the specified MPI communicator writes to file.
-   * \return The previous internal state (may be stored to return to the previous behavior).
-   */
-  auto setRootOnly(GBool rootOnly = true) -> GBool override { return buffer()->setRootOnly(rootOnly); }
-
-  /**
    * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
    * \details Flushing the buffer means that the contents of the buffer in memory is written to the file. If the
    *          file stream was not opened yet, this method just returns 0 and does nothing else.
    *
    * \params[in] minFlushSize Minimum buffer length.
-   * \return The previous value of the minimum flush size.
    */
-  auto setMinFlushSize(GInt minFlushSize) -> GInt {
-    if(m_isOpen) {
-      return buffer()->setMinFlushSize(minFlushSize);
+  void setMinFlushSize(const GInt minFlushSize) {
+    if(buffer() != nullptr) {
+      buffer()->setMinFlushSize(minFlushSize);
     }
-
-    return 0;
   }
 
  private:

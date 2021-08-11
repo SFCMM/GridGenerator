@@ -26,6 +26,21 @@ inline auto hostString() -> GString {
   return static_cast<GString>(&host_[0]);
 }
 
+/// Get the name of the user that runs the application.
+/// \return Returns the name of the user as a string.
+inline auto userString() -> GString {
+  // Gets the current username
+  GString user;
+
+  passwd *p = getpwuid(getuid());
+  if (p != nullptr) {
+    user = GString(p->pw_name);
+  } else {
+    user = "n/a";
+  }
+  return user;
+}
+
 /// Get the current working directory.
 /// \return Returns the current working directory as a string.
 inline auto getCWD() -> GString { return std::filesystem::current_path(); }
@@ -33,5 +48,7 @@ inline auto getCWD() -> GString { return std::filesystem::current_path(); }
 /// Check if the given file name is already existing.
 /// \param name File name to check for existence.
 /// \return File exists?
-inline auto isFile(const std::string& name) -> GBool { return std::filesystem::exists(name); }
+inline auto isFile(const std::string &name) -> GBool {
+  return std::filesystem::exists(name);
+}
 #endif // GRIDGENERATOR_SYS_H

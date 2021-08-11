@@ -45,12 +45,12 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_fil
   }
 
 #ifndef GRIDGEN_SINGLE_FILE_LOG
-  logger.open("logger" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
+  logger.open("gridgen_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
   if(DEBUG_LEVEL < Debug_Level::more_debug) {
-    logger.open("logger", true, argc, argv, MPI_COMM_WORLD);
+    logger.open("gridgen_log", true, argc, argv, MPI_COMM_WORLD);
   } else {
-    logger.open("logger", false, argc, argv, MPI_COMM_WORLD);
+    logger.open("gridgen_log", false, argc, argv, MPI_COMM_WORLD);
   }
 #endif
   logger.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
