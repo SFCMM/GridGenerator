@@ -8,7 +8,6 @@
 #include <sfcmm_common.h>
 #include <sstream>
 #include "constants.h"
-#include "macros.h"
 #include "term.h"
 
 namespace config {

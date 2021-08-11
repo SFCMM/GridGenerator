@@ -5,7 +5,6 @@
 #include <sfcmm_common.h>
 #include "functions.h"
 #include "gridcell_properties.h"
-#include "macros.h"
 
 
 namespace cartesian {

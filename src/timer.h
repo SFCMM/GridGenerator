@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 #include "constants.h"
-#include "macros.h"
 
 
 #define NEW_TIMER_GROUP(id, groupName)                 const GInt id = timers().newGroup(groupName)

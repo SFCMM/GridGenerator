@@ -8,7 +8,6 @@
 #include "globaltimers.h"
 #include "gtree.h"
 #include "IO.h"
-#include "macros.h"
 #include "timer.h"
 
 struct LevelOffsetType {

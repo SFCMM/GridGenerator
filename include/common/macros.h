@@ -1,11 +1,6 @@
 #ifndef GRIDGENERATOR_MACROS_H
 #define GRIDGENERATOR_MACROS_H
 
-#include <iostream>
-#include <mpi.h>
-#include <sfcmm_common.h>
-#include <sstream>
-
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"

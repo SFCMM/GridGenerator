@@ -7,7 +7,6 @@
 #include <sfcmm_common.h>
 #include <vector>
 #include "functions.h"
-#include "macros.h"
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;

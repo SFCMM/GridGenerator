@@ -8,7 +8,6 @@
 #include <vector>
 #include <sfcmm_common.h>
 #include "config.h"
-#include "macros.h"
 
 
 // todo: add tests

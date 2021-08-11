@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sfcmm_common.h>
 #include "constants.h"
-#include "macros.h"
 //#include <csv/csv.hpp>
 
 namespace hidden::_detail {
