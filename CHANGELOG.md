@@ -46,10 +46,8 @@
 ## Planned:
 
 - Generate porous mesh provided with some porosity value.
-- Open STL files.
 - Add doxygen generation to CI
 - (Optimize IO speed by manual buffering.)
-- Split out common sim libs
 - Setup valgrind and sanitize tests
 - Run coverage within CI
 - introduce type for bounding boxes
@@ -61,9 +59,10 @@
 - set filenames and paths
 - add tutorial
 - activate profile guided optimization
-- activate lto?
 - cleanup vtk io code
 - activate backtrace
+- replace iseven with call to gcem
+- add circular container based on vector...
 
 ### Moved from V0.0.2:
 
@@ -74,15 +73,43 @@
 - Write out VTK Point file (Binary).
 - add UnitTest and testcases for grid generation
 
+## Ongoing:
 
+1) Open STL files.
+2) Split out common sim libs
+   1) Refactor log
+   2) Refactor timer
+   3) Merge enums in gridcell_properties.h
+
+## Done:
+
+### Features
+
+### Buildsystem
+
+### Testing
+
+### Usability
+
+### IO
+
+### Performance
+
+### Bugs
+
+### Documentation
+
+### Refactoring
 
 # V0.0.2 (~8.8.21)
 
 ### Features
+
 - Add analytical geometries cube, box and sphere.
 - Define geometries as inside or outside
 
 ### Buildsystem
+
 - Add Cmake presets
 
 ### Testing
