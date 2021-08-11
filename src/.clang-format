@@ -132,15 +132,15 @@ IncludeBlocks: Preserve
 # Automatic ordering of include files:
 # - first is main header (gets assigned category 0 automatically)
 # - then all system headers (starting with '<'; category 1)
-# - then all other non-ZFS headers (category 2)
-# - finally all ZFS headers (category 3)
+# - then all other non-SFCMM headers (category 2)
+# - finally all SFCMM headers (category 3)
 IncludeCategories:
-  # - Regex: '^"zfs'
-  #   Priority: 3
+  - Regex: '^<sfcmm'
+    Priority: 2
   - Regex: '^<'
     Priority: 1
   - Regex: '.*'
-    Priority: 2
+    Priority: 3
 
 # Do not consider suffixes when determining the main include file
 IncludeIsMainRegex: '$'
