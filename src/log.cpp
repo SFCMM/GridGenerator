@@ -216,7 +216,7 @@ auto Log_buffer::getXmlFooter() -> GString {
  */
 Log_simpleFileBuffer::Log_simpleFileBuffer(const GString& filename, const GInt argc, GChar** argv, MPI_Comm mpiComm,
                                            GBool rootOnlyHardwired)
-  : Log_buffer(argc, argv), m_filename(), m_file() {
+  : Log_buffer(argc, argv) {
   open(filename, mpiComm, rootOnlyHardwired);
 }
 
@@ -241,14 +241,14 @@ void Log_simpleFileBuffer::open(const GString& filename, MPI_Comm mpiComm, const
     m_mpiComm = mpiComm;
 
     // Get domain id and number of domains
-    MPI_Comm_rank(m_mpiComm, &m_domainId);
-    MPI_Comm_size(m_mpiComm, &m_noDomains);
+    MPI_Comm_rank(m_mpiComm, &domainId());
+    MPI_Comm_size(m_mpiComm, &noDomains());
 
     // Set whether only domain 0 should do any writing (including the creation of a file)
     m_rootOnlyHardwired = rootOnlyHardwired;
 
     // Only open the file if m_rootOnlyHardwired was not set as true. Otherwise the file state remains closed.
-    if(!(m_rootOnlyHardwired && m_domainId != 0)) {
+    if(!(m_rootOnlyHardwired && domainId() != 0)) {
       // Set filename
       m_filename = filename;
 
@@ -312,10 +312,10 @@ auto Log_simpleFileBuffer::sync() -> int {
   // Only write if the file was already opened
   if(m_isOpen) {
     // Create formatted string, escape any XML entities in the message, and save to temporary buffer
-    m_tmpBuffer << m_prefixMessage << encodeXml(str()) << m_suffixMessage;
+    m_tmpBuffer << prefixMessage() << encodeXml(str()) << suffixMessage();
 
     // Only write to file if current buffer length exceeds the minimum size for flushing
-    if(m_tmpBuffer.str().length() >= static_cast<unsigned>(m_minFlushSize)) {
+    if(m_tmpBuffer.str().length() >= static_cast<unsigned>(minFlushSize())) {
       // Write the string to the file and flush the stream
       m_file << m_tmpBuffer.str() << flush;
 

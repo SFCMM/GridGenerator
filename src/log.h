@@ -8,26 +8,24 @@
 #include <vector>
 
 
-inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-
 class Log_buffer : public std::stringbuf {
   friend class Log;
 
- protected:
-  static const GInt m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
+ private:
+  static constexpr GInt m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
   //!< changes that could affect postprocessing tools)
-  GBool              m_rootOnly;      //!< Stores whether only the root domain writes a log file
-  int                m_domainId;      //!< Contains the MPI rank (= domain id) of this process
-  int                m_noDomains;     //!< Contains the MPI rank count (= number of domains)
-  GInt               m_minFlushSize;  //!< Minimum length of the internal buffer before flushing
-  GString            m_prefixMessage; //!< Stores the prefix that is prepended to each output
-  GString            m_suffixMessage; //!< Stores the suffix that is appended to each output
-  std::ostringstream m_tmpBuffer;     //!< Temporary buffer to hold string until flushing
-  GInt               m_argc{};
-  GChar**            m_argv{};
+  GBool   m_rootOnly{false}; //!< Stores whether only the root domain writes a log file
+  int     m_domainId{0};     //!< Contains the MPI rank (= domain id) of this process
+  int     m_noDomains{1};    //!< Contains the MPI rank count (= number of domains)
+  GInt    m_minFlushSize{0}; //!< Minimum length of the internal buffer before flushing
+  GString m_prefixMessage;   //!< Stores the prefix that is prepended to each output
+  GString m_suffixMessage;   //!< Stores the suffix that is appended to each output
+  GInt    m_argc{};
+  GChar** m_argv{};
 
   std::vector<std::pair<GString, GString>> m_prefixAttributes;
 
+ protected:
   virtual auto encodeXml(const GString& str) -> GString;
   virtual auto getXmlHeader() -> GString;
   virtual auto getXmlFooter() -> GString;
@@ -35,19 +33,19 @@ class Log_buffer : public std::stringbuf {
   virtual void createSuffixMessage();
   virtual void flushBuffer() = 0;
 
- public:
-  Log_buffer() : m_rootOnly(false), m_domainId(0), m_noDomains(1), m_minFlushSize(0), m_prefixMessage(), m_suffixMessage(), m_tmpBuffer() {}
+  [[nodiscard]] auto inline domainId() const -> int { return m_domainId; }
+  auto inline domainId() -> int& { return m_domainId; }
+  [[nodiscard]] auto inline noDomains() const -> int { return m_noDomains; }
+  auto inline noDomains() -> int& { return m_noDomains; }
 
-  Log_buffer(const GInt argc, GChar** argv)
-    : m_rootOnly(false),
-      m_domainId(0),
-      m_noDomains(1),
-      m_minFlushSize(0),
-      m_prefixMessage(),
-      m_suffixMessage(),
-      m_tmpBuffer(),
-      m_argc(argc),
-      m_argv(argv) {}
+  [[nodiscard]] auto inline prefixMessage() const -> const GString& { return m_prefixMessage; }
+  [[nodiscard]] auto inline suffixMessage() const -> const GString& { return m_suffixMessage; }
+  [[nodiscard]] auto inline minFlushSize() const -> GInt { return m_minFlushSize; }
+
+ public:
+  Log_buffer() = default;
+
+  Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}
 
   virtual auto setRootOnly(GBool rootOnly = true) -> GBool;
   virtual auto setMinFlushSize(GInt minFlushSize) -> GInt;
@@ -57,8 +55,6 @@ class Log_buffer : public std::stringbuf {
 
 /**
  * \brief Customized buffer to facilitate of a regular physical file for each processor within an MPI communicator.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
  * \details This class can be used as a regular string buffer, as it inherits from stringbuf. On flushing the
  *          buffer, the contents of the buffer are written to a file using an ofstream. This is mainly for cases
  *          where logging speed is crucial, as the implementation is very lightweight and since for each process
@@ -67,21 +63,22 @@ class Log_buffer : public std::stringbuf {
  */
 class Log_simpleFileBuffer : public Log_buffer {
  private:
-  GBool         m_isOpen{false};            //!< Stores whether the file(s) were already opened
-  GBool         m_rootOnlyHardwired{false}; //!< If true, only domain 0 opens and uses a file
-  GString       m_filename;                 //!< Filename on disk
-  std::ofstream m_file;                     //!< File stream tied to physical file on disk
-  MPI_Comm      m_mpiComm{};                //!< MPI communicator group
+  GBool              m_isOpen{false};            //!< Stores whether the file(s) were already opened
+  GBool              m_rootOnlyHardwired{false}; //!< If true, only domain 0 opens and uses a file
+  GString            m_filename;                 //!< Filename on disk
+  std::ofstream      m_file;                     //!< File stream tied to physical file on disk
+  MPI_Comm           m_mpiComm{};                //!< MPI communicator group
+  std::ostringstream m_tmpBuffer;                //!< Temporary buffer to hold string until flushing
 
  protected:
   auto sync() -> int override;
   void flushBuffer() override;
 
  public:
-  Log_simpleFileBuffer() : m_filename(), m_file(){};
+  Log_simpleFileBuffer() = default;
   Log_simpleFileBuffer(const GString& filename, const GInt m_argc, GChar** m_argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
                        GBool rootOnlyHardwired = false);
-  ~Log_simpleFileBuffer() override { close(); };
+  ~Log_simpleFileBuffer() override { Log_simpleFileBuffer::close(); };
 
   Log_simpleFileBuffer(const Log_simpleFileBuffer&) = delete;
   Log_simpleFileBuffer(Log_simpleFileBuffer&&)      = delete;
@@ -94,8 +91,6 @@ class Log_simpleFileBuffer : public Log_buffer {
 
 /**
  * \brief Base class for all Log<xyz> classes.
- * \author Michael Schlottke, Sven Berger
- * \date June 2012
  * \details This class is used to hold stream/buffer-independent methods. All Log<xyz>
  * subclasses inherit from this class. The auxiliary classes Log_<xyz> (especially the
  * buffers), however, should NOT have this class as their baseclass.

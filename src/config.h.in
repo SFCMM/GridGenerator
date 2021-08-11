@@ -3,6 +3,10 @@
 
 #include <sfcmm_common.h>
 
+/// Write error from root
+inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
+
 /// The default max number of offsprings allowed for a partitioning cell.
 static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
 
@@ -39,7 +43,7 @@ static constexpr GInt MAX_DIM = 4;
 
 // clang-format off
 #define PROJECT_VER @PROJECT_VERSION@
-#define BUILD_NUM 191
+#define BUILD_NUM 196
 #define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@
 #define COMPILER_NAME @CMAKE_CXX_COMPILER_ID@
 #define BUILD_TYPE @CMAKE_BUILD_TYPE@
