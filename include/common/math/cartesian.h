@@ -1,5 +1,7 @@
-#ifndef GRIDGENERATOR_CARTESIAN_H
-#define GRIDGENERATOR_CARTESIAN_H
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef SFCMM_CARTESIAN_H
+#define SFCMM_CARTESIAN_H
 
 #include <gcem.hpp>
 
@@ -52,15 +54,15 @@ static constexpr std::array<std::array<GDouble, sfcmm::MAX_DIM>,
         //<- 2D
 
         //-> 3D (+z)
-    {{-1, -1, 1, -1}}, // 4
-    {{1, -1, 1, -1}},  // 5
-    {{-1, 1, 1, -1}},  // 6
-    {{1, 1, 1, -1}},   // 7
-    //<- 3D (+z)
+        {{-1, -1, 1, -1}}, // 4
+        {{1, -1, 1, -1}},  // 5
+        {{-1, 1, 1, -1}},  // 6
+        {{1, 1, 1, -1}},   // 7
+        //<- 3D (+z)
 
-    //-> 4D
-    {{-1, -1, -1, 1}}, // 8
-    {{1, -1, -1, 1}},  // 9
+        //-> 4D
+        {{-1, -1, -1, 1}}, // 8
+        {{1, -1, -1, 1}},  // 9
     {{-1, 1, -1, 1}},  // 10
     {{1, 1, -1, 1}},   // 11
     {{-1, -1, 1, 1}},  // 12
@@ -88,15 +90,15 @@ static constexpr std::array<
         {{6, -1, 5, -1, 3, -1, -1, 15}}, // 7
 
         // upper table +8 and last dir = -1
-    {{-1, 9, -1, 10, -1, 12, 0, -1}},  // 8
-    {{8, -1, -1, 11, -1, 13, 1, -1}},  // 9
-    {{-1, 11, 8, -1, -1, 14, 2, -1}},  // 10
-    {{10, -1, 9, -1, -1, 15, 3, -1}},  // 11
-    {{-1, 13, -1, 14, 8, -1, 4, -1}},  // 12
-    {{12, -1, -1, 15, 9, -1, 5, -1}},  // 13
-    {{-1, 15, 12, -1, 10, -1, 6, -1}}, // 14
-    {{14, -1, 13, -1, 11, -1, 7, -1}}  // 15
-}};
+        {{-1, 9, -1, 10, -1, 12, 0, -1}},  // 8
+        {{8, -1, -1, 11, -1, 13, 1, -1}},  // 9
+        {{-1, 11, 8, -1, -1, 14, 2, -1}},  // 10
+        {{10, -1, 9, -1, -1, 15, 3, -1}},  // 11
+        {{-1, 13, -1, 14, 8, -1, 4, -1}},  // 12
+        {{12, -1, -1, 15, 9, -1, 5, -1}},  // 13
+        {{-1, 15, 12, -1, 10, -1, 6, -1}}, // 14
+        {{14, -1, 13, -1, 11, -1, 7, -1}}  // 15
+    }};
 
 // todo: replace with constant expression function
 /// Given the childId obtain the possible neighbors in a neighboring cell that
@@ -126,4 +128,4 @@ static constexpr std::array<
         {{-1, 14, -1, 13, -1, 11, -1, 7}}  // 15
     }};
 } // namespace cartesian
-#endif // GRIDGENERATOR_CARTESIAN_H
+#endif // SFCMM_CARTESIAN_H

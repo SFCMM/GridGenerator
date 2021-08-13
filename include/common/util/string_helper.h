@@ -1,5 +1,7 @@
-#ifndef GRIDGENERATOR_STRING_HELPER_H
-#define GRIDGENERATOR_STRING_HELPER_H
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef SFCMM_STRING_HELPER_H
+#define SFCMM_STRING_HELPER_H
 #include "common/sfcmm_types.h"
 #include <bitset>
 #include <gcem.hpp>

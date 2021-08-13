@@ -1,14 +1,14 @@
-#ifndef MATHFUNCTIONS_H
-#define MATHFUNCTIONS_H
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef SFCMM_MATHFUNCTIONS_H
+#define SFCMM_MATHFUNCTIONS_H
 #include "common/sfcmm_types.h"
 #include <cmath>
 #include <gcem.hpp>
 
 namespace detail_ {
-template <class T, class U>
-struct APPROX_ERROR {};
+template <class T, class U> struct APPROX_ERROR {};
 } // namespace detail_
-
 
 /// Approximately equality between two floating numbers.
 /// \tparam T
@@ -50,4 +50,4 @@ template <class T>
   return num % 2 == 0;
 }
 
-#endif // MATHFUNCTIONS_H
+#endif // SFCMM_MATHFUNCTIONS_H

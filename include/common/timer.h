@@ -1,9 +1,12 @@
-#ifndef GRIDGENERATOR_TIMER_H
-#define GRIDGENERATOR_TIMER_H
+// SPDX-License-Identifier: BSD-3-Clause
 
+#ifndef SFCMM_TIMER_H
+#define SFCMM_TIMER_H
 
+#include "sfcmm_types.h"
 #include <chrono>
 #include <cmath>
+#include <common/math/mathfunctions.h>
 #include <ctime>
 #include <iomanip>
 #include <string>
@@ -11,8 +14,6 @@
 #include <unistd.h>
 #include <utility>
 #include <vector>
-#include <sfcmm_common.h>
-//#include "constants.h"
 
 using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
 
@@ -251,7 +252,7 @@ inline auto TimerManager::returnTimer(const GInt timerId) -> GDouble {
   MPI_Reduce(&t, &tmp_rcv, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   return tmp_rcv / static_cast<GDouble>(MPI::globalNoDomains());
 #else
-  return m_timers[timerId].cpuTime.time_since_epoch().count();
+  return m_timers[timerId].cpuTime().time_since_epoch().count();
 #endif
 }
 

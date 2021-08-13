@@ -1,12 +1,13 @@
-#ifndef GRIDGENERATOR_MACROS_H
-#define GRIDGENERATOR_MACROS_H
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef SFCMM_MACROS_H
+#define SFCMM_MACROS_H
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
-#pragma ide diagnostic   ignored "cppcoreguidelines-macro-usage"
+#pragma ide diagnostic ignored "cppcoreguidelines-macro-usage"
 #endif
-
 
 /// Define macros to stringify literal and expanded macro arguments
 ///
@@ -20,12 +21,11 @@
 #define LOC_ __FILE__ ":" XSTRINGIFY(__LINE__)
 
 #define FUN_ static_cast<const char *>(__PRETTY_FUNCTION__)
-#define SIMPLE_FUN_ static_cast<const char *>(__FUNCTION__)
 
 #define AT_ std::string(FUN_) + " (" + LOC_ + ")"
 
 #define __FUNCTION_LOCATION__                                                  \
-  std::string(__FILE__) + ": " + std::string(SIMPLE_FUN_)
+  std::string(__FILE__) + ": " + std::string(__FUNCTION__)
 
 #ifdef USE_ASSERTS
 #define ASSERT(condition, message)                                             \

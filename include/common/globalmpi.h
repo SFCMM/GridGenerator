@@ -1,5 +1,7 @@
-#ifndef GRIDGENERATOR_GLOBALMPI_H
-#define GRIDGENERATOR_GLOBALMPI_H
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef SFCMM_GLOBALMPI_H
+#define SFCMM_GLOBALMPI_H
 
 #include <array>
 #include <iostream>
@@ -86,4 +88,4 @@ inline auto isRoot() -> GBool { return g_mpiInformation.m_globalDomainId == 0; }
 inline auto isSerial() -> GBool { return g_mpiInformation.m_globalNoDomains == 1; }
 } // namespace MPI
 
-#endif // GRIDGENERATOR_GLOBALMPI_H
+#endif // SFCMM_GLOBALMPI_H

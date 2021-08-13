@@ -76,9 +76,7 @@
 ## Ongoing:
 
 1) Open STL files.
-2) Split out common sim libs
-   2) Refactor timer
-   3) Merge enums in gridcell_properties.h
+2) Merge enums in gridcell_properties.h
 
 ## Done:
 
@@ -99,7 +97,10 @@
 ### Documentation
 
 ### Refactoring
+
+- split out common functionality into common lib
 - log.h
+- timer.h
 
 # V0.0.2 (~8.8.21)
 

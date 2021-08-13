@@ -5,9 +5,8 @@
 #include <iostream>
 #include <json.h>
 #include <map>
-#include <sfcmm_common.h>
 #include <sstream>
-#include "constants.h"
+#include <sfcmm_common.h>
 #include "term.h"
 
 namespace config {

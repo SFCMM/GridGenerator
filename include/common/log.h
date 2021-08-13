@@ -1,5 +1,7 @@
-#ifndef GRIDGENERATOR_LOG_H
-#define GRIDGENERATOR_LOG_H
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef SFCMM_LOG_H
+#define SFCMM_LOG_H
 #include "macros.h"
 #include "util/sys.h"
 #include <fstream>
@@ -18,11 +20,11 @@ class Log_buffer : public std::stringbuf {
 public:
   Log_buffer() = default;
 
-  Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}
+  Log_buffer(const GInt argc, GChar **argv) : m_argc(argc), m_argv(argv) {}
 
   /**
-   * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
-   * \params[in] minFlushSize Minimum buffer length.
+   * \brief Sets the minimum buffer length that has to be reached before the
+   * buffer is flushed. \params[in] minFlushSize Minimum buffer length.
    */
   void setMinFlushSize(GInt minFlushSize) { m_minFlushSize = minFlushSize; }
 
@@ -501,5 +503,4 @@ class LogFile : public Log {
 };
 inline LogFile logger; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
-
-#endif // GRIDGENERATOR_LOG_H
+#endif // SFCMM_LOG_H

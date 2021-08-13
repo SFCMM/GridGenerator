@@ -1,18 +1,16 @@
-#ifndef GRIDGENERATOR_CONSTANTS_H
-#define GRIDGENERATOR_CONSTANTS_H
+// SPDX-License-Identifier: BSD-3-Clause
 
+#ifndef SFCMM_CONSTANTS_H
+#define SFCMM_CONSTANTS_H
+
+#include "sfcmm_types.h"
 #include <array>
 #include <limits>
 #include <vector>
-#include <sfcmm_common.h>
-#include "config.h"
-#include "functions.h"
 
-static constexpr GFloat  GFloatEps      = std::numeric_limits<GFloat>::epsilon();
-static constexpr GDouble GDoubleEps     = std::numeric_limits<GDouble>::epsilon();
-static constexpr GInt    BASE2          = 2;
-static constexpr GDouble HALF           = 0.5;
-static constexpr GInt    INVALID_CELLID = -1;
+static constexpr GInt BASE2 = 2;
+static constexpr GDouble HALF = 0.5;
+static constexpr GInt INVALID_CELLID = -1;
 
 // Memory
 static constexpr GInt    KBIT  = 1024;

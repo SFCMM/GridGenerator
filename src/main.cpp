@@ -2,7 +2,6 @@
 
 #include <sfcmm_common.h>
 #include "config.h"
-#include "constants.h"
 #include "gridGenerator.h"
 
 
