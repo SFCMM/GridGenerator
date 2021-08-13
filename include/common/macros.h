@@ -13,24 +13,29 @@
 /// STRINGIFY() can be used to stringify literal macro arguments (e.g.
 /// STRINGIFY(__FILE__) becomes "__FILE__"), while XSTRINGIFY() will expand a
 /// macro first (e.g. XSTRINGIFY(__FILE__) becomes "macros.h").
-#define STRINGIFY(s)  #s
+#define STRINGIFY(s) #s
 #define XSTRINGIFY(s) STRINGIFY(s)
 
 /// Define a short-hand macros for the location in the code (<file>:<line>)
 #define LOC_ __FILE__ ":" XSTRINGIFY(__LINE__)
 
-#define FUN_ static_cast<const char*>(__PRETTY_FUNCTION__)
+#define FUN_ static_cast<const char *>(__PRETTY_FUNCTION__)
+#define SIMPLE_FUN_ static_cast<const char *>(__FUNCTION__)
 
 #define AT_ std::string(FUN_) + " (" + LOC_ + ")"
 
+#define __FUNCTION_LOCATION__                                                  \
+  std::string(__FILE__) + ": " + std::string(SIMPLE_FUN_)
+
 #ifdef USE_ASSERTS
-#define ASSERT(condition, message)                                                                                                         \
-  do {                                                                                                                                     \
-    if(!(condition)) {                                                                                                                     \
-      std::cerr << "Assertion `" #condition "` failed in " << __FILE__ << " line " << __LINE__ << ": " << message << std::endl;            \
-      TERMM(1, "ASSERTION FAILED");                                                                                                        \
-    }                                                                                                                                      \
-  } while(false)
+#define ASSERT(condition, message)                                             \
+  do {                                                                         \
+    if (!(condition)) {                                                        \
+      std::cerr << "Assertion `" #condition "` failed in " << __FILE__         \
+                << " line " << __LINE__ << ": " << message << std::endl;       \
+      TERMM(1, "ASSERTION FAILED");                                            \
+    }                                                                          \
+  } while (false)
 #else
 #define ASSERT(condition, message)                                                                                                         \
   do {                                                                                                                                     \

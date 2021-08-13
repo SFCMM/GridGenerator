@@ -620,4 +620,17 @@ class TimerProfiling {
   const std::string m_name;
 };
 
+/// Helper class for automatic tracing
+namespace profiling {
+struct Tracer {
+  Tracer(const GString& funloc) : m_timerId(TimerProfiling::getTimingId(funloc)) { TimerProfiling::s_functionTimings[m_timerId].in(); }
+  ~Tracer() { TimerProfiling::s_functionTimings[m_timerId].out(); }
+
+ private:
+  GInt m_timerId;
+};
+} // namespace profiling
+
+#define PROFILE() profiling::Tracer USE_ONLY_ONCE_PER_SCOPE(__FUNCTION_LOCATION__)
+
 #endif // GRIDGENERATOR_TIMER_H

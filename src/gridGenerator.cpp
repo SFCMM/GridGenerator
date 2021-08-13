@@ -75,6 +75,8 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 
 template <Debug_Level DEBUG_LEVEL>
 auto GridGenerator<DEBUG_LEVEL>::run() -> int {
+  TimerProfiling runProfile("GridGenerator::run");
+  PROFILE();
   RECORD_TIMER_START(TimeKeeper[Timers::Init]);
   startupInfo();
   logger << "Grid generator started ||>" << endl;
@@ -108,7 +110,6 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> int {
   STOP_ALL_RECORD_TIMERS();
   DISPLAY_ALL_TIMERS();
 
-  logger.close();
   MPI_Finalize();
 
   return 0;
@@ -173,6 +174,7 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::generateGrid() {
+  PROFILE();
   RECORD_TIMER_START(TimeKeeper[Timers::GridGeneration]);
   RECORD_TIMER_START(TimeKeeper[Timers::GridInit]);
 
