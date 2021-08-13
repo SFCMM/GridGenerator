@@ -12,44 +12,7 @@
 #include <utility>
 #include <vector>
 #include <sfcmm_common.h>
-#include "constants.h"
-
-
-#define NEW_TIMER_GROUP(id, groupName)                 const GInt id = timers().newGroup(groupName)
-#define NEW_TIMER(id, timerName, groupId)              const GInt id = timers().newGroupTimer(timerName, groupId)
-#define NEW_SUB_TIMER(id, timerName, timerId)          const GInt id = timers().newSubTimer(timerName, timerId)
-#define NEW_TIMER_GROUP_STATIC(id, groupName)          static const GInt id = timers().newGroup(groupName)
-#define NEW_TIMER_STATIC(id, timerName, groupId)       static const GInt id = timers().newGroupTimer(timerName, groupId)
-#define NEW_SUB_TIMER_STATIC(id, timerName, timerId)   static const GInt id = timers().newSubTimer(timerName, timerId)
-#define NEW_TIMER_GROUP_NOCREATE(id, groupName)        id = timers().newGroup(groupName)
-#define NEW_TIMER_NOCREATE(id, timerName, groupId)     id = timers().newGroupTimer(timerName, groupId)
-#define NEW_SUB_TIMER_NOCREATE(id, timerName, timerId) id = timers().newSubTimer(timerName, timerId)
-#define START_TIMER(timerId)                           timers().startTimer(timerId)
-#define RECORD_TIMER_START(timerId)                    timers().recordTimerStart(timerId, AT_)
-#define RECORD_TIMER_STOP(timerId)                     timers().recordTimerStop(timerId, AT_)
-#define RETURN_TIMER(timerId)                          timers().returnTimer(timerId)
-#define RETURN_TIMER_TIME(timerId)                     timers().returnTimerTime(timerId)
-#define STOP_TIMER(timerId)                            timers().stopTimer(timerId)
-#define STOP_ALL_TIMERS()                              timers().stopAllTimers()
-#define RECORD_TIMER(timerId)                          timers().recordTimer(timerId)
-#define RECORD_TIMERS()                                timers().recordTimers()
-#define RECORD_ALL_TIMER()                             timers().recordAllTimer()
-#define STOP_ALL_RECORD_TIMERS()                       timers().stopAllRecordTimers()
-#define DISPLAY_TIMER(timerId)                         timers().displayTimer(timerId)
-#define DISPLAY_TIMER_INTERM(timerId)                  timers().displayTimerNoToggleDisplayed(timerId)
-#define DISPLAY_TIMER_OFFSET(timerId, ivl)                                                                                                 \
-  if(globalTimeStep % ivl == 0) {                                                                                                          \
-    timers().recordTimerStop(timerId);                                                                                                     \
-    timers().displayTimerNoToggleDisplayed(timerId);                                                                                       \
-    timers().recordTimerStart(timerId);                                                                                                    \
-  }
-#define DISPLAY_ALL_GROUP_TIMERS(groupId) timers().displayAllTimers(groupId)
-#define DISPLAY_ALL_TIMERS()              timers().displayAllTimers()
-#define RESET_TIMER(timerId)              timers().resetTimer(timerId)
-#define RESET_TIMERS()                    timers().resetTimers()
-#define RESET_RECORD(timerId)             timers().resetRecord(timerId)
-#define RESET_ALL_RECORDS()               timers().resetRecords()
-#define SET_TIMER(timeValue, timerId)     timers().setTimer(timeValue, timerId)
+//#include "constants.h"
 
 using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
 
@@ -58,8 +21,8 @@ class Timer {
   Timer(std::string n, const GInt g, const GInt id, const GInt p)
     : m_name(std::move(n)),
       m_group(g),
-      timerId(id),
-      parent(p),
+      m_timerId(id),
+      m_parent(p),
       m_recordedTime(0),
       m_status(Timer::Uninitialized),
       m_subTimers(0),
@@ -98,8 +61,8 @@ class Timer {
  private:
   GString           m_name;  ///< Timer Name
   GInt              m_group; ///< Group Id
-  GInt              timerId = -1;
-  GInt              parent  = -1;   ///< Parent timer id
+  GInt              m_timerId = -1;
+  GInt              m_parent  = -1; ///< Parent timer id
   chronoTimePoint   m_cpuTime;      ///< CPU time
   chronoTimePoint   m_oldCpuTime;   ///< Old CPU time (for timer restart)
   GDouble           m_recordedTime; ///< Time recorded on the timer.
@@ -437,6 +400,59 @@ inline void TimerManager::displayTimerNoToggleDisplayed(const GInt timerId) {
   displayTimer_(timerId, false);
 }
 
+inline void NEW_TIMER_GROUP_NOCREATE(GInt& id, const GString& groupName) { id = timers().newGroup(groupName); }
+
+inline void NEW_TIMER_NOCREATE(GInt& id, const GString& timerName, const GInt groupId) { id = timers().newGroupTimer(timerName, groupId); }
+
+inline void NEW_SUB_TIMER_NOCREATE(GInt& id, const GString& timerName, const GInt timerId) {
+  id = timers().newSubTimer(timerName, timerId);
+}
+
+inline void START_TIMER(const GInt timerId) { timers().startTimer(timerId); }
+
+inline void RETURN_TIMER(const GInt timerId) { timers().returnTimer(timerId); }
+
+inline void RETURN_TIMER_TIME(const GInt timerId) { timers().returnTimerTime(timerId); }
+
+inline void STOP_TIMER(const GInt timerId) { timers().stopTimer(timerId); }
+
+inline void STOP_ALL_TIMERS() { timers().stopAllTimers(); }
+
+inline void RECORD_TIMER(const GInt timerId) { timers().recordTimer(timerId); }
+
+inline void RECORD_TIMERS() { timers().recordTimers(); }
+
+inline void STOP_ALL_RECORD_TIMERS() { timers().stopAllRecordTimers(); }
+
+inline void DISPLAY_TIMER(const GInt timerId) { timers().displayTimer(timerId); }
+
+inline void DISPLAY_TIMER_INTERM(const GInt timerId) { timers().displayTimerNoToggleDisplayed(timerId); }
+
+inline void DISPLAY_ALL_GROUP_TIMERS(const GInt groupId) { timers().displayAllTimers(groupId); }
+
+inline void DISPLAY_ALL_TIMERS() { timers().displayAllTimers(); }
+
+inline void RESET_TIMER(const GInt timerId) { timers().resetTimer(timerId); }
+
+inline void RESET_TIMERS() { timers().resetTimers(); }
+
+inline void RESET_RECORD(const GInt timerId) { timers().resetRecord(timerId); }
+
+inline void RESET_ALL_RECORDS() { timers().resetRecords(); }
+
+// Currently, not used.
+//#define NEW_TIMER_GROUP(id, groupName)                 const GInt id = timers().newGroup(groupName)
+//#define NEW_TIMER(id, timerName, groupId)              const GInt id = timers().newGroupTimer(timerName, groupId)
+//#define NEW_SUB_TIMER(id, timerName, timerId)          const GInt id = timers().newSubTimer(timerName, timerId)
+//#define NEW_TIMER_GROUP_STATIC(id, groupName)          static const GInt id = timers().newGroup(groupName)
+//#define NEW_TIMER_STATIC(id, timerName, groupId)       static const GInt id = timers().newGroupTimer(timerName, groupId)
+//#define NEW_SUB_TIMER_STATIC(id, timerName, timerId)   static const GInt id = timers().newSubTimer(timerName, timerId)
+
+// Macro for debugging purpose (AT_)!
+#define RECORD_TIMER_START(timerId) timers().recordTimerStart(timerId, AT_)
+#define RECORD_TIMER_STOP(timerId)  timers().recordTimerStop(timerId, AT_)
+
+
 class TimerProfiling;
 class FunctionTiming;
 
@@ -502,7 +518,12 @@ inline auto operator<(const FunctionTiming& a, const FunctionTiming& b) -> GBool
   return (a.getDeltaCpuTime() < b.getDeltaCpuTime());
 }
 
+namespace profiling {
+class Tracer;
+}
 class TimerProfiling {
+  friend profiling::Tracer;
+
  public:
   explicit TimerProfiling(std::string name) : m_initCpuTime(cpuTime()), m_initWallTime(wallTime()), m_name(std::move(name)) {}
   ~TimerProfiling() {
@@ -612,19 +633,26 @@ class TimerProfiling {
     time << rem << " secs";
     return time.str();
   }
-  inline static std::vector<FunctionTiming> s_functionTimings;
 
  private:
   const clock_t     m_initCpuTime;
   const GDouble     m_initWallTime;
-  const std::string m_name;
+  const std::string                         m_name;
+  inline static std::vector<FunctionTiming> s_functionTimings;
 };
 
 /// Helper class for automatic tracing
 namespace profiling {
-struct Tracer {
+class Tracer {
+ public:
   Tracer(const GString& funloc) : m_timerId(TimerProfiling::getTimingId(funloc)) { TimerProfiling::s_functionTimings[m_timerId].in(); }
   ~Tracer() { TimerProfiling::s_functionTimings[m_timerId].out(); }
+  // delete: copy construction, and copy assignment
+  Tracer(Tracer&) = delete;
+  auto operator=(const Tracer&) -> Tracer& = delete;
+  auto operator=(Tracer&&) -> Tracer& = delete;
+  Tracer(const Tracer&)               = delete;
+  Tracer(Tracer&&)                    = delete;
 
  private:
   GInt m_timerId;
