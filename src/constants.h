@@ -3,8 +3,8 @@
 
 #include <array>
 #include <limits>
-#include <sfcmm_common.h>
 #include <vector>
+#include <sfcmm_common.h>
 #include "config.h"
 #include "functions.h"
 
@@ -13,8 +13,22 @@ static constexpr GDouble GDoubleEps     = std::numeric_limits<GDouble>::epsilon(
 static constexpr GInt    BASE2          = 2;
 static constexpr GDouble HALF           = 0.5;
 static constexpr GInt    INVALID_CELLID = -1;
-static constexpr GInt    KBIT           = 1024;
-static constexpr GDouble DKBIT          = static_cast<GDouble>(KBIT);
+
+// Memory
+static constexpr GInt    KBIT  = 1024;
+static constexpr GDouble DKBIT = static_cast<GDouble>(KBIT);
+
+// Time
+namespace timeconst {
+static constexpr GInt    MINUTE  = 60;
+static constexpr GDouble DMINUTE = 60;
+static constexpr GInt    HOUR    = 3600;
+static constexpr GDouble DHOUR   = 3600;
+static constexpr GInt    DAY     = HOUR * 24;
+static constexpr GDouble DDAY    = DHOUR * 24;
+static constexpr GInt    WEEK    = DAY * 7;
+static constexpr GDouble DWEEK   = DDAY * 7;
+} // namespace timeconst
 
 enum class Debug_Level { no_debug, min_debug, debug, more_debug, max_debug };
 static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {"NO DEBUG", "MINIMAL DEBUG", "DEBUG", "MORE DEBUG", "MAXIMUM DEBUG"};
