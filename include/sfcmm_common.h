@@ -11,6 +11,7 @@ static constexpr int MAX_DIM = 4;
 #include "common/log.h"
 #include "common/macros.h"
 #include "common/sfcmm_types.h"
+#include "common/timer.h"
 
 #include "common/util/backtrace.h"
 #include "common/util/string_helper.h"

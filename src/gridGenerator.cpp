@@ -8,7 +8,6 @@
 #include "constants.h"
 #include "geometry.h"
 #include "gridGenerator.h"
-#include "timer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
