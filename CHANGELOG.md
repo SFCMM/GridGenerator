@@ -61,7 +61,6 @@
 - activate profile guided optimization
 - cleanup vtk io code
 - activate backtrace
-- replace iseven with call to gcem
 - add circular container based on vector...
 
 ### Moved from V0.0.2:
