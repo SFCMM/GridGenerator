@@ -36,7 +36,8 @@ class GeometryInterface {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryRepresentation {
  public:
-  GeometryRepresentation(const json& geom) : m_inside(config::opt_config_value(geom, "inside", true)){};
+  GeometryRepresentation(const json& geom)
+    : m_inside(config::opt_config_value(geom, "inside", true)), m_body(config::opt_config_value(geom, "body", GString("unique"))){};
   GeometryRepresentation()                              = default;
   virtual ~GeometryRepresentation()                     = default;
   GeometryRepresentation(const GeometryRepresentation&) = delete;
@@ -50,16 +51,22 @@ class GeometryRepresentation {
   [[nodiscard]] virtual inline auto str() const -> GString                                                    = 0;
 
   [[nodiscard]] inline auto type() const -> GeomType { return m_type; }
+  // necessary if objectref cannot be cast to const
+  [[nodiscard]] inline auto ctype() const -> GeomType { return m_type; }
   [[nodiscard]] inline auto name() const -> GString { return m_name; }
+  // necessary if objectref cannot be cast to const
+  [[nodiscard]] inline auto cname() const -> GString { return m_name; }
   [[nodiscard]] inline auto inside() const -> GBool { return m_inside; }
+  [[nodiscard]] inline auto body() const -> GString { return m_body; }
 
  protected:
   inline auto type() -> GeomType& { return m_type; }
   inline auto name() -> GString& { return m_name; }
 
  private:
-  GeomType m_type   = GeomType::unknown;
-  GString  m_name   = "undefined";
+  GeomType m_type = GeomType::unknown;
+  GString  m_name = "undefined";
+  GString  m_body;
   GBool    m_inside = true;
 };
 
@@ -91,12 +98,14 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ss << SP1 << "STL"
        << "\n";
     ss << SP7 << "Name: " << name() << "\n";
+    ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Filename: " << m_fileName << "\n";
     return ss.str();
   }
 
  private:
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
 
@@ -150,6 +159,7 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     ss << SP1 << "Sphere"
        << "\n";
     ss << SP7 << "Name: " << name() << "\n";
+    ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Center: " << strStreamify<NDIM>(m_center).str() << "\n";
     ss << SP7 << "Radius: " << m_radius << "\n";
     return ss.str();
@@ -157,6 +167,7 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 
  private:
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
 
@@ -215,6 +226,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     ss << SP1 << "Box"
        << "\n";
     ss << SP7 << "Name: " << name() << "\n";
+    ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Point A: " << strStreamify<NDIM>(m_A).str() << "\n";
     ss << SP7 << "Point B: " << strStreamify<NDIM>(m_B).str() << "\n";
     return ss.str();
@@ -222,6 +234,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 
  private:
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
 
@@ -286,6 +299,7 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     ss << SP1 << "Cube"
        << "\n";
     ss << SP7 << "Name: " << name() << "\n";
+    ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Center: " << strStreamify<NDIM>(m_center).str() << "\n";
     ss << SP7 << "Length: " << m_length << "\n";
     return ss.str();
@@ -294,6 +308,7 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 
  private:
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
 
@@ -308,6 +323,7 @@ class GeometryManager : public GeometryInterface {
   GeometryManager(const MPI_Comm comm) : GeometryInterface(comm){};
 
   void setup(const json& geometry) override {
+    // generate geometric representation objects for each defined geometry
     for(const auto& object : geometry.items()) {
       const GString& name = object.key();
 
@@ -336,6 +352,28 @@ class GeometryManager : public GeometryInterface {
         }
       }
       logger << m_geomObj.back()->str() << std::endl;
+    }
+
+    // map the geometry objects to bodies
+    for(const auto& geom : m_geomObj) {
+      const GString name = geom->cname();
+      if(geom->body() == "unique") {
+        if(m_bodyMap.count(name) == 1) {
+          GInt i = 0;
+          while(m_bodyMap.count(name + std::to_string(i)) == 1) {
+            i++;
+          }
+          m_bodyMap.emplace(name + std::to_string(i), std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
+        } else {
+          m_bodyMap.emplace(name, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
+        }
+      } else {
+        if(m_bodyMap.count(name) == 1) {
+          m_bodyMap[name].emplace_back(geom.get());
+        } else {
+          m_bodyMap.emplace(name, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
+        }
+      }
     }
   }
 
@@ -393,7 +431,8 @@ class GeometryManager : public GeometryInterface {
 
 
  private:
-  std::vector<std::unique_ptr<GeometryRepresentation<DEBUG_LEVEL, NDIM>>> m_geomObj;
+  std::vector<std::unique_ptr<GeometryRepresentation<DEBUG_LEVEL, NDIM>>>              m_geomObj;
+  std::unordered_map<GString, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>> m_bodyMap;
 };
 
 #endif // GRIDGENERATOR_GEOMETRY_H

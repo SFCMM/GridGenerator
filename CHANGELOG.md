@@ -81,6 +81,7 @@
 ## Done:
 
 ### Features
+- Define bodies of multiple geometries
 
 ### Buildsystem
 
