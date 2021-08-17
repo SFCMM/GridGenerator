@@ -4,8 +4,9 @@
 #include <json.h>
 #include <memory>
 #include <mpi.h>
-#include <sfcmm_common.h>
+#include <utility>
 #include <vector>
+#include <sfcmm_common.h>
 #include "functions.h"
 
 template <GInt NDIM>
@@ -65,7 +66,41 @@ class GeometryRepresentation {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
  public:
+  GeometrySTL(GString fileName, const GString& _name) : m_fileName(std::move(fileName)) {
+    name() = _name;
+    type() = GeomType::stl;
+  };
+
+  GeometrySTL(const json& stl, const GString& _name) : GeometryRepresentation<DEBUG_LEVEL, NDIM>(stl), m_fileName(stl["filename"]) {
+    name() = _name;
+    type() = GeomType::stl;
+  };
+
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override { return false; }
+
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override { return false; }
+
+  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
+    std::vector<GDouble> bbox(2 * NDIM);
+    std::fill(bbox.begin(), bbox.end(), 0);
+    return bbox;
+  }
+
+  [[nodiscard]] inline auto str() const -> GString override {
+    std::stringstream ss;
+    ss << SP1 << "STL"
+       << "\n";
+    ss << SP7 << "Name: " << name() << "\n";
+    ss << SP7 << "Filename: " << m_fileName << "\n";
+    return ss.str();
+  }
+
  private:
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
+
+  GString m_fileName;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -80,15 +115,15 @@ class GeometryAnalytical : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomSphere(const Point<NDIM>& center, GDouble radius) : m_center(center), m_radius(radius) {
-    name() = "Sphere";
+  GeomSphere(const Point<NDIM>& center, GDouble radius, const GString& _name) : m_center(center), m_radius(radius) {
+    name() = _name;
     type() = GeomType::sphere;
   };
-  GeomSphere(const json& sphere)
+  GeomSphere(const json& sphere, const GString& _name)
     : GeometryAnalytical<DEBUG_LEVEL, NDIM>(sphere),
       m_center(static_cast<std::vector<GDouble>>(sphere["center"]).data()),
       m_radius(sphere["radius"]) {
-    name() = "Sphere";
+    name() = _name;
     type() = GeomType::sphere;
   };
 
@@ -114,6 +149,7 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     std::stringstream ss;
     ss << SP1 << "Sphere"
        << "\n";
+    ss << SP7 << "Name: " << name() << "\n";
     ss << SP7 << "Center: " << strStreamify<NDIM>(m_center).str() << "\n";
     ss << SP7 << "Radius: " << m_radius << "\n";
     return ss.str();
@@ -131,16 +167,16 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B) : m_A(A), m_B(B) {
-    name() = "Box";
+  GeomBox(const Point<NDIM>& A, const Point<NDIM>& B, const GString& _name) : m_A(A), m_B(B) {
+    name() = _name;
     type() = GeomType::box;
     checkValid();
   }
-  GeomBox(const json& box)
+  GeomBox(const json& box, const GString& _name)
     : GeometryAnalytical<DEBUG_LEVEL, NDIM>(box),
       m_A(static_cast<std::vector<GDouble>>(box["A"]).data()),
       m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {
-    name() = "Box";
+    name() = _name;
     type() = GeomType::box;
     checkValid();
   }
@@ -178,6 +214,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     std::stringstream ss;
     ss << SP1 << "Box"
        << "\n";
+    ss << SP7 << "Name: " << name() << "\n";
     ss << SP7 << "Point A: " << strStreamify<NDIM>(m_A).str() << "\n";
     ss << SP7 << "Point B: " << strStreamify<NDIM>(m_B).str() << "\n";
     return ss.str();
@@ -203,15 +240,15 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
  public:
-  GeomCube(const Point<NDIM>& center, const GDouble length) : m_center(center), m_length(length) {
-    name() = "Cube";
+  GeomCube(const Point<NDIM>& center, const GDouble length, const GString& _name) : m_center(center), m_length(length) {
+    name() = _name;
     type() = GeomType::cube;
   };
-  GeomCube(const json& cube)
+  GeomCube(const json& cube, const GString& _name)
     : GeometryAnalytical<DEBUG_LEVEL, NDIM>(cube),
       m_center(static_cast<std::vector<GDouble>>(cube["center"]).data()),
       m_length(cube["length"]) {
-    name() = "Cube";
+    name() = _name;
     type() = GeomType::cube;
   };
 
@@ -248,6 +285,7 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     std::stringstream ss;
     ss << SP1 << "Cube"
        << "\n";
+    ss << SP7 << "Name: " << name() << "\n";
     ss << SP7 << "Center: " << strStreamify<NDIM>(m_center).str() << "\n";
     ss << SP7 << "Length: " << m_length << "\n";
     return ss.str();
@@ -271,23 +309,29 @@ class GeometryManager : public GeometryInterface {
 
   void setup(const json& geometry) override {
     for(const auto& object : geometry.items()) {
-      switch(resolveGeomType(object.key())) {
+      const GString& name = object.key();
+
+      switch(resolveGeomType(geometry[name]["type"])) {
         case GeomType::sphere: {
-          m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(geometry["sphere"]));
+          m_geomObj.emplace_back(std::make_unique<GeomSphere<DEBUG_LEVEL, NDIM>>(geometry[name], name));
           break;
         }
         case GeomType::box: {
-          m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(geometry["box"]));
+          m_geomObj.emplace_back(std::make_unique<GeomBox<DEBUG_LEVEL, NDIM>>(geometry[name], name));
           break;
         }
         case GeomType::cube: {
-          m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(geometry["cube"]));
+          m_geomObj.emplace_back(std::make_unique<GeomCube<DEBUG_LEVEL, NDIM>>(geometry[name], name));
+          break;
+        }
+        case GeomType::stl: {
+          m_geomObj.template emplace_back(std::make_unique<GeometrySTL<DEBUG_LEVEL, NDIM>>(geometry[name], name));
           break;
         }
         case GeomType::unknown:
           [[fallthrough]];
         default: {
-          logger << SP2 << "Unknown geometry type" << object.key() << std::endl;
+          logger << SP2 << "Unknown geometry type " << object.key() << std::endl;
           break;
         }
       }

@@ -4,6 +4,8 @@
 
 - Add gui based on schema
 - Add Paraview-Plugin for HDF5 format
+- Read geometry in parallel
+- Generate parallel geometry
 
 # V1.0.0
 
@@ -91,6 +93,8 @@
 ### Performance
 
 ### Bugs
+
+- allow multiple geometries of same type
 
 ### Documentation
 
