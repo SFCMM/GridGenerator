@@ -21,11 +21,12 @@
 #define LOC_ __FILE__ ":" XSTRINGIFY(__LINE__)
 
 #define FUN_ static_cast<const char *>(__PRETTY_FUNCTION__)
+#define SHORT_FUN_ static_cast<const char *>(__FUNCTION__)
 
 #define AT_ std::string(FUN_) + " (" + LOC_ + ")"
 
 #define __FUNCTION_LOCATION__                                                  \
-  std::string(__FILE__) + ": " + std::string(__FUNCTION__)
+  std::string(__FILE__) + ": " + std::string(SHORT_FUN_)
 
 #ifdef USE_ASSERTS
 #define ASSERT(condition, message)                                             \

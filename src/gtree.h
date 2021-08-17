@@ -9,7 +9,7 @@
 
 namespace cartesian {
 /// Underlying enum type for property access
-using Cell = GridCellProperties;
+using Cell = CellProperties;
 
 /// Underlying bitset type for property storage
 using PropertyBitsetType = grid::cell::BitsetType;

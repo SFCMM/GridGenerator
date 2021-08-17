@@ -239,8 +239,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::geometry;
 
-  using PropertyBitsetType = gridgen::cell::BitsetType;
-  using CellProperties     = GridGenCellProperties;
+  using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
 
   CartesianGridGen()                        = default;
@@ -305,7 +304,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     const GInt begin                         = m_levelOffsets[0].begin;
     m_center[begin]                          = Point<NDIM>(cog().data());
     m_globalId[begin]                        = begin;
-    property(begin, CellProperties::IsBndry) = true;
+    property(begin, CellProperties::bndry)   = true;
     m_size                                   = 1;
 
     //  Refine to min level
@@ -543,14 +542,14 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_nghbrIds[childCellId] = {INVALID_CELLID};
 
       // if parent is a boundary cell check for children as well
-      if(property(cellId, CellProperties::IsBndry)) {
-        property(childCellId, CellProperties::IsBndry) = cellHasCut(childCellId);
+      if(property(cellId, CellProperties::bndry)) {
+        property(childCellId, CellProperties::bndry) = cellHasCut(childCellId);
       }
 
       // check for cuts with the geometry
       // todo: implement
-      //      if(property(cellId, CellProperties::IsBndry)) {
-      //        property(childCellId, CellProperties::IsBndry) = checkCellForCut(childCellId);
+      //      if(property(cellId, CellProperties::bndry)) {
+      //        property(childCellId, CellProperties::bndry) = checkCellForCut(childCellId);
       //      }
 
       // update parent
@@ -603,11 +602,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     // delete cells that have been marked as being outside
     for(GInt cellId = m_levelOffsets[level].end - 1; cellId >= m_levelOffsets[level].begin; --cellId) {
-      ASSERT(!property(cellId, CellProperties::IsBndry)
-                 || property(cellId, CellProperties::IsInside) == property(cellId, CellProperties::IsBndry),
-             "Properties not set correctly! IsBndry implies IsInside!");
+      ASSERT(!property(cellId, CellProperties::bndry)
+                 || property(cellId, CellProperties::inside) == property(cellId, CellProperties::bndry),
+             "Properties not set correctly! bndry implies IsInside!");
       // remove cell since it is not inside
-      if(!property(cellId, CellProperties::IsInside)) {
+      if(!property(cellId, CellProperties::inside)) {
         const GInt parentId = m_parentId[cellId];
         ASSERT(parentId != INVALID_CELLID, "Invalid parentId!");
 
@@ -636,16 +635,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void markOutsideCells(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
     for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
-      property(cellId, CellProperties::TmpMarker) = false;
+      property(cellId, CellProperties::marked) = false;
     }
 
     for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
-      if(property(cellId, CellProperties::TmpMarker)) {
+      if(property(cellId, CellProperties::marked)) {
         continue;
       }
-      property(cellId, CellProperties::TmpMarker) = true;
-      const GBool isBndryCell                     = property(cellId, CellProperties::IsBndry);
-      property(cellId, CellProperties::IsInside)  = isBndryCell || pointIsInside(m_center[cellId]);
+      property(cellId, CellProperties::marked) = true;
+      const GBool isBndryCell                  = property(cellId, CellProperties::bndry);
+      property(cellId, CellProperties::inside) = isBndryCell || pointIsInside(m_center[cellId]);
       if(!isBndryCell) {
         floodCells(cellId);
       }
@@ -653,17 +652,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void floodCells(GInt cellId) {
-    const GBool inside = property(cellId, CellProperties::IsInside);
+    const GBool inside = property(cellId, CellProperties::inside);
     for(GInt id = 0; id < cartesian::maxNoNghbrs<NDIM>(); ++id) {
       const GInt nghbrId = m_nghbrIds[cellId].n[id];
-      if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::TmpMarker)) {
-        if(!property(nghbrId, CellProperties::IsBndry)) {
-          property(nghbrId, CellProperties::IsInside) = inside;
+      if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::marked)) {
+        if(!property(nghbrId, CellProperties::bndry)) {
+          property(nghbrId, CellProperties::inside) = inside;
           floodCells(nghbrId);
         } else {
-          property(nghbrId, CellProperties::IsInside) = true;
+          property(nghbrId, CellProperties::inside) = true;
         }
-        property(nghbrId, CellProperties::TmpMarker) = true;
+        property(nghbrId, CellProperties::marked) = true;
       }
     }
   }
@@ -676,7 +675,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void copyCell(const GInt from, const GInt to) {
-    ASSERT(!property(from, CellProperties::Del), "Invalid cell to be copied!");
+    ASSERT(!property(from, CellProperties::markedForDeletion), "Invalid cell to be copied!");
     ASSERT(from >= 0, "Invalid from!");
     ASSERT(to >= 0, "Invalid to!");
 

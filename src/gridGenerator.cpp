@@ -12,7 +12,6 @@
 #include <omp.h>
 #endif
 
-using namespace gridgen;
 using namespace std;
 
 template <Debug_Level DEBUG_LEVEL>

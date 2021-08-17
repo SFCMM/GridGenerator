@@ -23,7 +23,6 @@ class AppConfiguration {
         [[fallthrough]];
       default:
         return run<Debug_Level::max_debug>();
-        break;
     }
   }
 
@@ -103,5 +102,5 @@ auto main(int argc, GChar** argv) -> int {
   const GInt ret = gridGenRunner.run(debug);
 
   logger.close();
-  return ret;
+  return static_cast<int>(ret);
 }

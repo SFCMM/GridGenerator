@@ -662,4 +662,4 @@ class Tracer {
 
 #define PROFILE() profiling::Tracer USE_ONLY_ONCE_PER_SCOPE(__FUNCTION_LOCATION__)
 
-#endif // GRIDGENERATOR_TIMER_H
+#endif // SFCMM_TIMER_H
