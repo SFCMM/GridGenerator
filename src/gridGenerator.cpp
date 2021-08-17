@@ -176,23 +176,22 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_START(TimeKeeper[Timers::GridInit]);
 
   logger << "Generating a grid[" << NDIM << "D]" << endl;
-  m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>();
+
 
   cout << SP1 << "Reading Grid definition" << endl;
+  m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>(m_maxNoCells);
   loadGridDefinition<NDIM>();
-  m_grid->setCapacity(m_maxNoCells);
   logger << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
   cout << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
 
   // todo: add function to define memory to be allocated
   // todo: add function to convert to appropriate memory size
   const GDouble memoryConsumptionKB = CartesianGridGen<DEBUG_LEVEL, NDIM>::memorySizePerCell() * m_maxNoCells / DKBIT;
-  if(MPI::isSerial()) {
-    logger << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
-    cout << SP2 << "+ memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
-  } else {
-    logger << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
-    cout << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+
+  logger << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+  cout << SP2 << "+ local memory allocated: " << memoryConsumptionKB << "KB" << std::endl;
+
+  if(!MPI::isSerial()) {
     const GDouble globalMemory = memoryConsumptionKB * static_cast<GDouble>(MPI::globalNoDomains());
     logger << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;
     cout << SP2 << "+ global memory allocated: " << globalMemory << "KB" << std::endl;

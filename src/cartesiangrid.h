@@ -51,6 +51,9 @@ class GridInterface {
   /// \param capacity The capacity of this grid object to store cells.
   virtual void setCapacity(GInt capacity) = 0;
 
+  /// Reset the Grid
+  virtual void reset() = 0;
+
   /// Maximum possible level of the grid to store.
   /// \param maxLvl The maximum possible level the grid object can store.
   virtual void setMaxLvl(const GInt maxLvl) = 0;
@@ -242,7 +245,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
 
-  CartesianGridGen()                        = default;
+  explicit CartesianGridGen(const GInt maxNoCells) : m_capacity(maxNoCells) { setCapacity(maxNoCells); }
   ~CartesianGridGen() override              = default;
   CartesianGridGen(const CartesianGridGen&) = delete;
   CartesianGridGen(CartesianGridGen&&)      = delete;
@@ -252,6 +255,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   void setCapacity(const GInt capacity) override {
     if(!m_center.empty()) {
       TERMM(-1, "Invalid operation tree already allocated.");
+    }
+    if(capacity < m_capacity) {
+      logger << "WARNING: memory allocation requested. But capacity is sufficient CartesianGridGen::setCapacity() requested " << capacity
+             << " but allocated " << m_capacity << std::endl;
+      return;
     }
     m_center.resize(capacity);
     m_parentId.resize(capacity);
@@ -263,6 +271,18 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_properties.resize(capacity);
     m_level.resize(capacity);
     m_capacity = capacity;
+  }
+
+  void reset() override {
+    m_center.clear();
+    m_parentId.clear();
+    m_globalId.clear();
+    m_noChildren.clear();
+    m_nghbrIds.clear();
+    m_childIds.clear();
+    m_rfnDistance.clear();
+    m_properties.clear();
+    m_level.clear();
   }
 
   void setMaxLvl(const GInt _maxLvl) override {
