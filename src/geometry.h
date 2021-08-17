@@ -14,6 +14,9 @@ using Point = VectorD<NDIM>;
 
 using json = nlohmann::json;
 
+// todo: move to boundary condition
+enum class BoundaryConditionType { Wall };
+
 class GeometryInterface {
  public:
   GeometryInterface(const MPI_Comm comm) : m_comm(comm){};
@@ -65,10 +68,17 @@ class GeometryRepresentation {
   inline auto name() -> GString& { return m_name; }
 
  private:
-  GeomType m_type = GeomType::unknown;
-  GString  m_name = "undefined";
-  GString  m_body;
-  GBool    m_inside = true;
+  GeomType              m_type = GeomType::unknown;
+  GString               m_name = "undefined";
+  GString               m_body;
+  GBool                 m_inside = true;
+  BoundaryConditionType m_boundaryCondition;
+};
+
+template <GInt NDIM>
+struct triangle {
+  std::array<Point<NDIM>, 3> m_vertices;
+  Point<NDIM>                m_normal;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -104,6 +114,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Filename: " << m_fileName << "\n";
     ss << SP7 << "Binary: " << std::boolalpha << m_binary << "\n";
+    ss << SP7 << "No triangles: " << m_noTriangles << "\n";
     return ss.str();
   }
 
@@ -116,6 +127,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   void loadFile() {
     checkFileExistence();
     determineBinary();
+    countTriangles();
+    m_triangles.resize(m_noTriangles);
   }
 
   void checkFileExistence() {
@@ -136,8 +149,35 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ifl.close();
   }
 
-  GString m_fileName;
-  GBool   m_binary = false; // file is ASCII or binary
+  void countTriangles() {
+    if(m_binary) {
+      static constexpr GInt stl_header_size   = 80 + 4;
+      static constexpr GInt stl_triangle_size = 50;
+      m_noTriangles                           = (fileSize(m_fileName) - stl_header_size) / stl_triangle_size;
+    } else {
+      // open file in ascii format
+      std::ifstream ifl(m_fileName);
+
+      static constexpr GInt          buffer_size = 1024;
+      std::array<GChar, buffer_size> buffer{};
+
+      GString text;
+      // If number of elements unknown, count them...
+      while(text.find("endsolid") == std::string::npos) {
+        ifl.getline(&buffer[0], buffer_size);
+        text = static_cast<GString>(buffer.data());
+        if(text.find("facet") != std::string::npos && text.find("endface") == std::string::npos) {
+          ++m_noTriangles;
+        }
+      }
+      ifl.close();
+    }
+  }
+
+  GString                     m_fileName;
+  GBool                       m_binary      = false; // file is ASCII or binary
+  GInt                        m_noTriangles = 0;
+  std::vector<triangle<NDIM>> m_triangles;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
