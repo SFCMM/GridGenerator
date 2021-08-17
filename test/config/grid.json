@@ -52,12 +52,12 @@
     },
     "stl": {
       "type": "stl",
-      "filename": "test.stl",
+      "filename": "cube.stl",
       "body": "A"
     },
     "stlA": {
       "type": "stl",
-      "filename": "test.stl",
+      "filename": "cube_binary.stl",
       "body": "A"
     }
   },

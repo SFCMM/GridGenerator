@@ -58,6 +58,7 @@ class GeometryRepresentation {
   [[nodiscard]] inline auto cname() const -> GString { return m_name; }
   [[nodiscard]] inline auto inside() const -> GBool { return m_inside; }
   [[nodiscard]] inline auto body() const -> GString { return m_body; }
+  inline auto               body() -> GString& { return m_body; }
 
  protected:
   inline auto type() -> GeomType& { return m_type; }
@@ -76,11 +77,13 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GeometrySTL(GString fileName, const GString& _name) : m_fileName(std::move(fileName)) {
     name() = _name;
     type() = GeomType::stl;
+    loadFile();
   };
 
   GeometrySTL(const json& stl, const GString& _name) : GeometryRepresentation<DEBUG_LEVEL, NDIM>(stl), m_fileName(stl["filename"]) {
     name() = _name;
     type() = GeomType::stl;
+    loadFile();
   };
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override { return false; }
@@ -100,6 +103,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ss << SP7 << "Name: " << name() << "\n";
     ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Filename: " << m_fileName << "\n";
+    ss << SP7 << "Binary: " << std::boolalpha << m_binary << "\n";
     return ss.str();
   }
 
@@ -109,7 +113,31 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
 
+  void loadFile() {
+    checkFileExistence();
+    determineBinary();
+  }
+
+  void checkFileExistence() {
+    if(!isFile(m_fileName)) {
+      TERMM(-1, "The STL file: " + m_fileName + " cannot be found!");
+    }
+  }
+
+  void determineBinary() {
+    // A STL file is ASCII if the first 5 letters in a file are "solid"!
+    std::ifstream                  ifl(m_fileName);
+    static constexpr GInt          buffer_size = 1024;
+    std::array<GChar, buffer_size> buffer{};
+    ifl.getline(&buffer[0], buffer_size);
+    if(static_cast<GString>(buffer.data()).find("solid") != 0) {
+      m_binary = true;
+    }
+    ifl.close();
+  }
+
   GString m_fileName;
+  GBool   m_binary = false; // file is ASCII or binary
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -351,29 +379,23 @@ class GeometryManager : public GeometryInterface {
           break;
         }
       }
-      logger << m_geomObj.back()->str() << std::endl;
     }
 
     // map the geometry objects to bodies
     for(const auto& geom : m_geomObj) {
       const GString name = geom->cname();
       if(geom->body() == "unique") {
-        if(m_bodyMap.count(name) == 1) {
-          GInt i = 0;
-          while(m_bodyMap.count(name + std::to_string(i)) == 1) {
-            i++;
-          }
-          m_bodyMap.emplace(name + std::to_string(i), std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
-        } else {
-          m_bodyMap.emplace(name, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
-        }
+        geom->body() = name;
+        m_bodyMap.emplace(name, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
       } else {
-        if(m_bodyMap.count(name) == 1) {
-          m_bodyMap[name].emplace_back(geom.get());
+        const GString body = geom->body();
+        if(m_bodyMap.count(body) == 1) {
+          m_bodyMap[body].emplace_back(geom.get());
         } else {
-          m_bodyMap.emplace(name, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
+          m_bodyMap.emplace(body, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>({geom.get()}));
         }
       }
+      logger << geom->str() << std::endl;
     }
   }
 
