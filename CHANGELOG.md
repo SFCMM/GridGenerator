@@ -13,6 +13,8 @@
 
 - Increase coverage to >90%
 - Add schema check for the json file.
+- Add LZMA2 compression options, https://github.com/google/brotli, https://github.com/schnaader/precomp-cpp
+- Add messagePack, https://amzn.github.io/ion-docs/
 
 # V0.2.0  (~Q4/21)
 
@@ -27,7 +29,6 @@
 
 ## Planned:
 
-- Save HDF5 grid format.
 - Patch refinement.
 - Add python bindings.
 - Add weighting methods.
@@ -36,34 +37,38 @@
 - Add CMD to load test configuration file.
 - add more geometries hat, prism, tetrahedron, Regular dodecahedron, Regular icosahedron
 
+# V0.0.4 (~29.8.21)
+
+- Save HDF5 grid format.
+
 ### Moved from V0.0.3:
 
 - Implement MPI communication.
 - Save svg of the mesh.
 - Add python script to analyse performance.
-- Add error for documentation
+- Add error for missing documentation
+- add more geometries pyramid, cone, tube
+- add tutorial
+- add circular container based on vector...
+- cleanup vtk io code
+- activate profile guided optimization
+- add performance testing results to CI
+- introduce type for bounding boxes
+- define more output filters (targetLvl etc.)
+- activate backtrace
+- Add doxygen generation to CI
+- Run coverage within CI
+- Generate porous mesh provided with some porosity value.
+- (Optimize IO speed by manual buffering.)
+- Setup valgrind and sanitize tests
+- check geometries are touching
+- allow defining the output values that are written to the point files
 
 # V0.0.3 (~22.8.21)
 
 ## Planned:
 
-- Generate porous mesh provided with some porosity value.
-- Add doxygen generation to CI
-- (Optimize IO speed by manual buffering.)
-- Setup valgrind and sanitize tests
-- Run coverage within CI
-- introduce type for bounding boxes
-- check geometries are touching
-- add more geometries pyramid, cone, tube
-- allow defining the output values
-- define more output filters (targetLvl etc.)
-- add performance testing results to CI
 - set filenames and paths
-- add tutorial
-- activate profile guided optimization
-- cleanup vtk io code
-- activate backtrace
-- add circular container based on vector...
 
 ### Moved from V0.0.2:
 
@@ -106,7 +111,7 @@
 - timer.h
 - merge cell properties
 
-# V0.0.2 (~8.8.21)
+# V0.0.2 (8.8.21)
 
 ### Features
 

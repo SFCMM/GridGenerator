@@ -71,14 +71,16 @@ class GeometryRepresentation {
   GeomType              m_type = GeomType::unknown;
   GString               m_name = "undefined";
   GString               m_body;
-  GBool                 m_inside = true;
-  BoundaryConditionType m_boundaryCondition;
+  GBool                 m_inside            = true;
+  BoundaryConditionType m_boundaryCondition = BoundaryConditionType::Wall;
 };
 
 template <GInt NDIM>
 struct triangle {
   std::array<Point<NDIM>, 3> m_vertices;
   Point<NDIM>                m_normal;
+  Point<NDIM>                m_max;
+  Point<NDIM>                m_min;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -129,6 +131,11 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     determineBinary();
     countTriangles();
     m_triangles.resize(m_noTriangles);
+    if(m_binary) {
+      readBinarySTL();
+    } else {
+      readASCIISTL();
+    }
   }
 
   void checkFileExistence() {
@@ -171,6 +178,124 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
         }
       }
       ifl.close();
+    }
+  }
+
+  void readASCIISTL() {
+    // open file in ascii format
+    std::ifstream ifl(m_fileName);
+
+    static constexpr GInt          buffer_size = 1024;
+    std::array<GChar, buffer_size> buffer{};
+    GString                        text;
+
+    // iterate overall triangles
+    GInt triangleId = 0;
+    while(text.find("endsolid") == std::string::npos) {
+      ifl.getline(&buffer[0], buffer_size);
+      text = static_cast<GString>(buffer.data());
+
+      // get normal of the triangle
+      if(text.find("normal") != std::string::npos) {
+        trim(text);
+
+        // split the string into multiple delimited by " "
+        // todo: note this is not actually correct STL value can be split also by tabs!
+        std::vector<std::string> tokens;
+        tokenize(text, tokens, " ", true);
+
+        // Read normal vector components
+        for(GInt i = 0; i < NDIM; i++) {
+          tokens[i + 2] = trim(tokens[i + 2]);
+          if(tokens[i + 2].find_first_not_of("0123456789.eE-+") != std::string::npos) {
+            TERMM(-1, "ERROR: normal component " + tokens[i + 2] + " is not a number ");
+          }
+
+          m_triangles[triangleId].m_normal[i] = stod(tokens[i + 2]);
+        }
+        // Jump expression : outer loop
+        ifl.getline(&buffer[0], buffer_size);
+
+        // Read vertices
+        for(GInt j = 0; j < NDIM; j++) {
+          ifl.getline(&buffer[0], buffer_size);
+
+          text = static_cast<GString>(buffer.data());
+          trim(text);
+          std::vector<std::string> vertex;
+          tokenize(text, vertex, " ", true);
+
+          for(GInt i = 0; i < NDIM; i++) {
+            vertex[i + 1] = trim(vertex[i + 1]);
+            if(vertex[i + 1].find_first_not_of("0123456789.eE-+") != std::string::npos) {
+              TERMM(-1, "ERROR: vertex component " + vertex[i + 1] + " is not a number ");
+            }
+
+
+            m_triangles[triangleId].m_vertices[j][i] = stod(vertex[i + 1]);
+          }
+        }
+
+        setMinMax(m_triangles[triangleId]);
+        ++triangleId;
+      }
+    }
+    ifl.close();
+  }
+
+  void readBinarySTL() {
+    using namespace std;
+
+    // data in an binary STL file normal, vertex1, vertex2, vertex3
+    using facet_t = struct { std::array<float, NDIM> n, v1, v2, v3; };
+    facet_t facet;
+
+    // open file in binary format
+    FILE* fp = fopen(m_fileName.c_str(), "rb");
+
+    static constexpr GInt        stl_header_size = 85;
+    array<char, stl_header_size> header{};
+    unsigned short               ibuff2 = 0;
+
+    if(fread(&header[0], 1, stl_header_size - 1, fp) == 0u) {
+      TERMM(-1, "ERROR: Memory error!");
+    }
+
+    GInt                  triangleId      = 0;
+    static constexpr GInt float_byte_size = 4;
+    static constexpr GInt no_values       = 4; // (3 vertices + 1 normal)
+    for(GInt i = 0; fread(&facet, no_values * float_byte_size * NDIM, 1, fp) > 0; i++) {
+      if(fread(&ibuff2, 2, 1, fp) == 0u) {
+        TERMM(-1, "ERROR: Memory error!");
+      }
+
+      for(GInt j = 0; j < NDIM; j++) {
+        m_triangles[triangleId].m_normal[j]      = facet.n[j];
+        m_triangles[triangleId].m_vertices[0][j] = facet.v1[j];
+        m_triangles[triangleId].m_vertices[1][j] = facet.v2[j];
+        m_triangles[triangleId].m_vertices[2][j] = facet.v3[j];
+      }
+
+      setMinMax(m_triangles[triangleId]);
+      ++triangleId;
+    }
+
+    fclose(fp);
+  }
+
+  void setMinMax(triangle<NDIM>& tri) {
+    for(GInt j = 0; j < NDIM; j++) {
+      tri.m_max[j] = tri.m_vertices[0][j];
+      tri.m_min[j] = tri.m_vertices[0][j];
+    }
+    for(GInt i = 0; i < NDIM; i++) {
+      for(GInt j = 0; j < NDIM; j++) {
+        // Find maximum
+        const GDouble value = tri.m_vertices[i][j];
+        tri.m_max[j]        = (tri.m_max[j] < value) ? value : tri.m_max[j];
+        // Find minimum
+        tri.m_min[j] = (tri.m_min[j] > value) ? value : tri.m_min[j];
+      }
     }
   }
 
