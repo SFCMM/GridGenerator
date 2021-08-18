@@ -102,11 +102,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override { return false; }
 
-  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
-    std::vector<GDouble> bbox(2 * NDIM);
-    std::fill(bbox.begin(), bbox.end(), 0);
-    return bbox;
-  }
+  [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override { return m_bbox; }
 
   [[nodiscard]] inline auto str() const -> GString override {
     std::stringstream ss;
@@ -117,6 +113,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ss << SP7 << "Filename: " << m_fileName << "\n";
     ss << SP7 << "Binary: " << std::boolalpha << m_binary << "\n";
     ss << SP7 << "No triangles: " << m_noTriangles << "\n";
+    ss << SP7 << "Bounding Box: " << strStreamify<2 * NDIM>(m_bbox).str() << "\n";
     return ss.str();
   }
 
@@ -136,6 +133,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     } else {
       readASCIISTL();
     }
+    determineBoundaryBox();
   }
 
   void checkFileExistence() {
@@ -207,6 +205,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
         // Read normal vector components
         for(GInt i = 0; i < NDIM; i++) {
           tokens[i + 2] = trim(tokens[i + 2]);
+          // todo: role into function
           if(tokens[i + 2].find_first_not_of("0123456789.eE-+") != std::string::npos) {
             TERMM(-1, "ERROR: normal component " + tokens[i + 2] + " is not a number ");
           }
@@ -227,6 +226,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
           for(GInt i = 0; i < NDIM; i++) {
             vertex[i + 1] = trim(vertex[i + 1]);
+            // todo: role into function
             if(vertex[i + 1].find_first_not_of("0123456789.eE-+") != std::string::npos) {
               TERMM(-1, "ERROR: vertex component " + vertex[i + 1] + " is not a number ");
             }
@@ -288,13 +288,34 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       tri.m_max[j] = tri.m_vertices[0][j];
       tri.m_min[j] = tri.m_vertices[0][j];
     }
-    for(GInt i = 0; i < NDIM; i++) {
-      for(GInt j = 0; j < NDIM; j++) {
+
+    for(GInt vertexId = 0; vertexId < 3; vertexId++) {
+      for(GInt dir = 0; dir < NDIM; dir++) {
         // Find maximum
-        const GDouble value = tri.m_vertices[i][j];
-        tri.m_max[j]        = (tri.m_max[j] < value) ? value : tri.m_max[j];
+        const GDouble value = tri.m_vertices[vertexId][dir];
+        tri.m_max[dir]      = (tri.m_max[dir] < value) ? value : tri.m_max[dir];
         // Find minimum
-        tri.m_min[j] = (tri.m_min[j] > value) ? value : tri.m_min[j];
+        tri.m_min[dir] = (tri.m_min[dir] > value) ? value : tri.m_min[dir];
+      }
+    }
+  }
+
+  void determineBoundaryBox() {
+    m_bbox.resize(2 * NDIM);
+    std::fill(m_bbox.begin(), m_bbox.end(), 0);
+
+    // initialize
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      m_bbox[2 * dir]     = m_triangles[0].m_min[dir];
+      m_bbox[2 * dir + 1] = m_triangles[0].m_max[dir];
+    }
+
+    for(const auto& tri : m_triangles) {
+      for(GInt dir = 0; dir < NDIM; dir++) {
+        // Find minimum
+        m_bbox[2 * dir] = (m_bbox[2 * dir] > tri.m_min[dir]) ? tri.m_min[dir] : m_bbox[2 * dir];
+        // Find maximum
+        m_bbox[2 * dir + 1] = (m_bbox[2 * dir + 1] < tri.m_max[dir]) ? tri.m_max[dir] : m_bbox[2 * dir + 1];
       }
     }
   }
@@ -303,6 +324,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GBool                       m_binary      = false; // file is ASCII or binary
   GInt                        m_noTriangles = 0;
   std::vector<triangle<NDIM>> m_triangles;
+  std::vector<GDouble>        m_bbox;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
