@@ -43,6 +43,8 @@ class KDTree {
   auto operator=(const KDTree&) -> KDTree& = delete;
   auto operator=(KDTree&&) -> KDTree& = delete;
 
+  /// Build a min/max kd tree using the provided GeometryManager.
+  /// \param gm Geometry Manager for which to build the kd tree
   void buildTree(GeometryManager<DEBUG_LEVEL, NDIM>& gm) {
     // count number of total geometry elements
     // analytical geometries have 1
@@ -70,6 +72,7 @@ class KDTree {
     m_nodes[m_root].m_parent = 0; // no parent
     m_nodes[m_root].m_depth  = 0;
 
+    std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
 
     if(noNodes == 1) {
       // with one node we don't need to search so we just return the root element anyway
@@ -164,11 +167,71 @@ class KDTree {
     }
   };
 
-  void retrieveNodes(GDouble* targetRegion, GInt& noNodes, GInt*& nodeList){};
+  /// Retrive all nodes(elements) that intersect with a provided bounding box.
+  /// \param targetRegion Bounding box of the target region.
+  /// \param gm Reference to geometry manager instance
+  /// \param nodeList Reference to a vector to store the nodes which intersect the target region.
+  void retrieveNodes(GeometryManager<DEBUG_LEVEL, NDIM>& gm, const GDouble* targetRegion, std::vector<GInt>& nodeList) {
+    if(m_nodes.empty()) {
+      logger << "WARNING: Called retrieveNodes() but nothing to do!" << std::endl;
+      return;
+    }
 
-  void splitTree(GInt noSubTrees){};
+    std::array<GDouble, 2 * NDIM> min;
+    std::array<GDouble, 2 * NDIM> max;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      min[dir]        = m_boundingBox[dir];
+      min[dir + NDIM] = targetRegion[dir];
+      max[dir]        = targetRegion[dir + NDIM];
+      max[dir + NDIM] = m_boundingBox[dir + NDIM];
+    }
+    // Init empty stack and start at first node
+    GInt             root = 0;
+    std::stack<GInt> subtreeStack;
+    subtreeStack.push(root);
 
-  GInt get_root() { return m_root; };
+
+    // Infinite loop until complete tree is traversed
+    while(!subtreeStack.empty()) {
+      root = subtreeStack.top();
+      subtreeStack.pop();
+
+      // Check if the current nodes element-bounding box intersects target region
+      const GInt currentElementId = m_nodes[root].m_element;
+      GBool      doesOverlap      = true;
+
+      // whole element is within the target range
+      for(GInt i = 0; i < 2 * NDIM; i++) {
+        const GDouble value = gm.elementBoundingBox(currentElementId, i);
+        if(value > max[i] || value < min[i]) {
+          doesOverlap = false;
+          break;
+        }
+      }
+
+      // Inside target domain => add current element to return list
+      if(doesOverlap) {
+        nodeList.push_back(currentElementId);
+      }
+
+      const GInt currentDir = m_nodes[root].m_depth % (2 * NDIM);
+
+      // if right subtree is inside target domain push on stack
+      const GInt right = m_nodes[root].m_rightSubtree;
+      if(right > 0 && m_nodes[root].m_max >= min[currentDir] && m_nodes[root].m_pivot <= max[currentDir]) {
+        subtreeStack.push(right);
+      }
+
+      // if left subtree is inside target domain set it as root
+      const GInt left = m_nodes[root].m_leftSubtree;
+      if(left > 0 && m_nodes[root].m_pivot >= min[currentDir] && m_nodes[root].m_min <= max[currentDir]) {
+        root = left;
+        continue;
+      }
+    }
+  };
+
+  [[nodiscard]] auto get_root() const -> GInt { return m_root; };
 
  private:
   void reset() {
@@ -180,7 +243,7 @@ class KDTree {
 
   GInt                          m_root = -1;
   std::vector<KDNode>           m_nodes;
-  std::array<GDouble, 2 * NDIM> m_minMax{};
+  std::array<GDouble, 2 * NDIM> m_boundingBox{};
   std::vector<GInt>             m_nodeList;
 };
 #endif // GRIDGENERATOR_KDTREE_H
