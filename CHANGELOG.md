@@ -6,6 +6,7 @@
 - Add Paraview-Plugin for HDF5 format
 - Read geometry in parallel
 - Generate parallel geometry
+- use CGAL algorithms
 
 # V1.0.0
 

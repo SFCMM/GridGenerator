@@ -8,6 +8,7 @@
 #include <vector>
 #include <sfcmm_common.h>
 #include "functions.h"
+#include "kdtree.h"
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
@@ -31,6 +32,8 @@ class GeometryInterface {
   virtual inline auto               cutWithCell(const GDouble* cellCenter, const GDouble cellLength) const -> GBool = 0;
   [[nodiscard]] virtual inline auto noObjects() const -> GInt                                                       = 0;
   [[nodiscard]] virtual inline auto getBoundingBox() const -> std::vector<GDouble>                                  = 0;
+  [[nodiscard]] virtual auto inline noElements() const -> GInt                                                      = 0;
+  [[nodiscard]] virtual auto inline noElements(GInt objId) const -> GInt                                            = 0;
 
  private:
   MPI_Comm m_comm;
@@ -52,6 +55,9 @@ class GeometryRepresentation {
   [[nodiscard]] virtual inline auto cutWithCell(const Point<NDIM>& center, GDouble cellLength) const -> GBool = 0;
   [[nodiscard]] virtual inline auto getBoundingBox() const -> std::vector<GDouble>                            = 0;
   [[nodiscard]] virtual inline auto str() const -> GString                                                    = 0;
+  [[nodiscard]] virtual inline auto noElements() const -> GInt                                                = 0;
+  [[nodiscard]] virtual inline auto min(const GInt dir) const -> GDouble                                      = 0;
+  [[nodiscard]] virtual inline auto max(const GInt dir) const -> GDouble                                      = 0;
 
   [[nodiscard]] inline auto type() const -> GeomType { return m_type; }
   // necessary if objectref cannot be cast to const
@@ -62,6 +68,7 @@ class GeometryRepresentation {
   [[nodiscard]] inline auto inside() const -> GBool { return m_inside; }
   [[nodiscard]] inline auto body() const -> GString { return m_body; }
   inline auto               body() -> GString& { return m_body; }
+
 
  protected:
   inline auto type() -> GeomType& { return m_type; }
@@ -82,6 +89,16 @@ struct triangle {
   Point<NDIM>                m_max;
   Point<NDIM>                m_min;
 };
+namespace triangle_ {
+template <GInt NDIM>
+[[nodiscard]] inline auto min(const triangle<NDIM>& tri, const GInt dir) -> GDouble {
+  return tri.m_min[dir];
+}
+template <GInt NDIM>
+[[nodiscard]] inline auto max(const triangle<NDIM>& tri, const GInt dir) -> GDouble {
+  return tri.m_max[dir];
+}
+} // namespace triangle_
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
@@ -104,6 +121,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override { return m_bbox; }
 
+  [[nodiscard]] inline auto noElements() const -> GInt override { return m_noTriangles; }
+
   [[nodiscard]] inline auto str() const -> GString override {
     std::stringstream ss;
     ss << SP1 << "STL"
@@ -116,6 +135,11 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ss << SP7 << "Bounding Box: " << strStreamify<2 * NDIM>(m_bbox).str() << "\n";
     return ss.str();
   }
+
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble { return m_bbox[dir * 2]; }
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble { return m_bbox[dir * 2 + 1]; }
+
+  inline auto triangles() const -> const std::vector<triangle<NDIM>>& { return m_triangles; }
 
  private:
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
@@ -333,6 +357,16 @@ class GeometryAnalytical : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GeometryAnalytical() = default;
   GeometryAnalytical(const json& geom) : GeometryRepresentation<DEBUG_LEVEL, NDIM>(geom){};
 
+  [[nodiscard]] inline auto noElements() const -> GInt override { return 1; }
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble {
+    auto bbox = this->getBoundingBox();
+    return bbox[dir * 2];
+  }
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble {
+    auto bbox = this->getBoundingBox();
+    return bbox[dir * 2 + 1];
+  }
+
  private:
 };
 
@@ -532,6 +566,11 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   GDouble     m_length = 0;
 };
 
+struct MinMaxType {
+  std::function<GDouble(GInt)> min;
+  std::function<GDouble(GInt)> max;
+};
+
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryManager : public GeometryInterface {
  public:
@@ -584,6 +623,25 @@ class GeometryManager : public GeometryInterface {
       }
       logger << geom->str() << std::endl;
     }
+
+    // build elementMinMax
+    for(const auto& geom : m_geomObj) {
+      if(geom->ctype() == GeomType::stl) {
+        for(const auto& tri : static_cast<GeometrySTL<DEBUG_LEVEL, NDIM>*>(geom.get())->triangles()) {
+          std::function<GDouble(GInt)> triMin = [&](GInt dir) { return triangle_::min(tri, dir); };
+          std::function<GDouble(GInt)> triMax = [&](GInt dir) { return triangle_::max(tri, dir); };
+
+          m_elementMinMax.emplace_back(MinMaxType{triMin, triMax});
+        }
+      } else {
+        std::function<GDouble(GInt)> geomMin = [&](GInt dir) { return geom->min(dir); };
+        std::function<GDouble(GInt)> geomMax = [&](GInt dir) { return geom->max(dir); };
+
+        m_elementMinMax.emplace_back(MinMaxType{geomMin, geomMax});
+      }
+    }
+
+    m_adt.buildTree(*this);
   }
 
   [[nodiscard]] auto inline pointIsInside(const GDouble* x) const -> GBool override {
@@ -618,6 +676,13 @@ class GeometryManager : public GeometryInterface {
 
   [[nodiscard]] auto inline noObjects() const -> GInt override { return m_geomObj.size(); }
 
+  [[nodiscard]] auto inline noElements() const -> GInt override {
+    return std::transform_reduce(
+        m_geomObj.begin(), m_geomObj.end(), 0, [](GInt a, GInt b) { return a + b; }, [](const auto& obj) { return obj->noElements(); });
+  }
+
+  [[nodiscard]] auto inline noElements(GInt objId) const -> GInt override { return m_geomObj[objId]->noElements(); }
+
   [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
     std::vector<GDouble> bbox(2 * NDIM);
     std::fill(bbox.begin(), bbox.end(), 0);
@@ -638,10 +703,21 @@ class GeometryManager : public GeometryInterface {
     return bbox;
   }
 
+  [[nodiscard]] inline auto elementBoundingBox(const GInt elementId, const GInt dir) const {
+    ASSERT(dir <= 2 * NDIM, "Invalid dir");
+
+    if(isEven(dir)) {
+      return m_elementMinMax.at(elementId).min(dir / 2);
+    }
+    return m_elementMinMax.at(elementId).max(dir / 2 + 1);
+  }
+
 
  private:
   std::vector<std::unique_ptr<GeometryRepresentation<DEBUG_LEVEL, NDIM>>>              m_geomObj;
   std::unordered_map<GString, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>> m_bodyMap;
+  std::vector<MinMaxType>                                                              m_elementMinMax;
+  KDTree<DEBUG_LEVEL, NDIM>                                                            m_adt;
 };
 
 #endif // GRIDGENERATOR_GEOMETRY_H
