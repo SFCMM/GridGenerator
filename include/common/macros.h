@@ -28,24 +28,8 @@
 #define __FUNCTION_LOCATION__                                                  \
   std::string(__FILE__) + ": " + std::string(SHORT_FUN_)
 
-#ifdef USE_ASSERTS
-#define ASSERT(condition, message)                                             \
-  do {                                                                         \
-    if (!(condition)) {                                                        \
-      std::cerr << "Assertion `" #condition "` failed in " << __FILE__         \
-                << " line " << __LINE__ << ": " << message << std::endl;       \
-      TERMM(1, "ASSERTION FAILED");                                            \
-    }                                                                          \
-  } while (false)
-#else
-#define ASSERT(condition, message)                                                                                                         \
-  do {                                                                                                                                     \
-  } while(false && (condition))
-#endif
-
-
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic pop
 #endif
-#endif // GRIDGENERATOR_MACROS_H
+#endif // SFCMM_MACROS_H

@@ -9,6 +9,8 @@
 #include <sfcmm_common.h>
 #include "functions.h"
 #include "kdtree.h"
+#include "triangle.h"
+
 
 template <GInt NDIM>
 using Point = VectorD<NDIM>;
@@ -43,7 +45,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryRepresentation {
  public:
   GeometryRepresentation(const json& geom)
-    : m_inside(config::opt_config_value(geom, "inside", true)), m_body(config::opt_config_value(geom, "body", GString("unique"))){};
+    : m_body(config::opt_config_value(geom, "body", GString("unique"))), m_inside(config::opt_config_value(geom, "inside", true)){};
   GeometryRepresentation()                              = default;
   virtual ~GeometryRepresentation()                     = default;
   GeometryRepresentation(const GeometryRepresentation&) = delete;
@@ -68,7 +70,8 @@ class GeometryRepresentation {
   [[nodiscard]] inline auto inside() const -> GBool { return m_inside; }
   [[nodiscard]] inline auto body() const -> GString { return m_body; }
   inline auto               body() -> GString& { return m_body; }
-
+  [[nodiscard]] inline auto elementOffset() const -> GInt { return m_elementOffset; }
+  inline auto               elementOffset() -> GInt& { return m_elementOffset; }
 
  protected:
   inline auto type() -> GeomType& { return m_type; }
@@ -80,25 +83,8 @@ class GeometryRepresentation {
   GString               m_body;
   GBool                 m_inside            = true;
   BoundaryConditionType m_boundaryCondition = BoundaryConditionType::Wall;
+  GInt                  m_elementOffset     = -1;
 };
-
-template <GInt NDIM>
-struct triangle {
-  std::array<Point<NDIM>, 3> m_vertices;
-  Point<NDIM>                m_normal;
-  Point<NDIM>                m_max;
-  Point<NDIM>                m_min;
-};
-namespace triangle_ {
-template <GInt NDIM>
-[[nodiscard]] inline auto min(const triangle<NDIM>& tri, const GInt dir) -> GDouble {
-  return tri.m_min[dir];
-}
-template <GInt NDIM>
-[[nodiscard]] inline auto max(const triangle<NDIM>& tri, const GInt dir) -> GDouble {
-  return tri.m_max[dir];
-}
-} // namespace triangle_
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
@@ -115,7 +101,41 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     loadFile();
   };
 
-  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override { return false; }
+  [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
+    // 1. check if it is in object bounding box
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      const GDouble p = x[dir];
+      if(p < m_bbox[2 * dir] || p > m_bbox[2 * dir + 1]) {
+        return !inside();
+      }
+    }
+
+    // 2. cast ray through all triangles in target region and determine cuts (if any inside cuts are found i.e. uneven number of cuts with
+    // surface)
+    std::vector<GInt> nodeList;
+    m_kd.retrieveNodes(x, nodeList);
+    cerr0 << "possible nodes " << nodeList.size() << std::endl;
+    if(nodeList.empty()) {
+      return !inside();
+    }
+
+    std::array<GDouble, 2 * NDIM> line{};
+    for(GInt dim = 0; dim < NDIM; dim++) {
+      line[dim] = x[dim];
+    }
+    for(GInt rayDir = 0; rayDir < NDIM; ++rayDir) {
+      for(GInt dim = 0; dim < NDIM; ++dim) {
+        line[dim + NDIM] = x[dim];
+      }
+      for(const auto& tri : m_triangles) {
+        line[rayDir + NDIM] += 2 * (triangle_::boundingBox(tri, 2 * rayDir + 1) - triangle_::boundingBox(tri, 2 * rayDir));
+        if(!isEven(triangle_::countLineIntersections(tri, line))) {
+          return inside();
+        }
+      }
+    }
+    return !inside();
+  }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override { return false; }
 
@@ -146,6 +166,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::elementOffset;
 
   void loadFile() {
     checkFileExistence();
@@ -158,6 +179,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       readASCIISTL();
     }
     determineBoundaryBox();
+    m_kd.buildTree(m_triangles, m_bbox);
   }
 
   void checkFileExistence() {
@@ -315,12 +337,16 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
     for(GInt vertexId = 0; vertexId < 3; vertexId++) {
       for(GInt dir = 0; dir < NDIM; dir++) {
-        // Find maximum
         const GDouble value = tri.m_vertices[vertexId][dir];
-        tri.m_max[dir]      = (tri.m_max[dir] < value) ? value : tri.m_max[dir];
+        // Find maximum
+        tri.m_max[dir] = (tri.m_max[dir] < value) ? value : tri.m_max[dir];
         // Find minimum
         tri.m_min[dir] = (tri.m_min[dir] > value) ? value : tri.m_min[dir];
       }
+    }
+    for(GInt dir = 0; dir < NDIM; dir++) {
+      tri.m_max[dir] += GDoubleEps;
+      tri.m_min[dir] -= GDoubleEps;
     }
   }
 
@@ -349,6 +375,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GInt                        m_noTriangles = 0;
   std::vector<triangle<NDIM>> m_triangles;
   std::vector<GDouble>        m_bbox;
+  KDTree<DEBUG_LEVEL, NDIM>   m_kd;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -625,7 +652,8 @@ class GeometryManager : public GeometryInterface {
     }
 
     // build elementMinMax
-    for(const auto& geom : m_geomObj) {
+    GInt offsetCounter = 0;
+    for(auto& geom : m_geomObj) {
       if(geom->ctype() == GeomType::stl) {
         for(const auto& tri : static_cast<GeometrySTL<DEBUG_LEVEL, NDIM>*>(geom.get())->triangles()) {
           std::function<GDouble(GInt)> triMin = [&](GInt dir) { return triangle_::min(tri, dir); };
@@ -639,9 +667,11 @@ class GeometryManager : public GeometryInterface {
 
         m_elementMinMax.emplace_back(MinMaxType{geomMin, geomMax});
       }
+      geom->elementOffset() = offsetCounter;
+      offsetCounter += geom->noElements();
     }
 
-    m_adt.buildTree(*this);
+    m_kd.buildTree(*this);
   }
 
   [[nodiscard]] auto inline pointIsInside(const GDouble* x) const -> GBool override {
@@ -703,7 +733,7 @@ class GeometryManager : public GeometryInterface {
     return bbox;
   }
 
-  [[nodiscard]] inline auto elementBoundingBox(const GInt elementId, const GInt dir) const {
+  [[nodiscard]] inline auto elementBoundingBox(const GInt elementId, const GInt dir) const -> GDouble {
     ASSERT(dir <= 2 * NDIM, "Invalid dir");
 
     if(isEven(dir)) {
@@ -712,12 +742,21 @@ class GeometryManager : public GeometryInterface {
     return m_elementMinMax.at(elementId).max(dir / 2 + 1);
   }
 
+  [[nodiscard]] inline auto pointInElementBB(const GInt elementId, const Point<NDIM>& x) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      if(x[dir] > m_elementMinMax[elementId].max(dir) || x[dir] < m_elementMinMax[elementId].min(dir)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 
  private:
   std::vector<std::unique_ptr<GeometryRepresentation<DEBUG_LEVEL, NDIM>>>              m_geomObj;
   std::unordered_map<GString, std::vector<GeometryRepresentation<DEBUG_LEVEL, NDIM>*>> m_bodyMap;
   std::vector<MinMaxType>                                                              m_elementMinMax;
-  KDTree<DEBUG_LEVEL, NDIM>                                                            m_adt;
+  KDTree<DEBUG_LEVEL, NDIM>                                                            m_kd;
 };
 
 #endif // GRIDGENERATOR_GEOMETRY_H

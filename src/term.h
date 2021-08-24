@@ -1,6 +1,7 @@
 #ifndef GRIDGENERATOR_TERM_H
 #define GRIDGENERATOR_TERM_H
-#include <sfcmm_common.h>
+#include "common/log.h"
+#include "common/util/backtrace.h"
 
 [[noreturn]] inline void term(const GInt errorCode, const GString& location, const GString& message = "") {
   if(errorCode != 0) {
@@ -39,4 +40,19 @@
   do {                                                                                                                                     \
     term(exitval, AT_, msg);                                                                                                               \
   } while(false)
+
+#ifdef USE_ASSERTS
+#define ASSERT(condition, message)                                                                                                         \
+  do {                                                                                                                                     \
+    if(!(condition)) {                                                                                                                     \
+      std::cerr << "Assertion `" #condition "` failed in " << __FILE__ << " line " << __LINE__ << ": " << message << std::endl;            \
+      TERMM(1, "ASSERTION FAILED");                                                                                                        \
+    }                                                                                                                                      \
+  } while(false)
+#else
+#define ASSERT(condition, message)                                                                                                         \
+  do {                                                                                                                                     \
+  } while(false && (condition))
+#endif
+
 #endif // GRIDGENERATOR_TERM_H
