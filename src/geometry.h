@@ -110,31 +110,148 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       }
     }
 
-    // 2. cast ray through all triangles in target region and determine cuts (if any inside cuts are found i.e. uneven number of cuts with
-    // surface)
-    std::vector<GInt> nodeList;
-    m_kd.retrieveNodes(x, nodeList);
-    cerr0 << "possible nodes " << nodeList.size() << std::endl;
-    if(nodeList.empty()) {
-      return !inside();
+    // 2. cast ray from the point to the outside and determine cuts (if an uneven number of cuts is found the point is inside)
+    std::vector<GInt>             nodeList;
+    std::array<GDouble, 2 * NDIM> targetRegion;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      targetRegion[2 * dir]     = x[dir];
+      targetRegion[2 * dir + 1] = x[dir];
     }
 
-    std::array<GDouble, 2 * NDIM> line{};
-    for(GInt dim = 0; dim < NDIM; dim++) {
-      line[dim] = x[dim];
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      // cast ray to the outside (too make sure 2*the extend)
+      targetRegion[2 * dir + 1] += 2 * m_extend[dir];
+      m_kd.retrieveNodes(targetRegion, nodeList); // todo: doesnot retrieve all points...
+      // reset
+      targetRegion[2 * dir + 1] = x[dir];
     }
-    for(GInt rayDir = 0; rayDir < NDIM; ++rayDir) {
-      for(GInt dim = 0; dim < NDIM; ++dim) {
-        line[dim + NDIM] = x[dim];
-      }
-      for(const auto& tri : m_triangles) {
-        line[rayDir + NDIM] += 2 * (triangle_::boundingBox(tri, 2 * rayDir + 1) - triangle_::boundingBox(tri, 2 * rayDir));
-        if(!isEven(triangle_::countLineIntersections(tri, line))) {
-          return inside();
+
+    removeDuplicates(nodeList);
+    cerr0 << "possible nodes " << nodeList.size() << std::endl; // todo: remove
+    cerr0 << "point " << strStreamify<NDIM>(x).str() << "~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    static constexpr GDouble tolerance = 1E-10;
+    std::vector<Point<NDIM>> intersectionPoints;
+
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      // it is enough to cast one ray in any direction otherwise the geometry has holes!
+      Point<NDIM> ray;
+      ray.fill(0);
+      ray[dir] = 2 * m_extend[dir];
+
+      for(const GInt triId : nodeList) {
+        const auto& tri = m_triangles[triId];
+        cerr0 << "vertex1 " << strStreamify<NDIM>(tri.m_vertices[0]).str() << std::endl;
+        cerr0 << "vertex2 " << strStreamify<NDIM>(tri.m_vertices[1]).str() << std::endl;
+        cerr0 << "vertex3 " << strStreamify<NDIM>(tri.m_vertices[2]).str() << std::endl;
+        //              const auto edge1 = tri.m_vertices[1] - tri.m_vertices[0];
+        //              const auto edge2 = tri.m_vertices[2] - tri.m_vertices[0];
+        const auto edge3 = x - tri.m_vertices[0];
+        cerr0 << "edge3 " << strStreamify<NDIM>(edge3).str() << std::endl;
+
+
+        //              Point<NDIM> normal;
+        //              normal[0] = edge1[1] * edge2[2] - edge1[2] * edge2[1];
+        //              normal[1] = edge1[2] * edge2[0] - edge1[0] * edge2[2];
+        //              normal[2] = edge1[0] * edge2[1] - edge1[1] * edge2[0];
+
+        //        const auto a = normal.dot(edge3);
+        const auto a = -tri.m_normal.dot(edge3);
+        //        const auto b = normal.dot(ray);
+        const auto b = tri.m_normal.dot(ray);
+        cerr0 << "normal " << strStreamify<NDIM>(tri.m_normal).str() << std::endl;
+        //              cerr0 << "normalb " << strStreamify<NDIM>(normal).str() <<std::endl;
+        cerr0 << "a " << a << " b " << b << std::endl;
+
+        if(fabs(b) < tolerance) {
+          if(fabs(a) < tolerance) {
+            // ray lies in triangle plane
+            //          nodeList[noReallyIntersectingNodes] = nodeList[n];
+            //	noReallyIntersectingNodes++;
+            //          noIntersections++;
+            logger << "Found ray in triangle plane" << std::endl;
+            //          continue;
+            return inside();
+          }
+          // ray disjoint from plane
+          cerr0 << "disjoint" << std::endl;
+          continue;
+        }
+        const auto r = a / b;
+
+        // check necessary conditions
+        if(r < -tolerance || r > 1 + tolerance) {
+          cerr0 << "r outside: " << r << std::endl;
+          continue;
+        }
+        const auto ip = x + r * ray;
+        cerr0 << "ray " << strStreamify<NDIM>(ray).str() << std::endl;
+        cerr0 << "intersection point " << strStreamify<NDIM>(ip).str() << std::endl;
+        const auto w  = ip - tri.m_vertices[0];
+        const auto u  = tri.m_vertices[1] - tri.m_vertices[0];
+        const auto uu = u.dot(u);
+        const auto wu = w.dot(u);
+        const auto v  = tri.m_vertices[2] - tri.m_vertices[0];
+        const auto vv = v.dot(v);
+        const auto uv = u.dot(v);
+        const auto wv = w.dot(v);
+        const auto D  = uv * uv - uu * vv;
+        const auto s  = (uv * wv - vv * wu) / D;
+        if(s < -tolerance || s > 1 + tolerance) {
+          // Intersection point is outside triangle
+          cerr0 << "s outside" << std::endl;
+          continue;
+        }
+        const auto t = (uv * wu - uu * wv) / D;
+        if(t < -tolerance || (s + t) > 1 + tolerance) {
+          // Intersection point is outside triangle
+          cerr0 << "t outside" << std::endl;
+          continue;
+        }
+
+        if(intersectionPoints.empty()) {
+          intersectionPoints.emplace_back(ip);
+        } else {
+          GBool singleIP = true;
+
+          // check if the intersection point already exists (i.e. shared edges)
+          for(const auto& ip2 : intersectionPoints) {
+            const auto diff = ip - ip2;
+            if(diff.norm() < tolerance) {
+              singleIP = false;
+              break;
+            }
+          }
+          if(singleIP) {
+            intersectionPoints.emplace_back(ip);
+          }
         }
       }
+
+      cerr0 << "intersection points " << intersectionPoints.size() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " << std::endl;
+      if(!isEven(intersectionPoints.size())) {
+        return inside();
+      }
     }
+    TERMM(-1, "this is not possible! " + strStreamify<NDIM>(x).str());
     return !inside();
+
+    //    std::array<GDouble, 2 * NDIM> line{};
+    //    for(GInt dim = 0; dim < NDIM; dim++) {
+    //      line[dim] = x[dim];
+    //    }
+    //    for(GInt rayDir = 0; rayDir < NDIM; ++rayDir) {
+    //      for(GInt dim = 0; dim < NDIM; ++dim) {
+    //        line[dim + NDIM] = x[dim];
+    //      }
+    //      for(const auto& tri : m_triangles) {
+    //        line[rayDir + NDIM] += 2 * (triangle_::boundingBox(tri, 2 * rayDir + 1) - triangle_::boundingBox(tri, 2 * rayDir));
+    //        if(!isEven(triangle_::countLineIntersections(tri, line))) {
+    //          return inside();
+    //        }
+    //      }
+    //    }
+    //    return !inside();
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override { return false; }
@@ -153,6 +270,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     ss << SP7 << "Binary: " << std::boolalpha << m_binary << "\n";
     ss << SP7 << "No triangles: " << m_noTriangles << "\n";
     ss << SP7 << "Bounding Box: " << strStreamify<2 * NDIM>(m_bbox).str() << "\n";
+    ss << SP7 << "Extend: " << strStreamify<NDIM>(m_extend).str() << "\n";
     return ss.str();
   }
 
@@ -368,6 +486,10 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
         m_bbox[2 * dir + 1] = (m_bbox[2 * dir + 1] < tri.m_max[dir]) ? tri.m_max[dir] : m_bbox[2 * dir + 1];
       }
     }
+
+    for(GInt dir = 0; dir < NDIM; dir++) {
+      m_extend[dir] = m_bbox[2 * dir + 1] - m_bbox[2 * dir];
+    }
   }
 
   GString                     m_fileName;
@@ -375,6 +497,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GInt                        m_noTriangles = 0;
   std::vector<triangle<NDIM>> m_triangles;
   std::vector<GDouble>        m_bbox;
+  std::array<GDouble, NDIM>   m_extend{};
   KDTree<DEBUG_LEVEL, NDIM>   m_kd;
 };
 

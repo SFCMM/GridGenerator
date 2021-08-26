@@ -6,6 +6,7 @@
 #include <json.h>
 #include <map>
 #include <sstream>
+#include <unordered_set>
 #include <sfcmm_common.h>
 #include "term.h"
 
@@ -63,5 +64,13 @@ inline auto checkDuplicateIds(const std::vector<GInt>& ids) -> std::vector<GInt>
     }
   }
   return duplicated;
+}
+
+inline void removeDuplicates(std::vector<GInt>& id) {
+  std::unordered_set<GInt> s;
+  for(const auto i : id) {
+    s.insert(i);
+  }
+  id.assign(s.begin(), s.end());
 }
 #endif // GRIDGENERATOR_FUNCTIONS_H

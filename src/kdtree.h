@@ -313,7 +313,7 @@ class KDTree {
   /// \param targetRegion Bounding box of the target region.
   /// \param gm Reference to geometry manager instance
   /// \param nodeList Reference to a vector to store the nodes which intersect the target region.
-  void retrieveNodes(GeometryManager<DEBUG_LEVEL, NDIM>& gm, const GDouble* targetRegion, std::vector<GInt>& nodeList) const {
+  void retrieveNodes(const std::array<GDouble, 2 * NDIM> targetRegion, std::vector<GInt>& nodeList) const {
     if(m_nodes.empty()) {
       logger << "WARNING: Called retrieveNodes() but nothing to do!" << std::endl;
       return;
@@ -337,22 +337,23 @@ class KDTree {
     // Infinite loop until complete tree is traversed
     while(!finished) {
       // Check if the current nodes element-bounding box intersects target region
-      const GInt currentElementId = m_nodes[root].m_element;
-      GBool      doesOverlap      = true;
-
-      // whole element is within the target range!!!
-      for(GInt i = 0; i < 2 * NDIM; i++) {
-        const GDouble value = gm.elementBoundingBox(currentElementId, i);
-        if(value > max[i] || value < min[i]) {
-          doesOverlap = false;
-          break;
-        }
-      }
-
-      // Inside target domain => add current element to return list
-      if(doesOverlap) {
-        nodeList.push_back(currentElementId);
-      }
+      //      const GInt currentElementId = m_nodes[root].m_element;
+      //      GBool      doesOverlap      = true;
+      //
+      //      // whole element is within the target range!!!
+      //      for(GInt i = 0; i < 2 * NDIM; i++) {
+      //        const GDouble value = gm.elementBoundingBox(currentElementId, i);
+      //        if(value > max[i] || value < min[i]) {
+      //          doesOverlap = false;
+      //          break;
+      //        }
+      //      }
+      //
+      //      // Inside target domain => add current element to return list
+      //      if(doesOverlap) {
+      //        nodeList.push_back(currentElementId);
+      //      }
+      nodeList.emplace_back(m_nodes[root].m_element);
 
       const GInt currentDir = m_nodes[root].m_depth % (2 * NDIM);
 
