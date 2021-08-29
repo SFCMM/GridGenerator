@@ -14,6 +14,21 @@
 /// \tparam T Type of the vector
 /// \param in Vector to be stringstreamed
 /// \return std::stringstream of the in vector.
+template <class T>
+static inline auto strStreamify(const std::vector<T> &in) -> std::stringstream {
+  std::stringstream str;
+  str << in[0];
+  for (GInt i = 1; i < in.size(); i++) {
+    str << " " << in[i];
+  }
+  return str;
+}
+
+/// Get a stringstream from a given std::vector. Type needs to overload "<<".
+/// \tparam LENGTH Length of the vector to be streamed.
+/// \tparam T Type of the vector
+/// \param in Vector to be stringstreamed
+/// \return std::stringstream of the in vector.
 template <GInt LENGTH, class T>
 static inline auto strStreamify(const std::vector<T> &in) -> std::stringstream {
   std::stringstream str;

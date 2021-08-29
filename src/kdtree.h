@@ -110,7 +110,6 @@ class KDTree {
       const GInt currentDir    = currentDepth % (NDIM * 2);
       auto&      currentOffset = offset[currentNode];
       const GInt offsetWidth   = currentOffset.to - currentOffset.from;
-      cerr0 << "offsetWidth (GM)" << offsetWidth << std::endl; // todo: remove
 
       if(offsetWidth > 0) {
         left                               = ++nodeId;
@@ -234,7 +233,6 @@ class KDTree {
       const GInt currentDir    = currentDepth % (NDIM * 2);
       auto&      currentOffset = offset[currentNode];
       const GInt offsetWidth   = currentOffset.to - currentOffset.from;
-      cerr0 << "offsetWidth " << offsetWidth << std::endl; // todo: remove
       if(offsetWidth < 0) {
         cerr0 << "currentOffset.to " << currentOffset.to << std::endl;
         cerr0 << "currentOffset.from " << currentOffset.from << std::endl;
@@ -266,6 +264,10 @@ class KDTree {
           return triangle_::boundingBox(triangles[a], currentDir) < triangle_::boundingBox(triangles[b], currentDir);
         });
 
+        //        for(auto it = index.begin() + currentOffset.from; it < index.begin() + currentOffset.to + 1; ++it) {
+        //          cerr0 << *it << " " << triangle_::boundingBox(triangles[*it], currentDir) << std::endl;
+        //        }
+
         // remove own element from offset range
         m_nodes[currentNode].m_element = index[currentOffset.from];
         ++currentOffset.from;
@@ -278,8 +280,6 @@ class KDTree {
         // Left subtree (lower values)
         offset[left].from = currentOffset.from;
         offset[left].to   = pivotElementId;
-        cerr0 << "offset[left].from " << offset[left].from << std::endl; // todo: remove
-        cerr0 << "offset[left].to " << offset[left].to << std::endl;
         ASSERT(offset[left].to >= offset[left].from, "Invalid offset");
 
 
@@ -287,8 +287,6 @@ class KDTree {
         if(right > 0) {
           offset[right].from = offset[left].to + 1;
           offset[right].to   = currentOffset.to;
-          cerr0 << "offset[right].from " << offset[right].from << std::endl; // todo: remove
-          cerr0 << "offset[right].to " << offset[right].to << std::endl;
           ASSERT(offset[right].to >= offset[right].from, "Invalid offset");
         }
       } else {
@@ -322,17 +320,15 @@ class KDTree {
     std::array<GDouble, 2 * NDIM> min;
     std::array<GDouble, 2 * NDIM> max;
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      min[dir]        = m_boundingBox[dir];
-      min[dir + NDIM] = targetRegion[dir];
-      max[dir]        = targetRegion[dir + NDIM];
-      max[dir + NDIM] = m_boundingBox[dir + NDIM];
+      min[dir]        = m_boundingBox[2 * dir];
+      min[dir + NDIM] = targetRegion[2 * dir];
+      max[dir]        = targetRegion[2 * dir + 1];
+      max[dir + NDIM] = m_boundingBox[2 * dir + 1];
     }
     // Init empty stack and start at first node
     GInt             root     = 0;
     GBool            finished = false;
     std::stack<GInt> subtreeStack;
-    subtreeStack.push(root);
-
 
     // Infinite loop until complete tree is traversed
     while(!finished) {
@@ -429,6 +425,35 @@ class KDTree {
   };
 
   [[nodiscard]] auto get_root() const -> GInt { return m_root; };
+
+  void print() const {
+    using namespace std;
+
+    const GInt noNodes = m_nodes.size();
+    cout << "no Nodes " << noNodes << endl;
+    cout << "root " << m_root << " element " << m_nodes[m_root].m_element << " pivot " << m_nodes[m_root].m_pivot << endl;
+    const GInt maxDepth = gcem::sqrt(noNodes);
+    cout << "maxDepth " << maxDepth << endl;
+    stack<GInt> stacker;
+    stacker.emplace(m_root);
+    while(!stacker.empty()) {
+      const GInt currentNode = stacker.top();
+      stacker.pop();
+
+      const GInt r = m_nodes[currentNode].m_rightSubtree;
+      const GInt l = m_nodes[currentNode].m_leftSubtree;
+      if(r > 0) {
+        stacker.emplace(r);
+        cout << "R node " << r << " element " << m_nodes[r].m_element << " pivot " << m_nodes[r].m_pivot << " parent "
+             << m_nodes[r].m_parent << endl;
+      }
+      if(l > 0) {
+        stacker.emplace(l);
+        cout << "L node " << l << " element " << m_nodes[l].m_element << " pivot " << m_nodes[l].m_pivot << " parent "
+             << m_nodes[l].m_parent << endl;
+      }
+    }
+  }
 
  private:
   void reset() {
