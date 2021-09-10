@@ -31,10 +31,10 @@ template <GInt NDIM>
 [[nodiscard]] inline auto boundingBox(const triangle<NDIM>& tri, const GInt dir) -> GDouble {
   ASSERT(dir <= 2 * NDIM, "Invalid dir");
 
-  if(isEven(dir)) {
-    return tri.m_min(dir / 2);
+  if(dir >= NDIM) {
+    return tri.m_max(dir - NDIM);
   }
-  return tri.m_max(dir / 2 + 1);
+  return tri.m_min(dir);
 }
 
 template <GInt NDIM>

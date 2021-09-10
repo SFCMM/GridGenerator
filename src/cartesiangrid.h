@@ -22,12 +22,12 @@ using Point = VectorD<NDIM>;
 
 template <GInt NDIM>
 struct /*alignas(64)*/ NeighborList {
-  std::array<GInt, cartesian::maxNoNghbrs<NDIM>()> n{INVALID_CELLID};
+  std::array<GInt, cartesian::maxNoNghbrs<NDIM>()> n{INVALID_LIST<cartesian::maxNoNghbrs<NDIM>()>()};
 };
 
 template <GInt NDIM>
 struct /*alignas(64)*/ ChildList {
-  std::array<GInt, cartesian::maxNoChildren<NDIM>()> c{INVALID_CELLID};
+  std::array<GInt, cartesian::maxNoChildren<NDIM>()> c{INVALID_LIST<cartesian::maxNoChildren<NDIM>()>()};
 };
 
 class GridInterface {
@@ -321,11 +321,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_levelOffsets[1] = {0, cartesian::maxNoChildren<NDIM>()};
     }
 
-    const GInt begin                         = m_levelOffsets[0].begin;
-    m_center[begin]                          = Point<NDIM>(cog().data());
-    m_globalId[begin]                        = begin;
-    property(begin, CellProperties::bndry)   = true;
-    m_size                                   = 1;
+    const GInt begin                       = m_levelOffsets[0].begin;
+    m_center[begin]                        = Point<NDIM>(cog().data());
+    m_globalId[begin]                      = begin;
+    property(begin, CellProperties::bndry) = true;
+    m_size                                 = 1;
 
     //  Refine to min level
     for(GInt l = 0; l < partitionLvl(); l++) {
@@ -364,7 +364,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
-    reorderHilberCurve();
+    reorderHilbertCurve();
 
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridPart]);
   }
@@ -558,19 +558,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       // reset since we overwrite previous levels
       m_noChildren[childCellId] = 0;
       m_properties[childCellId].reset();
-      m_childIds[childCellId] = {INVALID_CELLID};
-      m_nghbrIds[childCellId] = {INVALID_CELLID};
+      m_childIds[childCellId] = {INVALID_LIST<cartesian::maxNoChildren<NDIM>()>()};
+      m_nghbrIds[childCellId] = {INVALID_LIST<cartesian::maxNoNghbrs<NDIM>()>()};
 
       // if parent is a boundary cell check for children as well
       if(property(cellId, CellProperties::bndry)) {
         property(childCellId, CellProperties::bndry) = cellHasCut(childCellId);
       }
-
-      // check for cuts with the geometry
-      // todo: implement
-      //      if(property(cellId, CellProperties::bndry)) {
-      //        property(childCellId, CellProperties::bndry) = checkCellForCut(childCellId);
-      //      }
 
       // update parent
       m_childIds[cellId].c[childId] = childCellId;
@@ -597,7 +591,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
                 static_cast<GInt>(cartesian::nghbrInside[childId][dir]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
             // neighbor is within the same parent cell
             if(nghbrId != INVALID_CELLID) {
-              neighbors[dir] = nghbrId;
+              neighbors[dir] = children[nghbrId];
             } else {
               const GInt parentLvlNeighborChildId = static_cast<GInt>(
                   cartesian::nghbrParentChildId[childId][dir]); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -610,6 +604,23 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
                  && m_childIds[parentLvlNghbrId].c[parentLvlNeighborChildId] != INVALID_CELLID) {
                 neighbors[dir] = m_childIds[parentLvlNghbrId].c[parentLvlNeighborChildId];
               }
+            }
+
+            if(DEBUG_LEVEL > Debug_Level::min_debug && neighbors[dir] != INVALID_CELLID
+               && (m_center[neighbors[dir]] - m_center[children[childId]]).norm()
+                      > 1.9 * lengthOnLvl(std::to_integer<GInt>(m_level[children[childId]]))) {
+              cerr0 << "neighbors[dir] " << neighbors[dir] << " cellId " << children[childId] << std::endl;
+              cerr0 << "neighbors " << strStreamify<NDIM>(m_center[neighbors[dir]]).str() << std::endl;
+              cerr0 << "neighbors " << strStreamify<NDIM>(m_center[children[childId]]).str() << std::endl;
+              cerr0 << "ndiff " << (m_center[neighbors[dir]] - m_center[children[childId]]).norm() << " vs "
+                    << lengthOnLvl(std::to_integer<GInt>(m_level[children[childId]])) << std::endl;
+              cerr0 << "parentId " << parentId << " np " << m_nghbrIds[parentId].n[dir] << std::endl;
+              cerr0 << "parent " << strStreamify<NDIM>(m_center[parentId]).str() << std::endl;
+              cerr0 << "parent neighbors " << strStreamify<NDIM>(m_center[m_nghbrIds[parentId].n[dir]]).str() << std::endl;
+              cerr0 << "pdiff " << (m_center[parentId] - m_center[m_nghbrIds[parentId].n[dir]]).norm() << " vs "
+                    << lengthOnLvl(std::to_integer<GInt>(m_level[parentId])) << std::endl;
+
+              TERMM(-1, "Invalid neighbor");
             }
           }
         }
@@ -672,17 +683,24 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void floodCells(GInt cellId) {
+    std::stack<GInt> flooding;
+    flooding.template emplace(cellId);
     const GBool inside = property(cellId, CellProperties::inside);
-    for(GInt id = 0; id < cartesian::maxNoNghbrs<NDIM>(); ++id) {
-      const GInt nghbrId = m_nghbrIds[cellId].n[id];
-      if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::marked)) {
-        if(!property(nghbrId, CellProperties::bndry)) {
-          property(nghbrId, CellProperties::inside) = inside;
-          floodCells(nghbrId);
-        } else {
-          property(nghbrId, CellProperties::inside) = true;
+
+    while(!flooding.empty()) {
+      const GInt currentCellId = flooding.top();
+      flooding.pop();
+      for(GInt id = 0; id < cartesian::maxNoNghbrs<NDIM>(); ++id) {
+        const GInt nghbrId = m_nghbrIds[currentCellId].n[id];
+        if(nghbrId != INVALID_CELLID && !property(nghbrId, CellProperties::marked)) {
+          property(nghbrId, CellProperties::marked) = true;
+          if(!property(nghbrId, CellProperties::bndry)) {
+            property(nghbrId, CellProperties::inside) = inside;
+            flooding.template emplace(nghbrId);
+          } else {
+            property(nghbrId, CellProperties::inside) = true;
+          }
         }
-        property(nghbrId, CellProperties::marked) = true;
       }
     }
   }
@@ -712,6 +730,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       if(m_nghbrIds[to].n[dir] != INVALID_CELLID) {
         m_nghbrIds[m_nghbrIds[to].n[dir]].n[cartesian::oppositeDir(dir)] = to;
       }
+      m_nghbrIds[from].n[dir] = INVALID_CELLID;
     }
 
     if(m_parentId[to] != INVALID_CELLID) {
@@ -741,7 +760,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  void reorderHilberCurve() {
+  void reorderHilbertCurve() {
     logger << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
     std::cout << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
 

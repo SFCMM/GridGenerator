@@ -98,6 +98,7 @@ auto main(int argc, GChar** argv) -> int {
   if(!isFile(config_file)) {
     TERMM(-1, "Configuration file not found: " + config_file);
   }
+  gridGenRunner.setConfigurationFile(config_file);
 
   const GInt ret = gridGenRunner.run(debug);
 

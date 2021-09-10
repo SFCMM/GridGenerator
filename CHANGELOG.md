@@ -38,7 +38,7 @@
 - Add CMD to load test configuration file.
 - add more geometries hat, prism, tetrahedron, Regular dodecahedron, Regular icosahedron
 
-# V0.0.4 (~29.8.21)
+# V0.0.4 (~5.9.21)
 
 - Save HDF5 grid format.
 
@@ -64,12 +64,14 @@
 - Setup valgrind and sanitize tests
 - check geometries are touching
 - allow defining the output values that are written to the point files
+- BUG: donut_lowres.stl at level 6/4 produces some cells outside
 
-# V0.0.3 (~22.8.21)
+# V0.0.3 (~31.8.21)
 
 ## Planned:
 
 - set filenames and paths
+- save segment ids
 
 ### Moved from V0.0.2:
 
@@ -80,14 +82,15 @@
 - Write out VTK Point file (Binary).
 - add UnitTest and testcases for grid generation
 
-## Ongoing:
 
-1) Open STL files.
+## Ongoing:
 
 ## Done:
 
 ### Features
+
 - Define bodies of multiple geometries
+- Open STL files.
 
 ### Buildsystem
 

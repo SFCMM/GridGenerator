@@ -1,8 +1,8 @@
 {
   "dry-run": true,
   "dim": 3,
-  "partitionLevel": 3,
-  "uniformLevel": 4,
+  "partitionLevel": 5,
+  "uniformLevel": 6,
   "maxNoCells": 10000000,
   "gridOutput": {
     "format": "VTK",

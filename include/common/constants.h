@@ -12,15 +12,22 @@ static constexpr GInt BASE2 = 2;
 static constexpr GDouble HALF = 0.5;
 static constexpr GInt INVALID_CELLID = -1;
 
+template <GInt LENGTH>
+static constexpr auto INVALID_LIST() -> std::array<GInt, LENGTH> {
+  std::array<GInt, LENGTH> invalid{};
+  std::fill_n(invalid.begin(), LENGTH, INVALID_CELLID);
+  return invalid;
+}
+
 // Memory
-static constexpr GInt    KBIT  = 1024;
+static constexpr GInt KBIT = 1024;
 static constexpr GDouble DKBIT = static_cast<GDouble>(KBIT);
 
 // Time
 namespace timeconst {
-static constexpr GInt    MINUTE  = 60;
+static constexpr GInt MINUTE = 60;
 static constexpr GDouble DMINUTE = 60;
-static constexpr GInt    HOUR    = 3600;
+static constexpr GInt HOUR = 3600;
 static constexpr GDouble DHOUR   = 3600;
 static constexpr GInt    DAY     = HOUR * 24;
 static constexpr GDouble DDAY    = DHOUR * 24;

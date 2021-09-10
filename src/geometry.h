@@ -103,12 +103,10 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     // 1. check if it is in object bounding box
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      const GDouble p = x[dir];
-      if(p < m_bbox[2 * dir] || p > m_bbox[2 * dir + 1]) {
-        return !inside();
-      }
+    if(!pointInsideObjBB(x)) {
+      return !inside();
     }
+
 
     // 2. cast ray from the point to the outside and determine cuts (if an uneven number of cuts is found the point is inside)
     std::vector<GInt>             nodeList;
@@ -117,8 +115,6 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       targetRegion[2 * dir]     = x[dir];
       targetRegion[2 * dir + 1] = x[dir];
     }
-
-    //    m_kd.print();
 
 
     static constexpr GDouble tolerance = 1E-10;
@@ -131,13 +127,6 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       // reset
       targetRegion[2 * dir + 1] = x[dir];
 
-
-      removeDuplicates(nodeList);
-      //      cerr0 << "possible nodes " << nodeList.size() << std::endl; // todo: remove
-      //    cerr0 << "point " << strStreamify<NDIM>(x).str() <<"~~~~~~~~~~~~~~~~~~" << std::endl;
-      //    printElements();
-      //      cerr0 << "Nodes to be checked for cuts " << strStreamify(nodeList).str() << std::endl;
-
       // it is enough to cast one ray in any direction otherwise the geometry has holes!
       Point<NDIM> ray;
       ray.fill(0);
@@ -145,11 +134,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
       for(const GInt triId : nodeList) {
         const auto& tri = m_triangles[triId];
-        //        cerr0 << "vertex1 " << strStreamify<NDIM>(tri.m_vertices[0]).str() << std::endl;
-        //        cerr0 << "vertex2 " << strStreamify<NDIM>(tri.m_vertices[1]).str() << std::endl;
-        //        cerr0 << "vertex3 " << strStreamify<NDIM>(tri.m_vertices[2]).str() << std::endl;
         const auto edge3 = x - tri.m_vertices[0];
-        //        cerr0 << "edge3 " << strStreamify<NDIM>(edge3).str() << std::endl;
 
 
         const auto a = -tri.m_normal.dot(edge3);
@@ -170,9 +155,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
         if(r < -tolerance || r > 1 + tolerance) {
           continue;
         }
+
         const auto ip = x + r * ray;
-        //        cerr0 << "ray " << strStreamify<NDIM>(ray).str() << std::endl;
-        //        cerr0 << "intersection point " << strStreamify<NDIM>(ip).str() << std::endl;
         const auto w  = ip - tri.m_vertices[0];
         const auto u  = tri.m_vertices[1] - tri.m_vertices[0];
         const auto uu = u.dot(u);
@@ -185,13 +169,12 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
         const auto s  = (uv * wv - vv * wu) / D;
         if(s < -tolerance || s > 1 + tolerance) {
           // Intersection point is outside triangle
-          //          cerr0 << "s outside" << std::endl;
           continue;
         }
+
         const auto t = (uv * wu - uu * wv) / D;
         if(t < -tolerance || (s + t) > 1 + tolerance) {
           // Intersection point is outside triangle
-          //          cerr0 << "t outside" << std::endl;
           continue;
         }
 
@@ -214,26 +197,168 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
         }
       }
 
-      if(!isEven(intersectionPoints.size())) {
-        return inside();
+      if(isEven(intersectionPoints.size())) {
+        return !inside();
       }
+
+      intersectionPoints.clear();
       nodeList.clear();
     }
-    return !inside();
+
+    return inside();
   }
 
-  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override { return false; }
+  [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, const GDouble cellLength) const -> GBool override {
+    if(cellCutWithObjBB(cellCenter, cellLength)) {
+      std::vector<GInt>             nodeList;
+      std::array<GDouble, 2 * NDIM> targetRegion;
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        // search for cuts within the bb of the current cell
+        targetRegion[2 * dir]     = cellCenter[dir] - HALF * cellLength;
+        targetRegion[2 * dir + 1] = cellCenter[dir] + HALF * cellLength;
+      }
+
+      // obtain kd tree nodes which have possible cuts
+      m_kd.retrieveNodes(targetRegion, nodeList);
+      if(DEBUG_LEVEL > Debug_Level::debug) {
+        if(!nodeList.empty()) {
+          cerr0 << "possible nodes " << strStreamify(nodeList).str() << std::endl;
+        } else {
+          cerr0 << "no nodes!" << std::endl;
+        }
+      }
+      removeNonOverlappingNodes(targetRegion, nodeList);
+
+      if(DEBUG_LEVEL > Debug_Level::debug) {
+        if(!nodeList.empty()) {
+          cerr0 << "possible nodes after non-overlapping removal " << strStreamify(nodeList).str() << std::endl;
+        } else {
+          cerr0 << "no nodes left after non-overlapping removal!" << std::endl;
+        }
+      }
+
+      if(!nodeList.empty()) {
+        static constexpr GInt combo[3][6]    = {{0, 2, 0, 2, 1, 2}, {0, 2, 0, 2, 0, 1}, {0, 1, 0, 1, 1, 2}};
+        const GDouble         cellHalfLength = HALF * cellLength;
+        for(const GInt triId : nodeList) {
+          GBool                            cut  = true;
+          auto&                            tri  = m_triangles[triId];
+          const std::array<Point<NDIM>, 3> vert = {tri.m_vertices[0] - cellCenter, tri.m_vertices[1] - cellCenter,
+                                                   tri.m_vertices[2] - cellCenter};
+          const Point<NDIM>                res  = vert[1] - vert[0];
+          const std::array<Point<NDIM>, 3> edge = {vert[1] - vert[0], vert[2] - vert[1], vert[0] - vert[2]};
+
+
+          for(GInt i = 0; i < 3; ++i) {
+            GInt mul = 1;
+            GInt j   = 2;
+            GInt k   = 1;
+            for(GInt l = 0; l < NDIM; ++l) {
+              GDouble p0 = mul * edge[i][j] * vert[combo[i][2 * l]][k] - mul * edge[i][k] * vert[combo[i][2 * l]][j];
+              GDouble p1 = mul * edge[i][j] * vert[combo[i][2 * l + 1]][k] - mul * edge[i][k] * vert[combo[i][2 * l + 1]][j];
+
+              const GDouble min = (p0 < p1) ? p0 : p1;
+              const GDouble max = (p0 < p1) ? p1 : p0;
+              const GDouble rad = cellHalfLength * (abs(edge[i][j]) + abs(edge[i][k]));
+
+              if(min > rad || max < -rad) {
+                cut = false;
+                break;
+              }
+
+              mul *= -1;
+              j -= l;
+              k = 0;
+            }
+            if(!cut) {
+              break;
+            }
+          }
+          if(!cut) {
+            continue;
+          }
+
+          for(GInt i = 0; i < NDIM; i++) {
+            GDouble min = vert[0][i];
+            GDouble max = vert[0][i];
+
+            for(GInt j = 1; j < NDIM; j++) {
+              if(vert[j][i] < min) {
+                min = vert[j][i];
+              }
+              if(vert[j][i] > max) {
+                max = vert[j][i];
+              }
+            }
+
+            if(min > cellHalfLength || max < -cellHalfLength) {
+              cut = false;
+              break;
+            }
+          }
+          if(!cut) {
+            continue;
+          }
+          Point<NDIM> normal;
+          normal[0] = edge[0][1] * edge[1][2] - edge[0][2] * edge[1][1];
+          normal[1] = edge[0][2] * edge[1][0] - edge[0][0] * edge[1][2];
+          normal[2] = edge[0][0] * edge[1][1] - edge[0][1] * edge[1][0];
+
+          GDouble d = normal.dot(vert[0]);
+          d *= -1;
+
+          Point<NDIM> vmin;
+          Point<NDIM> vmax;
+          for(GInt i = 0; i < NDIM; i++) {
+            if(normal[i] > 0.0) {
+              vmin[i] = -cellHalfLength;
+              vmax[i] = cellHalfLength;
+            } else {
+              vmin[i] = cellHalfLength;
+              vmax[i] = -cellHalfLength;
+            }
+          }
+
+          if((normal[0] * vmin[0] + normal[1] * vmin[1] + normal[2] * vmin[2]) + d > 0.0) {
+            continue;
+          }
+          if((normal[0] * vmax[0] + normal[1] * vmax[1] + normal[2] * vmax[2]) + d >= 0.0) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
 
   [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override { return m_bbox; }
 
-  [[nodiscard]] inline auto noElements() const -> GInt override { return m_noTriangles; }
-  void                      printElements() const {
-    GInt elementId = 0;
-    for(const auto& tri : m_triangles) {
-      std::cout << "----- Element " << elementId++ << "-----" << std::endl;
-      triangle_::print(tri);
+  [[nodiscard]] inline auto pointInsideObjBB(const Point<NDIM>& x) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      const GDouble p = x[dir];
+      if(p < m_bbox[2 * dir] || p > m_bbox[2 * dir + 1]) {
+        return false;
+      }
     }
+    return true;
   }
+
+  [[nodiscard]] inline auto cellCutWithObjBB(const Point<NDIM>& cellCenter, const GDouble cellLength) const -> GBool {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      const GDouble diffMin = abs(cellCenter[dir] - m_bbox[2 * dir]);
+      const GDouble diffMax = abs(cellCenter[dir] - m_bbox[2 * dir + 1]);
+      //      cerr0 << "diffMin " << diffMin << " diffMax " << diffMax << std::endl;
+      if(diffMin <= cellLength || diffMax <= cellLength) {
+        // is closer than cellLength a cut might exist
+        return true;
+      }
+    }
+    // point is within overall BB so might cut the geometry
+    return pointInsideObjBB(cellCenter);
+  }
+
+  [[nodiscard]] inline auto noElements() const -> GInt override { return m_noTriangles; }
 
   [[nodiscard]] inline auto str() const -> GString override {
     std::stringstream ss;
@@ -251,6 +376,14 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] inline auto min(const GInt dir) const -> GDouble { return m_bbox[dir * 2]; }
   [[nodiscard]] inline auto max(const GInt dir) const -> GDouble { return m_bbox[dir * 2 + 1]; }
+
+  void printElements() const {
+    GInt elementId = 0;
+    for(const auto& tri : m_triangles) {
+      std::cout << "----- Element " << elementId++ << "-----" << std::endl;
+      triangle_::print(tri);
+    }
+  }
 
   inline auto triangles() const -> const std::vector<triangle<NDIM>>& { return m_triangles; }
 
@@ -464,6 +597,28 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
     for(GInt dir = 0; dir < NDIM; dir++) {
       m_extend[dir] = m_bbox[2 * dir + 1] - m_bbox[2 * dir];
+    }
+  }
+
+  void removeNonOverlappingNodes(const std::array<GDouble, 2 * NDIM>& targetRegion, std::vector<GInt>& nodeList) const {
+    for(auto it = nodeList.begin(); it != nodeList.end();) {
+      const auto& tri = m_triangles[*it];
+
+      GBool erase = false;
+      for(GInt i = 0; i < NDIM; i++) {
+        //        cerr0 << "tri " << tri.m_min[i] << " > " << targetRegion [2 * i + 1] << " " << tri.m_max[i] << " < " << targetRegion[2*i]
+        //        <<
+        //            std::endl;
+        if(tri.m_min[i] > targetRegion[2 * i + 1] || tri.m_max[i] < targetRegion[2 * i]) {
+          //          cerr0 << "erase " << std::endl;
+          it    = nodeList.erase(it);
+          erase = true;
+          break;
+        }
+      }
+      if(!erase) {
+        ++it;
+      }
     }
   }
 
@@ -833,11 +988,15 @@ class GeometryManager : public GeometryInterface {
 
   [[nodiscard]] inline auto elementBoundingBox(const GInt elementId, const GInt dir) const -> GDouble {
     ASSERT(dir <= 2 * NDIM, "Invalid dir");
-
-    if(isEven(dir)) {
-      return m_elementMinMax.at(elementId).min(dir / 2);
+    if(dir >= NDIM) {
+      return m_elementMinMax.at(elementId).max(dir - NDIM);
     }
-    return m_elementMinMax.at(elementId).max(dir / 2 + 1);
+    return m_elementMinMax.at(elementId).min(dir);
+
+    //    if(isEven(dir)) {
+    //      return m_elementMinMax.at(elementId).min(dir / 2);
+    //    }
+    //    return m_elementMinMax.at(elementId).max(static_cast<GInt>(gcem::floor(dir / 2.0)));
   }
 
   [[nodiscard]] inline auto pointInElementBB(const GInt elementId, const Point<NDIM>& x) const -> GBool {

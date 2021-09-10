@@ -1,0 +1,20 @@
+{
+  "dry-run": true,
+  "dim": 3,
+  "partitionLevel": 4,
+  "uniformLevel": 6,
+  "maxNoCells": 1000000,
+  "gridOutput": {
+    "format": "VTK",
+    "cellFilter": "highestLvl",
+    "type": "points"
+  },
+  "geometry": {
+    "stlA": {
+      "type": "stl",
+      "filename": "donut_highres.stl",
+      "body": "B"
+    }
+  },
+  "unused-value": "unused dummy"
+}

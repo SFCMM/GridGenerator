@@ -117,7 +117,6 @@ class KDTree {
 
         m_nodes[left].m_parent = currentNode;
         m_nodes[left].m_depth  = currentDepth + 1;
-        nodeStack.push(left);
 
         if(offsetWidth > 1) {
           right                               = ++nodeId;
@@ -131,6 +130,8 @@ class KDTree {
           right                               = 0;
           m_nodes[currentNode].m_rightSubtree = right;
         }
+        nodeStack.push(left);
+
         // sort by the currentDir of the bounding boxes of each element
         // example: currentDir = 0 -> (min x dir) -3, -1, 2 , 4
         std::sort(index.begin() + currentOffset.from, index.begin() + currentOffset.to + 1,
@@ -244,7 +245,7 @@ class KDTree {
 
         m_nodes[left].m_parent = currentNode;
         m_nodes[left].m_depth  = currentDepth + 1;
-        nodeStack.push(left);
+        ASSERT(m_nodes[left].m_depth > 0, "Invalid depth");
 
         if(offsetWidth > 1) {
           right                               = ++nodeId;
@@ -252,24 +253,25 @@ class KDTree {
 
           m_nodes[right].m_parent = currentNode;
           m_nodes[right].m_depth  = currentDepth + 1;
+          ASSERT(m_nodes[right].m_depth > 0, "Invalid depth");
+
           nodeStack.push(right);
         } else {
           // sub tree exhausted no right subtree
           right                               = 0;
           m_nodes[currentNode].m_rightSubtree = right;
         }
+        nodeStack.push(left); // left side of the tree first so needs to be on the stack last
+
         // sort by the currentDir of the bounding boxes of each element
         // example: currentDir = 0 -> (min x dir) -3, -1, 2 , 4
         std::sort(index.begin() + currentOffset.from, index.begin() + currentOffset.to + 1, [&](GInt a, GInt b) {
           return triangle_::boundingBox(triangles[a], currentDir) < triangle_::boundingBox(triangles[b], currentDir);
         });
 
-        //        for(auto it = index.begin() + currentOffset.from; it < index.begin() + currentOffset.to + 1; ++it) {
-        //          cerr0 << *it << " " << triangle_::boundingBox(triangles[*it], currentDir) << std::endl;
-        //        }
-
-        // remove own element from offset range
+        // set first element in range
         m_nodes[currentNode].m_element = index[currentOffset.from];
+        // remove own element from offset range
         ++currentOffset.from;
 
         // find the pivot
@@ -299,6 +301,7 @@ class KDTree {
         // Connect id to leaf
         m_nodes[currentNode].m_element = index[currentOffset.to];
         m_nodes[currentNode].m_pivot   = triangle_::boundingBox(triangles[m_nodes[currentNode].m_element], currentDir);
+        ASSERT(m_nodes[currentNode].m_depth > 0, "Invalid depth");
       }
       // set the minimum and maximum value of all children
       m_nodes[currentNode].m_min =
@@ -311,7 +314,7 @@ class KDTree {
   /// \param targetRegion Bounding box of the target region.
   /// \param gm Reference to geometry manager instance
   /// \param nodeList Reference to a vector to store the nodes which intersect the target region.
-  void retrieveNodes(const std::array<GDouble, 2 * NDIM> targetRegion, std::vector<GInt>& nodeList) const {
+  void retrieveNodes(const std::array<GDouble, 2 * NDIM>& targetRegion, std::vector<GInt>& nodeList) const {
     if(m_nodes.empty()) {
       logger << "WARNING: Called retrieveNodes() but nothing to do!" << std::endl;
       return;
@@ -320,35 +323,25 @@ class KDTree {
     std::array<GDouble, 2 * NDIM> min;
     std::array<GDouble, 2 * NDIM> max;
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      min[dir]        = m_boundingBox[2 * dir];
-      min[dir + NDIM] = targetRegion[2 * dir];
-      max[dir]        = targetRegion[2 * dir + 1];
-      max[dir + NDIM] = m_boundingBox[2 * dir + 1];
+      min[dir]        = m_boundingBox[2 * dir] - GDoubleEps;
+      min[dir + NDIM] = targetRegion[2 * dir] - GDoubleEps;
+      max[dir]        = targetRegion[2 * dir + 1] + GDoubleEps;
+      max[dir + NDIM] = m_boundingBox[2 * dir + 1] + GDoubleEps;
     }
+
     // Init empty stack and start at first node
     GInt             root     = 0;
     GBool            finished = false;
     std::stack<GInt> subtreeStack;
 
+    //        for(const auto& node: m_nodes){
+    //          nodeList.emplace_back(node.m_element);
+    //          sort(nodeList.begin(), nodeList.end());
+    //        }
+    //        return;
+
     // Infinite loop until complete tree is traversed
     while(!finished) {
-      // Check if the current nodes element-bounding box intersects target region
-      //      const GInt currentElementId = m_nodes[root].m_element;
-      //      GBool      doesOverlap      = true;
-      //
-      //      // whole element is within the target range!!!
-      //      for(GInt i = 0; i < 2 * NDIM; i++) {
-      //        const GDouble value = gm.elementBoundingBox(currentElementId, i);
-      //        if(value > max[i] || value < min[i]) {
-      //          doesOverlap = false;
-      //          break;
-      //        }
-      //      }
-      //
-      //      // Inside target domain => add current element to return list
-      //      if(doesOverlap) {
-      //        nodeList.push_back(currentElementId);
-      //      }
       nodeList.emplace_back(m_nodes[root].m_element);
 
       const GInt currentDir = m_nodes[root].m_depth % (2 * NDIM);
@@ -356,6 +349,7 @@ class KDTree {
       // todo: this can be rolled into a function
       //  if right subtree is inside target domain push on stack
       const GInt right = m_nodes[root].m_rightSubtree;
+
       if(right > 0 && m_nodes[root].m_max >= min[currentDir] && m_nodes[root].m_pivot <= max[currentDir]) {
         subtreeStack.push(right);
       }
@@ -372,6 +366,11 @@ class KDTree {
       }
       root = subtreeStack.top();
       subtreeStack.pop();
+    }
+
+    // sort nodes to make debugging simpler
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      sort(nodeList.begin(), nodeList.end());
     }
   };
 
@@ -445,12 +444,12 @@ class KDTree {
       if(r > 0) {
         stacker.emplace(r);
         cout << "R node " << r << " element " << m_nodes[r].m_element << " pivot " << m_nodes[r].m_pivot << " parent "
-             << m_nodes[r].m_parent << endl;
+             << m_nodes[r].m_parent << " depth " << m_nodes[r].m_depth << endl;
       }
       if(l > 0) {
         stacker.emplace(l);
         cout << "L node " << l << " element " << m_nodes[l].m_element << " pivot " << m_nodes[l].m_pivot << " parent "
-             << m_nodes[l].m_parent << endl;
+             << m_nodes[l].m_parent << " depth " << m_nodes[l].m_depth << endl;
       }
     }
   }
