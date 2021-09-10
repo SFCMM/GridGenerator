@@ -532,11 +532,22 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     ASSERT(level + 1 <= maxLvl(), "Invalid refinement level! " + std::to_string(level + 1) + ">" + std::to_string(maxLvl()));
 
     // refine all cells on the given level
-    GInt cellCount = 0;
-    for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
-      refineCell(cellId, levelOffset[level + 1].begin + cellCount * cartesian::maxNoChildren<NDIM>());
-      ++cellCount;
+#ifdef _OPENMP
+#pragma omp parallel default(none) shared(levelOffset, level)
+    {
+      const GInt begin = levelOffset[level].begin;
+      const GInt end   = levelOffset[level].end;
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for(GInt cellId = begin; cellId < end; ++cellId) {
+        const GInt cellCount = cellId - begin;
+        refineCell(cellId, levelOffset[level + 1].begin + cellCount * cartesian::maxNoChildren<NDIM>());
+      }
+#ifdef _OPENMP
     }
+#endif
   }
 
   void refineCell(const GInt cellId, const GInt offset) {

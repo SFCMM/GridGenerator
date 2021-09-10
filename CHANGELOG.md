@@ -37,6 +37,7 @@
 - Add more complex porosity options.
 - Add CMD to load test configuration file.
 - add more geometries hat, prism, tetrahedron, Regular dodecahedron, Regular icosahedron
+- improve OpenMP parallelisation
 
 # V0.0.4 (~5.9.21)
 
@@ -69,11 +70,9 @@
 # V0.0.3 (~31.8.21)
 
 ## Planned:
-- save segment ids
 
 ### Moved from V0.0.2:
 
-- Add OpenMP parallelization.
 - Add documentation in Readme.md of all configuration options.
 - Boundary refinement.
 - Add bench cmd command.
@@ -100,6 +99,8 @@
 ### IO
 
 ### Performance
+
+- add some initial openMP parallelisation
 
 ### Bugs
 
