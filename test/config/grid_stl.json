@@ -4,6 +4,8 @@
   "partitionLevel": 4,
   "uniformLevel": 6,
   "maxNoCells": 1000000,
+  "outputDir": "out2",
+  "gridFileName": "gridD",
   "gridOutput": {
     "format": "VTK",
     "cellFilter": "highestLvl",

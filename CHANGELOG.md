@@ -69,8 +69,6 @@
 # V0.0.3 (~31.8.21)
 
 ## Planned:
-
-- set filenames and paths
 - save segment ids
 
 ### Moved from V0.0.2:
@@ -97,6 +95,7 @@
 ### Testing
 
 ### Usability
+- set filenames and paths
 
 ### IO
 

@@ -158,13 +158,19 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   m_dim        = required_config_value<GInt>("dim");
   m_maxNoCells = required_config_value<GInt>("maxNoCells");
 
-  m_dryRun                  = opt_config_value<GBool>("dry-run", m_dryRun);
-  m_outputDir               = opt_config_value<GString>("outputDir", m_outputDir);
-  m_maxNoOffsprings         = opt_config_value<GInt>("maxNoOffsprings", m_maxNoOffsprings);
-  json defaultGeometry      = {"cube", {{"center", {0.0, 0.0, 0.0}}, {"length", 1}}};
-  m_geometryConfig          = opt_config_value<json>("geometry", defaultGeometry);
-  json defaultGridOutConfig = {{"format", "ASCII"}, {"cellFilter", "highestLvl"}, {"type", "points"}};
-  m_gridOutConfig           = opt_config_value<json>("gridOutput", defaultGridOutConfig);
+  // todo: unused
+  m_dryRun = opt_config_value<GBool>("dry-run", m_dryRun);
+
+  m_outputDir = getCWD() + "/" + opt_config_value<GString>("outputDir", m_outputDir);
+  if(!isPath(m_outputDir, true)) {
+    TERMM(-1, "Is not a valid output directory! " + m_outputDir);
+  }
+
+  // fix path
+  if(m_outputDir.back() != '/') {
+    m_outputDir += '/';
+  }
+
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
 }
 
@@ -236,7 +242,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   logger.eraseAttribute("level");
 
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
-  m_grid->save(m_gridOutConfig);
+  m_grid->save(m_outputDir + m_outGridFilename, m_gridOutConfig);
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
 }
 
@@ -257,10 +263,19 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
     TERMM(-1, "Invalid definition of grid level uniformLevel >= maxRfnmtLvl");
   }
 
+  // todo: unused
+  m_maxNoOffsprings = opt_config_value<GInt>("maxNoOffsprings", m_maxNoOffsprings);
+
   m_outGridFilename = opt_config_value<GString>("gridFileName", m_outGridFilename);
+
+  json defaultGridOutConfig = {{"format", "ASCII"}, {"cellFilter", "highestLvl"}, {"type", "points"}};
+  m_gridOutConfig           = opt_config_value<json>("gridOutput", defaultGridOutConfig);
 
   cout << SP1 << "Reading Geometry" << endl;
   m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);
+
+  json defaultGeometry = {"cube", {{"center", {0.0, 0.0, 0.0}}, {"length", 1}}};
+  m_geometryConfig     = opt_config_value<json>("geometry", defaultGeometry);
   m_geometry->setup(m_geometryConfig);
   m_grid->setGeometryManager(m_geometry);
 

@@ -54,6 +54,19 @@ inline auto isFile(const std::string &name) -> GBool {
   return std::filesystem::exists(name);
 }
 
+/// Check if the given path is valid.
+/// \param path to check
+/// \param generateDir if path doesn't exist create dir (default=false)
+/// \return Path exists?
+inline auto isPath(const std::string &path, const GBool generateDir = false)
+    -> GBool {
+  const GBool existPath = std::filesystem::exists(path);
+  if (!existPath && generateDir) {
+    return std::filesystem::create_directory(path);
+  }
+  return existPath;
+}
+
 /// Get size of a file in bytes.
 /// \param name File name of the file to be sized.
 /// \return Number of bytes contained in the file.

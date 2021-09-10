@@ -117,8 +117,9 @@ class GridInterface {
 
   ////IO
   /// Save the grid to a file.
+  /// \param fileName The filename(path) of the grid file to be saved.
   /// \param gridOutConfig Json configuration object containing the configuration options of the output format.
-  virtual void save(const json& gridOutConfig) = 0;
+  virtual void save(const GString& fileName, const json& gridOutConfig) = 0;
 
  private:
 };
@@ -443,7 +444,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     increaseCurrentHighestLvl();
   }
 
-  void save(const json& gridOutConfig) override {
+  void save(const GString& fileName, const json& gridOutConfig) override {
     // Cell filter functions
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -476,9 +477,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     values.emplace_back(toStringVector(m_noChildren, m_size));
 
     if(format == "ASCII") {
-      ASCII::writePointsCSV<NDIM>("Test", m_size, m_center, index, values, outputFilter);
+      ASCII::writePointsCSV<NDIM>(fileName, m_size, m_center, index, values, outputFilter);
     } else if(format == "VTK") {
-      VTK::writePoints<NDIM>("Test", m_size, m_center, index, values, outputFilter);
+      VTK::writePoints<NDIM>(fileName, m_size, m_center, index, values, outputFilter);
     } else {
       TERMM(-1, "Unknown output format " + format);
     }
