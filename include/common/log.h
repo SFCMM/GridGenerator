@@ -45,12 +45,13 @@ protected:
     std::ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
 
     // Create a for loop that uses an iterator to traverse the complete string
-    for(GString::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
+    for (GString::const_iterator iter = inputStr.begin(); iter < inputStr.end();
+         iter++) {
       // Get current character
       auto c = static_cast<GChar>(*iter);
 
       // Use a switch/case statement for the five XML entities
-      switch(c) {
+      switch (c) {
       case '"':
         tmpEncodeBuffer << "&quot;";
         break; // Replace double quotes
@@ -143,7 +144,6 @@ protected:
               << " " << XSTRINGIFY(BUILD_TYPE) << " ("
               << GString(XSTRINGIFY(COMPILER_VER)) << ")"
               << "\" />\n";
-
 
     // Return XML header
     return tmpBuffer.str();

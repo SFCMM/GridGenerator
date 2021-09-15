@@ -12,13 +12,6 @@ namespace cartesian {
 /// \return The opposite direction to dir.
 static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
   return 2 * (dir / 2) + 1 - (dir % 2);
-  // 0 = 1 ok
-  // 1 = 0 ok
-  // 2 = 3 ok
-  //...
-  // 5 = 4 ok
-  // 6 = 7 ok
-  // 7 = 6 ok
 }
 /// Return maximum number of children per cell
 /// \tparam NDIM Number of dimension of the Cartesian grid
@@ -63,14 +56,14 @@ static constexpr std::array<std::array<GDouble, sfcmm::MAX_DIM>,
         //-> 4D
         {{-1, -1, -1, 1}}, // 8
         {{1, -1, -1, 1}},  // 9
-    {{-1, 1, -1, 1}},  // 10
-    {{1, 1, -1, 1}},   // 11
-    {{-1, -1, 1, 1}},  // 12
-    {{1, -1, 1, 1}},   // 13
-    {{-1, 1, 1, 1}},   // 14
-    {{1, 1, 1, 1}}     // 15
-                       //<- 4D
-}};
+        {{-1, 1, -1, 1}},  // 10
+        {{1, 1, -1, 1}},   // 11
+        {{-1, -1, 1, 1}},  // 12
+        {{1, -1, 1, 1}},   // 13
+        {{-1, 1, 1, 1}},   // 14
+        {{1, 1, 1, 1}}     // 15
+                           //<- 4D
+    }};
 
 // todo: replace with constant expression function
 /// Given the childId gives the neighboring childIds(and existence ==-1 ->

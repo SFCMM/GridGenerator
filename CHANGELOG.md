@@ -38,6 +38,7 @@
 - Add CMD to load test configuration file.
 - add more geometries hat, prism, tetrahedron, Regular dodecahedron, Regular icosahedron
 - improve OpenMP parallelisation
+- cleanup VTK output functions
 
 # V0.0.4 (~5.9.21)
 
@@ -76,7 +77,6 @@
 - Add documentation in Readme.md of all configuration options.
 - Boundary refinement.
 - Add bench cmd command.
-- Write out VTK Point file (Binary).
 - add UnitTest and testcases for grid generation
 
 
@@ -97,6 +97,8 @@
 - set filenames and paths
 
 ### IO
+
+- Write out VTK Point file (Binary).
 
 ### Performance
 
