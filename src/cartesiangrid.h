@@ -296,6 +296,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(m_capacity < 1) {
       TERMM(-1, "Invalid grid capacity.");
     }
+    if(geometry() == nullptr) {
+      TERMM(-1, "No geometry set");
+    }
 
     partitionLvl() = partitioningLvl;
     logger << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;

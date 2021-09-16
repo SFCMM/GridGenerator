@@ -857,9 +857,18 @@ class GeometryManager : public GeometryInterface {
   GeometryManager(const MPI_Comm comm) : GeometryInterface(comm){};
 
   void setup(const json& geometry) override {
+    cerr0 << geometry << std::endl;
     // generate geometric representation objects for each defined geometry
     for(const auto& object : geometry.items()) {
       const GString& name = object.key();
+
+      if(name == "0") {
+        TERMM(-1, "Malformed json: No valid key!");
+      }
+
+      if(geometry[name].count("type") == 0) {
+        TERMM(-1, "Malformed json: No \"type\" given!");
+      }
 
       switch(resolveGeomType(geometry[name]["type"])) {
         case GeomType::sphere: {

@@ -25,6 +25,7 @@
 - Fix duplicate points in STLs.
 - Add option to scale and translate STls.
 - add more geometries star, donut, bipyramids
+- add benchmark support for scalings
 
 # V0.1.0 (~Q3/21)
 
@@ -39,6 +40,10 @@
 - add more geometries hat, prism, tetrahedron, Regular dodecahedron, Regular icosahedron
 - improve OpenMP parallelisation
 - cleanup VTK output functions
+- bench command options like level etc.
+- bench command validation of the grid
+- generate hashkey for grids
+- add better benchmark output
 
 # V0.0.4 (~5.9.21)
 
@@ -75,12 +80,11 @@
 ### Moved from V0.0.2:
 
 - Add documentation in Readme.md of all configuration options.
-- Boundary refinement.
-- Add bench cmd command.
 - add UnitTest and testcases for grid generation
 
-
 ## Ongoing:
+
+- Boundary refinement.
 
 ## Done:
 
@@ -94,7 +98,9 @@
 ### Testing
 
 ### Usability
+
 - set filenames and paths
+- bench command
 
 ### IO
 
@@ -102,11 +108,11 @@
 
 ### Performance
 
-- add some initial openMP parallelisation
+- initial openMP parallelisation
 
 ### Bugs
 
-- allow multiple geometries of same type
+- multiple geometries of same type not possible
 
 ### Documentation
 

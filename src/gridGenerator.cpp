@@ -15,9 +15,8 @@
 using namespace std;
 
 template <Debug_Level DEBUG_LEVEL>
-void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
-  m_exe                   = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-  m_configurationFileName = std::move(config_file);
+void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
+  m_exe = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 #ifdef _OPENMP
   int provided = 0;
@@ -51,6 +50,26 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_fil
   logger.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 
   initTimers();
+}
+
+template <Debug_Level DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
+  m_configurationFileName = std::move(config_file);
+  init(argc, argv);
+}
+
+template <Debug_Level DEBUG_LEVEL>
+void GridGenerator<DEBUG_LEVEL>::initBenchmark(int argc, GChar** argv) {
+  m_benchmark             = true;
+  m_configurationFileName = "";
+
+  m_dim              = 3;
+  m_maxNoCells       = 100000;
+  m_partitionLvl     = 3;
+  m_uniformLvl       = 5;
+  m_maxRefinementLvl = m_uniformLvl;
+
+  init(argc, argv);
 }
 
 template <Debug_Level DEBUG_LEVEL>
@@ -136,10 +155,14 @@ template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
 
-  logger << "Loading configuration file [" << m_configurationFileName << "]" << endl;
+  if(!m_benchmark) {
+    logger << "Loading configuration file [" << m_configurationFileName << "]" << endl;
+  } else {
+    logger << "Setting up benchmarking!" << endl;
+  }
 
   // 1. open configuration file on root process
-  if(MPI::isRoot()) {
+  if(MPI::isRoot() && isFile(m_configurationFileName)) {
     std::ifstream configFileStream(m_configurationFileName);
     configFileStream >> m_config;
     // put all available keys in map to keep track of usage
@@ -155,8 +178,10 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   }
 
   // 3. load&check configuration values
-  m_dim        = required_config_value<GInt>("dim");
-  m_maxNoCells = required_config_value<GInt>("maxNoCells");
+  if(!m_benchmark) {
+    m_dim        = required_config_value<GInt>("dim");
+    m_maxNoCells = required_config_value<GInt>("maxNoCells");
+  }
 
   // todo: unused
   m_dryRun = opt_config_value<GBool>("dry-run", m_dryRun);
@@ -186,7 +211,11 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 
   cout << SP1 << "Reading Grid definition" << endl;
   m_grid = std::make_unique<CartesianGridGen<DEBUG_LEVEL, NDIM>>(m_maxNoCells);
-  loadGridDefinition<NDIM>();
+  if(!m_benchmark) {
+    loadGridDefinition<NDIM>();
+  } else {
+    benchmarkSetup<NDIM>();
+  }
   logger << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
   cout << SP2 << "+ maximum number of cells: " << m_maxNoCells << endl;
 
@@ -250,6 +279,9 @@ template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
+  if(m_benchmark) {
+    return;
+  }
 
   m_partitionLvl = required_config_value<GInt>("partitionLevel");
   m_uniformLvl   = required_config_value<GInt>("uniformLevel");
@@ -327,6 +359,18 @@ void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
     }
   }
   logger << endl;
+}
+
+template <Debug_Level DEBUG_LEVEL>
+template <GInt NDIM>
+void GridGenerator<DEBUG_LEVEL>::benchmarkSetup() {
+  logger << "Setting up benchmarking grid!" << std::endl;
+  m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);
+
+  json defaultGeometry = {{"cube", {{"type", "cube"}, {"center", {0.0, 0.0, 0.0}}, {"length", 1}}}};
+  m_geometry->setup(defaultGeometry);
+  m_grid->setGeometryManager(m_geometry);
+  m_grid->setBoundingBox(m_geometry->getBoundingBox());
 }
 
 

@@ -32,7 +32,11 @@ class AppConfiguration {
   template <Debug_Level DEBUG>
   auto run() -> int {
     GridGenerator<DEBUG> gridGen{};
-    gridGen.init(m_argc, m_argv, m_configurationFile);
+    if(!m_benchmark) {
+      gridGen.init(m_argc, m_argv, m_configurationFile);
+    } else {
+      gridGen.initBenchmark(m_argc, m_argv);
+    }
     return gridGen.run();
   }
 
@@ -45,12 +49,14 @@ class AppConfiguration {
   }
 
   void setConfigurationFile(GString& configFile) { m_configurationFile = configFile; }
+  void setBenchmark() { m_benchmark = true; }
 
  private:
   GChar** m_argv{};
   int     m_argc{};
 
   GString m_configurationFile = "grid.json";
+  GBool   m_benchmark         = false;
 };
 } // namespace internal_
 
@@ -68,6 +74,7 @@ auto main(int argc, GChar** argv) -> int {
   options.add_options()("h,help", "Print usage");
   options.add_options()("version", "Get version information");
   options.add_options()("c,config", "Configuration file (default=grid.json)", cxxopts::value<std::string>()->default_value("grid.json"));
+  options.add_options()("b,bench", "Run benchmark");
 
   options.parse_positional({"config"});
   auto result = options.parse(argc, argv);
@@ -92,13 +99,17 @@ auto main(int argc, GChar** argv) -> int {
     std::cout << "Activated debug level " << DEBUG_LEVEL.at(debug) << std::endl;
   }
 
-  // first positional argument should be the configuration file
-  GString config_file = result["config"].as<GString>();
-  // check if the file actually exists
-  if(!isFile(config_file)) {
-    TERMM(-1, "Configuration file not found: " + config_file);
+  if(result.count("bench") > 0) {
+    gridGenRunner.setBenchmark();
+  } else {
+    // first positional argument should be the configuration file
+    GString config_file = result["config"].as<GString>();
+    // check if the file actually exists
+    if(!isFile(config_file)) {
+      TERMM(-1, "Configuration file not found: " + config_file);
+    }
+    gridGenRunner.setConfigurationFile(config_file);
   }
-  gridGenRunner.setConfigurationFile(config_file);
 
   const GInt ret = gridGenRunner.run(debug);
 

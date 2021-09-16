@@ -4,6 +4,7 @@
 #define SFCMM_TIMER_H
 
 #include "sfcmm_types.h"
+#include "term.h"
 #include <chrono>
 #include <cmath>
 #include <common/math/mathfunctions.h>
@@ -238,8 +239,9 @@ inline void TimerManager::recordTimerStart(const GInt timerId, const GString& po
 
 inline void TimerManager::startTimer(const GInt timerId, const GString& pos) {
   ASSERT(m_timers[timerId].status() != Timer::Running,
-         "The timer " + m_timers[timerId].name + " with id: " + std::to_string(timerId)
-             + " can't be started because it is already running! " + pos);
+         "The timer " + m_timers[timerId].name() +
+             " with id: " + std::to_string(timerId) +
+             " can't be started because it is already running! " + pos);
   std::ignore = pos;
 
   chronoTimePoint t = time();

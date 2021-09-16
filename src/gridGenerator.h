@@ -24,7 +24,9 @@ class GridGenerator {
   auto operator=(GridGenerator&&) -> GridGenerator& = delete;
 
 
+  void init(int argc, GChar** argv);
   void init(int argc, GChar** argv, GString config_file);
+  void initBenchmark(int argc, GChar** argv);
   auto run() -> int;
 
  private:
@@ -44,6 +46,8 @@ class GridGenerator {
   void loadConfiguration();
   template <GInt nDim>
   void loadGridDefinition();
+  template <GInt nDim>
+  void benchmarkSetup();
   template <GInt nDim>
   void generateGrid();
 
@@ -66,6 +70,7 @@ class GridGenerator {
   GInt                               m_uniformLvl           = -1;
   GInt                               m_maxRefinementLvl     = -1;
   GBool                              m_dryRun               = false;
+  GBool                              m_benchmark            = false;
   GString                            m_outputDir            = "out";
   GString                            m_outGridFilename      = "grid";
   std::unique_ptr<WeightMethod>      m_weightMethod;
