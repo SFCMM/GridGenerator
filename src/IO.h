@@ -237,7 +237,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     }
     GInt       header_coord_size = 4 * actualValues;
     const GInt number_bytes      = 8 + header_coord_size;
-    const GInt number_chars      = gcem::ceil(number_bytes * 8.0 / 6.0);
+    const GInt number_chars      = static_cast<GInt>(gcem::ceil(static_cast<GDouble>(number_bytes) * 8.0 / 6.0));
     const GInt padding           = 4 - (number_chars % 4);
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
     pointFile << base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues) << padders[padding];
@@ -250,9 +250,9 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     for(GInt id = 0; id < noOutCells; ++id) {
       tmp_id[id] = id;
     }
-    GInt       header_coord_size = 8 * noOutCells;
-    const GInt number_bytes      = 8 + header_coord_size;
-    const GInt number_chars      = gcem::ceil(number_bytes * 8.0 / 6.0);
+    GInt       header_coord_size = binary::BYTE_SIZE * noOutCells;
+    const GInt number_bytes      = binary::BYTE_SIZE + header_coord_size;
+    const GInt number_chars      = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
     const GInt padding           = 4 - (number_chars % 4);
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
     pointFile << base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells) << padders[padding];

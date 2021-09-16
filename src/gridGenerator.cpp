@@ -260,10 +260,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 
   RECORD_TIMER_START(TimeKeeper[Timers::GridRefinement]);
   for(GInt refinedLvl = m_uniformLvl; refinedLvl < m_maxRefinementLvl; ++refinedLvl) {
-    GInt noCellsToRefine = 0;
-    // todo:implement
-    // GInt noCellsToRefine = markCellsForRefinement();
-    noCellsToRefine = m_grid->markBndryCells();
+    GInt noCellsToRefine = m_grid->markBndryCells();
     m_grid->refineMarkedCells(noCellsToRefine);
     logger.updateAttributes();
   }

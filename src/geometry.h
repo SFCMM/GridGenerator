@@ -529,7 +529,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     array<char, stl_header_size> header{};
     unsigned short               ibuff2 = 0;
 
-    if(fread(&header[0], 1, stl_header_size - 1, fp) == 0u) {
+    if(fread(&header[0], 1, stl_header_size - 1, fp) == 0U) {
       TERMM(-1, "ERROR: Memory error!");
     }
 
@@ -537,7 +537,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     static constexpr GInt float_byte_size = 4;
     static constexpr GInt no_values       = 4; // (3 vertices + 1 normal)
     for(GInt i = 0; fread(&facet, no_values * float_byte_size * NDIM, 1, fp) > 0; i++) {
-      if(fread(&ibuff2, 2, 1, fp) == 0u) {
+      if(fread(&ibuff2, 2, 1, fp) == 0U) {
         TERMM(-1, "ERROR: Memory error!");
       }
 
@@ -670,7 +670,7 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
-    return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(0.5 * cellLength, 2))) + GDoubleEps);
+    return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(HALF * cellLength, 2))) + GDoubleEps);
   }
 
   [[nodiscard]] inline auto getBoundingBox() const -> std::vector<GDouble> override {
@@ -1001,11 +1001,6 @@ class GeometryManager : public GeometryInterface {
       return m_elementMinMax.at(elementId).max(dir - NDIM);
     }
     return m_elementMinMax.at(elementId).min(dir);
-
-    //    if(isEven(dir)) {
-    //      return m_elementMinMax.at(elementId).min(dir / 2);
-    //    }
-    //    return m_elementMinMax.at(elementId).max(static_cast<GInt>(gcem::floor(dir / 2.0)));
   }
 
   [[nodiscard]] inline auto pointInElementBB(const GInt elementId, const Point<NDIM>& x) const -> GBool {
