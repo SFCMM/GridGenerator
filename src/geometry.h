@@ -133,8 +133,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       ray[dir] = 2 * m_extend[dir];
 
       for(const GInt triId : nodeList) {
-        const auto& tri = m_triangles[triId];
-        const auto edge3 = x - tri.m_vertices[0];
+        const auto& tri   = m_triangles[triId];
+        const auto  edge3 = x - tri.m_vertices[0];
 
 
         const auto a = -tri.m_normal.dot(edge3);
