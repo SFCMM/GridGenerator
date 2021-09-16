@@ -114,6 +114,8 @@ class GridInterface {
   /// \param noCellsToRefine The number of cells that have been marked.
   virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
 
+  virtual GInt markBndryCells() = 0;
+
 
   ////IO
   /// Save the grid to a file.
@@ -441,10 +443,47 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     // refine marked cells
+    GInt refinedCells = 0;
+    for(GInt cellId = m_levelOffsets[currentHighestLvl()].begin; cellId < m_levelOffsets[currentHighestLvl()].end; ++cellId) {
+      if(property(cellId, CellProperties::toRefine)) {
+        refineCell(cellId, m_levelOffsets[currentHighestLvl() + 1].begin + refinedCells * cartesian::maxNoChildren<NDIM>());
+        ++refinedCells;
+      }
+    }
+    m_size = m_levelOffsets[currentHighestLvl() + 1].end;
+
+    findChildLevelNghbrs(m_levelOffsets, currentHighestLvl());
+    if(!MPI::isSerial()) {
+      // todo:implement
+      // findChildLevelNeighbors(m_haloOffsets, l);
+    }
+
+    if(!MPI::isSerial()) {
+      // todo:implement
+      //        deleteOutsideCellsParallel(l + 1);
+    } else {
+      deleteOutsideCells(currentHighestLvl() + 1);
+    }
+
+    m_size = m_levelOffsets[currentHighestLvl() + 1].end;
+
     // todo:implement
     //    refineMarkedCells(m_currentHighestLvl);
 
     increaseCurrentHighestLvl();
+  }
+
+  auto markBndryCells() -> GInt override {
+    logger << SP2 << "* marking bndry cells " << std::endl;
+    std::cout << SP2 << "* marking bndry cells " << std::endl;
+    GInt markedCells = 0;
+    for(GInt cellId = m_levelOffsets[currentHighestLvl()].begin; cellId < m_levelOffsets[currentHighestLvl()].end; ++cellId) {
+      if(property(cellId, CellProperties::bndry)) {
+        property(cellId, CellProperties::toRefine) = true;
+        markedCells++;
+      }
+    }
+    return markedCells;
   }
 
   void save(const GString& fileName, const json& gridOutConfig) override {
@@ -657,7 +696,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       // remove cell since it is not inside
       if(!property(cellId, CellProperties::inside)) {
         const GInt parentId = m_parentId[cellId];
-        ASSERT(parentId != INVALID_CELLID, "Invalid parentId!");
+        ASSERT(parentId != INVALID_CELLID, "Invalid parentId! (cellId: " + std::to_string(cellId) + ")");
 
         // remove from parent
         updateParent(m_parentId[cellId], cellId, INVALID_CELLID);

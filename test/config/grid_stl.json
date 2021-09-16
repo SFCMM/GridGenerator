@@ -2,19 +2,20 @@
   "dry-run": true,
   "dim": 3,
   "partitionLevel": 4,
-  "uniformLevel": 5,
+  "uniformLevel": 6,
+  "maxRfnmtLvl": 8,
   "maxNoCells": 4000000,
   "outputDir": "out2",
   "gridFileName": "gridD",
   "gridOutput": {
     "format": "VTK",
-    "cellFilter": "highestLvl",
+    "cellFilter": "leafCells",
     "type": "points"
   },
   "geometry": {
     "stlA": {
       "type": "stl",
-      "filename": "donut_highres.stl",
+      "filename": "donut_lowres.stl",
       "body": "B"
     }
   },

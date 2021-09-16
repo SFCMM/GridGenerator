@@ -44,6 +44,8 @@
 - bench command validation of the grid
 - generate hashkey for grids
 - add better benchmark output
+- allow to select boundary to be refined
+- allow per boundary refinement settings
 
 # V0.0.4 (~5.9.21)
 
@@ -84,8 +86,6 @@
 
 ## Ongoing:
 
-- Boundary refinement.
-
 ## Done:
 
 ### Features
@@ -101,6 +101,7 @@
 
 - set filenames and paths
 - bench command
+- simple boundary refinement
 
 ### IO
 

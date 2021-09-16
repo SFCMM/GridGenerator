@@ -263,6 +263,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     GInt noCellsToRefine = 0;
     // todo:implement
     // GInt noCellsToRefine = markCellsForRefinement();
+    noCellsToRefine = m_grid->markBndryCells();
     m_grid->refineMarkedCells(noCellsToRefine);
     logger.updateAttributes();
   }
