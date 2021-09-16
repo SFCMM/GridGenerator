@@ -15937,7 +15937,7 @@ char* to_chars(char* first, const char* last, FloatType value)
     *first++ = '-';
   }
 
-  if (value == 0) // +-0
+  if (std::abs(value) < std::numeric_limits<FloatType>::epsilon()) // +-0
   {
     *first++ = '0';
     // Make it look like a floating-point number (#362, #378)

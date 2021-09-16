@@ -22,10 +22,10 @@ template <GInt NDIM>
 [[nodiscard]] inline auto max(const triangle<NDIM>& tri, const GInt dir) -> GDouble {
   return tri.m_max[dir];
 }
-template <GInt NDIM>
-[[nodiscard]] inline auto countLineIntersections(const triangle<NDIM>& tri, const std::array<GDouble, 2 * NDIM>& line) -> GInt {
-  return 1;
-}
+// template <GInt NDIM>
+//[[nodiscard]] inline auto countLineIntersections(const triangle<NDIM>& tri, const std::array<GDouble, 2 * NDIM>& line) -> GInt {
+//   return 1;
+// }
 
 template <GInt NDIM>
 [[nodiscard]] inline auto boundingBox(const triangle<NDIM>& tri, const GInt dir) -> GDouble {

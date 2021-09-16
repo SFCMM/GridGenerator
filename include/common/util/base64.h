@@ -125,7 +125,7 @@ inline static auto encodeLE(T *c) -> GString {
       static_cast<GUchar *>(static_cast<void *>(&swapped_endian[0]));
 
   for (GInt i = 0; i < length; ++i) {
-    for (GInt byte = 0; byte < sizeof(T); ++byte) {
+    for (GUint byte = 0; byte < sizeof(T); ++byte) {
       auto tmp_bitset = std::bitset<8>(char_wise[i * sizeof(T) + byte]);
       for (GInt bit = 0; bit < 8; ++bit) {
         const GInt index =
@@ -164,7 +164,7 @@ inline static auto encodeLE(T *c, const GInt length) -> GString {
       static_cast<GUchar *>(static_cast<void *>(&swapped_endian[0]));
 
   for (GInt i = 0; i < length; ++i) {
-    for (GInt byte = 0; byte < sizeof(T); ++byte) {
+    for (GUint byte = 0; byte < sizeof(T); ++byte) {
       auto tmp_bitset = std::bitset<8>(char_wise[i * sizeof(T) + byte]);
       for (GInt bit = 0; bit < 8; ++bit) {
         const GInt index =

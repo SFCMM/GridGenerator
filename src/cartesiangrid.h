@@ -114,7 +114,9 @@ class GridInterface {
   /// \param noCellsToRefine The number of cells that have been marked.
   virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
 
-  virtual GInt markBndryCells() = 0;
+  /// Mark all boundary cells for refinement
+  /// \return Number of cells marked for refinement
+  virtual auto markBndryCells() -> GInt = 0;
 
 
   ////IO

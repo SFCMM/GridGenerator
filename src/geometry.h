@@ -245,7 +245,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
           auto&                            tri  = m_triangles[triId];
           const std::array<Point<NDIM>, 3> vert = {tri.m_vertices[0] - cellCenter, tri.m_vertices[1] - cellCenter,
                                                    tri.m_vertices[2] - cellCenter};
-          const Point<NDIM>                res  = vert[1] - vert[0];
+          //          const Point<NDIM>                res  = vert[1] - vert[0];
           const std::array<Point<NDIM>, 3> edge = {vert[1] - vert[0], vert[2] - vert[1], vert[0] - vert[2]};
 
 
@@ -374,8 +374,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     return ss.str();
   }
 
-  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble { return m_bbox[dir * 2]; }
-  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble { return m_bbox[dir * 2 + 1]; }
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override { return m_bbox[dir * 2]; }
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override { return m_bbox[dir * 2 + 1]; }
 
   void printElements() const {
     GInt elementId = 0;
@@ -638,11 +638,11 @@ class GeometryAnalytical : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GeometryAnalytical(const json& geom) : GeometryRepresentation<DEBUG_LEVEL, NDIM>(geom){};
 
   [[nodiscard]] inline auto noElements() const -> GInt override { return 1; }
-  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble {
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override {
     auto bbox = this->getBoundingBox();
     return bbox[dir * 2];
   }
-  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble {
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override {
     auto bbox = this->getBoundingBox();
     return bbox[dir * 2 + 1];
   }

@@ -18,7 +18,7 @@ template <class T>
 static inline auto strStreamify(const std::vector<T> &in) -> std::stringstream {
   std::stringstream str;
   str << in[0];
-  for (GInt i = 1; i < in.size(); i++) {
+  for (GUint i = 1; i < in.size(); i++) {
     str << " " << in[i];
   }
   return str;
