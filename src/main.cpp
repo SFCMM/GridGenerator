@@ -72,7 +72,7 @@ auto main(int argc, GChar** argv) -> int {
 
   options.add_options()("d,debug", "Enable debugging with given level.", cxxopts::value<GInt>()->default_value("0"));
   options.add_options()("h,help", "Print usage");
-  options.add_options()("version", "Get version information");
+  options.add_options()("v,version", "Get version information");
   options.add_options()("c,config", "Configuration file (default=grid.json)", cxxopts::value<std::string>()->default_value("grid.json"));
   options.add_options()("b,bench", "Run benchmark");
 

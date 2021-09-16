@@ -25,3 +25,33 @@
    ```make -j 6```
 4) run bench
    ```./gridgenerator --bench```
+
+## Commandline options
+
+### Debug (-d, --debug)
+
+Set the debug level to run:
+
+- 0 off (default)
+- 1 minimal
+- 2 normal
+- 3 more
+- 4 maximum
+
+For example to run with the debug level 3:
+```./gridgenerator --debug 3```
+
+Determines how many extra checks and output is produced!
+
+### Configuration File (-c, --config)
+
+Set the path to the configuration that is to be used.
+
+### Benchmark (-b, --bench)
+
+Run a benchmark.
+
+### Help (-h, --help)
+
+### Version (-v, --version)
+

@@ -72,17 +72,10 @@
 - (Optimize IO speed by manual buffering.)
 - Setup valgrind and sanitize tests
 - check geometries are touching
+- add UnitTest and testcases for grid generation
+- add documentation for the configuration files
 - allow defining the output values that are written to the point files
 - BUG: donut_lowres.stl at level 6/4 produces some cells outside
-
-# V0.0.3 (~31.8.21)
-
-## Planned:
-
-### Moved from V0.0.2:
-
-- Add documentation in Readme.md of all configuration options.
-- add UnitTest and testcases for grid generation
 
 ## Ongoing:
 
@@ -90,12 +83,28 @@
 
 ### Features
 
-- Define bodies of multiple geometries
-- Open STL files.
-
 ### Buildsystem
 
 ### Testing
+
+### Usability
+
+### IO
+
+### Performance
+
+### Bugs
+
+### Documentation
+
+### Refactoring
+
+# V0.0.3 (16.9.21)
+
+### Features
+
+- Define bodies of multiple geometries
+- Open STL files.
 
 ### Usability
 
@@ -116,6 +125,8 @@
 - multiple geometries of same type not possible
 
 ### Documentation
+
+- added details of the currently available commandline options
 
 ### Refactoring
 
