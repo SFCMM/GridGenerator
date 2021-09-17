@@ -1,6 +1,7 @@
 #ifndef GRIDGENERATOR_KDTREE_H
 #define GRIDGENERATOR_KDTREE_H
 #include <stack>
+#include "config.h"
 #include "triangle.h"
 
 struct KDNode {

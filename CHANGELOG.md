@@ -46,6 +46,7 @@
 - add better benchmark output
 - allow to select boundary to be refined
 - allow per boundary refinement settings
+- boundary smoothing
 
 # V0.0.4 (~5.9.21)
 
@@ -60,10 +61,8 @@
 - add more geometries pyramid, cone, tube
 - add tutorial
 - add circular container based on vector...
-- cleanup vtk io code
 - activate profile guided optimization
 - add performance testing results to CI
-- introduce type for bounding boxes
 - define more output filters (targetLvl etc.)
 - activate backtrace
 - Add doxygen generation to CI
@@ -74,10 +73,13 @@
 - check geometries are touching
 - add UnitTest and testcases for grid generation
 - add documentation for the configuration files
-- allow defining the output values that are written to the point files
 - BUG: donut_lowres.stl at level 6/4 produces some cells outside
 
 ## Ongoing:
+
+- allow defining the output values that are written to the point files
+- introduce type for bounding boxes
+- cleanup vtk io code
 
 ## Done:
 

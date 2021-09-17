@@ -4,6 +4,7 @@
 
 #include <sfcmm_common.h>
 
+#include "cartesiangrid_generation.h"
 #include "config.h"
 #include "geometry.h"
 #include "gridGenerator.h"
