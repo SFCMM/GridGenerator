@@ -582,9 +582,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 #ifdef _OPENMP
 #pragma omp parallel default(none) shared(levelOffset, level)
     {
+#endif
+      
       const GInt begin = levelOffset[level].begin;
       const GInt end   = levelOffset[level].end;
-#endif
 #ifdef _OPENMP
 #pragma omp for
 #endif
