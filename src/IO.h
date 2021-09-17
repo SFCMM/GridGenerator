@@ -65,6 +65,59 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
 namespace VTK {
 using namespace std;
 
+static constexpr auto header() -> string_view {
+  return "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n"
+         "  <PolyData>\n";
+}
+
+static constexpr auto footer() -> string_view {
+  return "    </Piece>\n"
+         "  </PolyData>\n"
+         "</VTKFile> \n";
+}
+
+static inline auto piece_header(const GInt noOfPoints) -> GString {
+  return "<Piece NumberOfPoints=\"" + to_string(noOfPoints)
+         + "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" "
+           "NumberOfPolys=\"0\" > \n";
+}
+
+template <GInt DIM, GBool BINARY = false>
+static inline auto point_header() -> GString {
+  if(BINARY) {
+    return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
+  }
+  return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
+}
+
+static constexpr auto point_footer() -> string_view {
+  return "        </DataArray>\n"
+         "      </Points>";
+}
+
+template <GBool BINARY = false>
+static constexpr auto vert_header() -> string_view {
+  if(BINARY) {
+    return "      <Verts>\n"
+           "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"BINARY\"> \n";
+  }
+  return "      <Verts>\n"
+         "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\"> \n";
+}
+
+static constexpr auto offset_data_header() -> string_view {
+  return "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\"> \n";
+}
+
+static constexpr auto data_footer() -> string_view { return "        </DataArray>"; }
+
+static constexpr auto vert_footer() -> string_view { return "        </Verts> \n"; }
+
+static constexpr auto point_data_header() -> string_view { return "      <PointData> \n"; }
+
+static constexpr auto point_data_footer() -> string_view { return "      </PointData> \n"; }
+
+
 namespace ASCII {
 // todo: combine to functions ASCII and binary!!
 template <GInt DIM>
@@ -82,31 +135,6 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     noOutCells++;
   }
 
-  static constexpr string_view header = "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n"
-                                        "  <PolyData>\n";
-
-  static constexpr string_view footer = "    </Piece>\n"
-                                        "  </PolyData>\n"
-                                        "</VTKFile> \n";
-
-  const GString piece_header = "<Piece NumberOfPoints=\"" + to_string(noOutCells)
-                               + "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" "
-                                 "NumberOfPolys=\"0\" > \n";
-
-  const GString point_header =
-      "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
-
-  static constexpr string_view point_footer = "        </DataArray>\n"
-                                              "      </Points>";
-
-  static constexpr string_view vert_header = "      <Verts>\n"
-                                             "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\"> \n";
-
-  static constexpr string_view offset_data_header = "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\"> \n";
-  static constexpr string_view data_footer        = "        </DataArray>";
-  static constexpr string_view vert_footer        = "        </Verts> \n";
-  static constexpr string_view point_data_header  = "      <PointData> \n";
-  static constexpr string_view point_data_footer  = "      </PointData> \n";
   auto                         point_data_int32   = [](const GString& name) {
     return GString("<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ascii\">\n");
   };
@@ -118,9 +146,9 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
   pointFile.open(fileName + ".vtp");
 
-  pointFile << header;
-  pointFile << piece_header;
-  pointFile << point_header;
+  pointFile << header();
+  pointFile << piece_header(noOutCells);
+  pointFile << point_header<DIM>();
 
   for(GInt id = 0; id < noValues; ++id) {
     if(!filter(id)) {
@@ -136,17 +164,17 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     pointFile << "\n";
   }
 
-  pointFile << point_footer;
-  pointFile << vert_header;
+  pointFile << point_footer();
+  pointFile << vert_header();
   for(GInt id = 0; id < noOutCells; ++id) {
     pointFile << id << "\n";
   }
-  pointFile << data_footer;
-  pointFile << offset_data_header;
+  pointFile << data_footer();
+  pointFile << offset_data_header();
   pointFile << noOutCells << "\n";
-  pointFile << data_footer;
-  pointFile << vert_footer;
-  pointFile << point_data_header;
+  pointFile << data_footer();
+  pointFile << vert_footer();
+  pointFile << point_data_header();
   GInt i = 0;
   for(const auto& column : values) {
     pointFile << point_data_int32(index[i++]);
@@ -156,10 +184,10 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       }
       pointFile << column[id] << "\n";
     }
-    pointFile << data_footer;
+    pointFile << data_footer();
   }
-  pointFile << point_data_footer;
-  pointFile << footer;
+  pointFile << point_data_footer();
+  pointFile << footer();
 }
 } // namespace ASCII
 
@@ -180,31 +208,6 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     noOutCells++;
   }
 
-  static constexpr string_view header = "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n"
-                                        "  <PolyData>\n";
-
-  static constexpr string_view footer = "    </Piece>\n"
-                                        "  </PolyData>\n"
-                                        "</VTKFile> \n";
-
-  const GString piece_header = "<Piece NumberOfPoints=\"" + to_string(noOutCells)
-                               + "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" "
-                                 "NumberOfPolys=\"0\" > \n";
-
-  const GString point_header =
-      "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
-
-  static constexpr string_view point_footer = "       </DataArray>\n"
-                                              "      </Points>";
-
-  static constexpr string_view vert_header = "      <Verts>\n"
-                                             "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"binary\"> \n";
-
-  static constexpr string_view offset_data_header = "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ASCII\"> \n";
-  static constexpr string_view data_footer        = "        </DataArray>";
-  static constexpr string_view vert_footer        = "        </Verts> \n";
-  static constexpr string_view point_data_header  = "      <PointData> \n";
-  static constexpr string_view point_data_footer  = "      </PointData> \n";
   auto                         point_data_int32   = [](const GString& name) {
     return GString("<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ASCII\">\n");
   };
@@ -218,9 +221,9 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
   pointFile.open(fileName + ".vtp");
 
-  pointFile << header;
-  pointFile << piece_header;
-  pointFile << point_header;
+  pointFile << header();
+  pointFile << piece_header(noOutCells);
+  pointFile << point_header<DIM, true>();
 
   {
     GInt                actualValues = 0;
@@ -243,8 +246,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     pointFile << base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues) << padders[padding];
   }
 
-  pointFile << "\n" << point_footer;
-  pointFile << vert_header;
+  pointFile << "\n" << point_footer();
+  pointFile << vert_header<true>();
   {
     std::vector<GInt> tmp_id(noOutCells);
     for(GInt id = 0; id < noOutCells; ++id) {
@@ -257,12 +260,12 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
     pointFile << base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells) << padders[padding];
   }
-  pointFile << data_footer;
-  pointFile << offset_data_header;
+  pointFile << data_footer();
+  pointFile << offset_data_header();
   pointFile << noOutCells << "\n";
-  pointFile << data_footer;
-  pointFile << vert_footer;
-  pointFile << point_data_header;
+  pointFile << data_footer();
+  pointFile << vert_footer();
+  pointFile << point_data_header();
   GInt i = 0;
   for(const auto& column : values) {
     pointFile << point_data_int32(index[i++]);
@@ -272,10 +275,10 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       }
       pointFile << column[id] << "\n";
     }
-    pointFile << data_footer;
+    pointFile << data_footer();
   }
-  pointFile << point_data_footer;
-  pointFile << footer;
+  pointFile << point_data_footer();
+  pointFile << footer();
 }
 } // namespace BINARY
 } // namespace VTK
