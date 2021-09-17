@@ -16,6 +16,23 @@ struct LevelOffsetType {
   GInt end;
 };
 
+template <GInt NDIM>
+struct BoundingBox {
+ public:
+  std::array<GDouble, NDIM> min{NAN_LIST<NDIM>()};
+  std::array<GDouble, NDIM> max{NAN_LIST<NDIM>()};
+};
+
+template <GInt NDIM>
+inline auto VectorBBox(const BoundingBox<NDIM>& bbox) -> std::vector<GDouble> {
+  std::vector<GDouble> tmp;
+  for(GInt dir = 0; dir < NDIM; ++dir) {
+    tmp.emplace_back(bbox.min[dir]);
+    tmp.emplace_back(bbox.max[dir]);
+  }
+  return tmp;
+}
+
 inline auto levelSize(LevelOffsetType& level) -> GInt { return level.end - level.begin; }
 
 template <GInt NDIM>
@@ -45,12 +62,13 @@ class BaseCartesianGrid : public GridInterface {
     if(bbox.size() != 2 * NDIM) {
       TERMM(-1, "Invalid boundary box definition.");
     }
-    std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      m_geometryExtents[dir] = gcem::abs(m_boundingBox[2 * dir + 1] - m_boundingBox[2 * dir]);
+      m_boundingBox.min[dir] = bbox[2 * dir];
+      m_boundingBox.max[dir] = bbox[2 * dir + 1];
+      m_geometryExtents[dir] = gcem::abs(m_boundingBox.max[dir] - m_boundingBox.min[dir]);
       // direction of largest extent will be = 0 if all extents are equal
       m_decisiveDirection    = m_geometryExtents[dir] > m_geometryExtents[m_decisiveDirection] ? dir : m_decisiveDirection;
-      m_centerOfGravity[dir] = m_boundingBox[2 * dir] + HALF * (m_boundingBox[2 * dir + 1] - m_boundingBox[2 * dir]);
+      m_centerOfGravity[dir] = m_boundingBox.min[dir] + HALF * (m_boundingBox.max[dir] - m_boundingBox.min[dir]);
     }
     m_lengthOnLevel[0] =
         (1.0 + 1.0 / gcem::pow(static_cast<GDouble>(BASE2), static_cast<GDouble>(MAX_LVL))) * m_geometryExtents[m_decisiveDirection];
@@ -75,9 +93,7 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto lengthOfBoundingBox() const -> std::vector<GDouble> override {
     return std::vector<GDouble>(m_geometryExtents.begin(), m_geometryExtents.end());
   };
-  [[nodiscard]] inline auto boundingBox() const -> std::vector<GDouble> override {
-    return std::vector<GDouble>(m_boundingBox.begin(), m_boundingBox.end());
-  };
+  [[nodiscard]] inline auto boundingBox() const -> std::vector<GDouble> override { return VectorBBox(m_boundingBox); };
   [[nodiscard]] inline auto largestDir() const -> GInt override { return m_decisiveDirection; };
   [[nodiscard]] inline auto partitionLvl() const -> GInt override { return m_partitioningLvl; };
   inline auto               partitionLvl() -> GInt& override { return m_partitioningLvl; }
@@ -111,7 +127,8 @@ class BaseCartesianGrid : public GridInterface {
   GInt m_maxLvl            = 0;
 
   // box containing the whole geometry
-  std::array<GDouble, 2 * NDIM> m_boundingBox{NAN_LIST<2 * NDIM>()};
+  BoundingBox<NDIM> m_boundingBox;
+  //  std::array<GDouble, 2 * NDIM> m_boundingBox{NAN_LIST<2 * NDIM>()};
   // extent of the geometry
   std::array<GDouble, NDIM> m_geometryExtents{NAN_LIST<NDIM>()};
   // m_center of gravity of the geometry
