@@ -74,6 +74,7 @@
 - add UnitTest and testcases for grid generation
 - add documentation for the configuration files
 - BUG: donut_lowres.stl at level 6/4 produces some cells outside
+- add test for 1D, 2D, 3D
 
 ## Ongoing:
 

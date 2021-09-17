@@ -91,12 +91,16 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
 
  protected:
+  /// Increase the current highest level by 1
   inline void increaseCurrentHighestLvl() {
     ASSERT(m_currentHighestLvl <= m_maxLvl, "Level increased over maximum level!");
     ++m_currentHighestLvl;
   }
 
+  /// Give write access to geometry
   inline auto geometry() { return m_geometry; }
+
+  /// Get access to geometry
   inline auto geometry() const { return m_geometry; }
 
  private:
@@ -107,15 +111,15 @@ class BaseCartesianGrid : public GridInterface {
   GInt m_maxLvl            = 0;
 
   // box containing the whole geometry
-  std::array<GDouble, 2 * NDIM> m_boundingBox{NAN};
+  std::array<GDouble, 2 * NDIM> m_boundingBox{NAN_LIST<2 * NDIM>()};
   // extent of the geometry
-  std::array<GDouble, NDIM> m_geometryExtents{NAN};
+  std::array<GDouble, NDIM> m_geometryExtents{NAN_LIST<NDIM>()};
   // m_center of gravity of the geometry
-  std::array<GDouble, NDIM> m_centerOfGravity{NAN};
+  std::array<GDouble, NDIM> m_centerOfGravity{NAN_LIST<NDIM>()};
   // direction of largest extent
   GInt m_decisiveDirection{};
   // length of the cells on each level basest on the largest extent
-  std::array<GDouble, MAX_LVL> m_lengthOnLevel{NAN};
+  std::array<GDouble, MAX_LVL> m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>

@@ -130,11 +130,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         }
       }
 
-      refineGrid(m_levelOffsets, l);
-      findChildLevelNghbrs(m_levelOffsets, l);
-      deleteOutsideCells(l + 1);
-      increaseCurrentHighestLvl();
-      logger.updateAttributes();
+      refineGrid(l);
     }
 
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
@@ -158,39 +154,14 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         outOfMemory(l + 1);
       }
 
-      if(!MPI::isSerial()) {
-        // updateHaloOffsets();
-      }
-
-      refineGrid(m_levelOffsets, l);
-      if(!MPI::isSerial()) {
-        // todo:implement
-        // refineGrid(m_haloOffsets, l);
-      }
-      m_size = m_levelOffsets[l + 1].end;
-
-      findChildLevelNghbrs(m_levelOffsets, l);
-      if(!MPI::isSerial()) {
-        // todo:implement
-        // findChildLevelNeighbors(m_haloOffsets, l);
-      }
-
-      if(!MPI::isSerial()) {
-        // todo:implement
-        //        deleteOutsideCellsParallel(l + 1);
-      } else {
-        deleteOutsideCells(l + 1);
-      }
-
-      m_size = m_levelOffsets[l + 1].end;
-      increaseCurrentHighestLvl();
-      logger.updateAttributes();
+      refineGrid<true>(l);
     }
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
   }
 
   void refineMarkedCells(const GInt noCellsToRefine) override {
     if(noCellsToRefine == 0) {
+      logger << "WARNING: refineMarkedCells called but nothing to do" << std::endl;
       return;
     }
 
@@ -205,40 +176,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::cout << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
 
 
-    if(!MPI::isSerial()) {
-      // todo:implement
-      // updateHaloOffsets();
-    }
-
-    // refine marked cells
-    GInt refinedCells = 0;
-    for(GInt cellId = m_levelOffsets[currentHighestLvl()].begin; cellId < m_levelOffsets[currentHighestLvl()].end; ++cellId) {
-      if(property(cellId, CellProperties::toRefine)) {
-        refineCell(cellId, m_levelOffsets[currentHighestLvl() + 1].begin + refinedCells * cartesian::maxNoChildren<NDIM>());
-        ++refinedCells;
-      }
-    }
-    m_size = m_levelOffsets[currentHighestLvl() + 1].end;
-
-    findChildLevelNghbrs(m_levelOffsets, currentHighestLvl());
-    if(!MPI::isSerial()) {
-      // todo:implement
-      // findChildLevelNeighbors(m_haloOffsets, l);
-    }
-
-    if(!MPI::isSerial()) {
-      // todo:implement
-      //        deleteOutsideCellsParallel(l + 1);
-    } else {
-      deleteOutsideCells(currentHighestLvl() + 1);
-    }
-
-    m_size = m_levelOffsets[currentHighestLvl() + 1].end;
-
-    // todo:implement
-    //    refineMarkedCells(m_currentHighestLvl);
-
-    increaseCurrentHighestLvl();
+    refineGrid<true, false>(currentHighestLvl());
   }
 
   auto markBndryCells() -> GInt override {
@@ -338,6 +276,45 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     TERMM(-1, "Out of memory!");
   }
 
+  template <GBool DISTRIBUTED = false, GBool UNIFORM = true>
+  void refineGrid(const GInt level) {
+    if(DISTRIBUTED && !MPI::isSerial()) {
+      // updateHaloOffsets();
+    }
+
+    if(UNIFORM) {
+      refineGrid(m_levelOffsets, level);
+      if(DISTRIBUTED && !MPI::isSerial()) {
+        // todo:implement
+        // refineGrid(m_haloOffsets, l);
+      }
+    } else {
+      refineGridMarkedOnly(m_levelOffsets, level);
+      if(DISTRIBUTED && !MPI::isSerial()) {
+        // todo:implement
+        // refineGridMarkedOnly(m_haloOffsets, l);
+      }
+    }
+    m_size = m_levelOffsets[level + 1].end;
+
+    findChildLevelNghbrs(m_levelOffsets, level);
+    if(DISTRIBUTED && !MPI::isSerial()) {
+      // todo:implement
+      // findChildLevelNeighbors(m_haloOffsets, l);
+    }
+
+    if(DISTRIBUTED && !MPI::isSerial()) {
+      // todo:implement
+      //        deleteOutsideCellsParallel(l + 1);
+    } else {
+      deleteOutsideCells(level + 1);
+    }
+
+    m_size = m_levelOffsets[level + 1].end;
+    increaseCurrentHighestLvl();
+    logger.updateAttributes();
+  }
+
   void refineGrid(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
     logger << SP2 << "+ refining grid on level: " << level << std::endl;
     std::cout << SP2 << "+ refining grid on level: " << level << std::endl;
@@ -362,6 +339,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 #ifdef _OPENMP
     }
 #endif
+  }
+
+  void refineGridMarkedOnly(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
+    GInt refinedCells = 0;
+    for(GInt cellId = levelOffset[level].begin; cellId < levelOffset[level].end; ++cellId) {
+      if(property(cellId, CellProperties::toRefine)) {
+        refineCell(cellId, levelOffset[level + 1].begin + refinedCells * cartesian::maxNoChildren<NDIM>());
+        ++refinedCells;
+      }
+    }
   }
 
   void refineCell(const GInt cellId, const GInt offset) {

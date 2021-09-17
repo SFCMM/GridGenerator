@@ -197,8 +197,8 @@ class KDTree {
 
     // set root node
     m_root                   = 0;
-    offset[m_root].from      = 0;
-    offset[m_root].to        = noNodes - 1;
+    offset.at(m_root).from   = 0;
+    offset.at(m_root).to     = noNodes - 1;
     m_nodes[m_root].m_parent = 0; // no parent
     m_nodes[m_root].m_depth  = 0;
 

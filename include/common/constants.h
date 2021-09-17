@@ -22,6 +22,16 @@ static constexpr auto INVALID_LIST() -> std::array<GInt, LENGTH> {
   return invalid;
 }
 
+/// Generate nan list for init of arrays
+/// \tparam LENGTH Length of the nan list
+/// \return NAN list of LENGTH
+template <GInt LENGTH>
+static constexpr auto NAN_LIST() -> std::array<GDouble, LENGTH> {
+  std::array<GDouble, LENGTH> invalid{};
+  std::fill_n(invalid.begin(), LENGTH, NAN);
+  return invalid;
+}
+
 // Memory
 static constexpr GInt KBIT = 1024;
 static constexpr GDouble DKBIT = static_cast<GDouble>(KBIT);
