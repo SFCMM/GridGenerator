@@ -51,6 +51,11 @@ class GridGenerator {
   template <GInt nDim>
   void generateGrid();
 
+  //  template<GInt NDIM>
+  //  static std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> gm(){
+  //      std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>>(m_comm);
+  //  };
+
 
   template <typename T>
   auto required_config_value(const GString& key) -> T;

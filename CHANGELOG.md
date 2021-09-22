@@ -26,6 +26,8 @@
 - Add option to scale and translate STls.
 - add more geometries star, donut, bipyramids
 - add benchmark support for scalings
+- move kdtree to common
+- move boundingbox to common
 
 # V0.1.0 (~Q3/21)
 
@@ -47,6 +49,8 @@
 - allow to select boundary to be refined
 - allow per boundary refinement settings
 - boundary smoothing
+- move more functionality into bounding box
+- refactor kdtree
 
 # V0.0.4 (~5.9.21)
 

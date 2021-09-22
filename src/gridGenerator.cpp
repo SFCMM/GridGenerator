@@ -242,7 +242,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   logger << SP2 << "+ m_center of gravity: " << strStreamify<NDIM>(m_grid->cog()).str() << "\n";
   logger << SP2 << "+ decisive direction: " << m_grid->largestDir() << "\n";
   logger << SP2 << "+ geometry extents: " << strStreamify<NDIM>(m_grid->lengthOfBoundingBox()).str() << "\n";
-  logger << SP2 << "+ bounding box: " << strStreamify<2 * NDIM>(m_grid->boundingBox()).str() << endl;
+  logger << SP2 << "+ bounding box: " << m_grid->boundingBox().str() << endl;
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridInit]);
 
   const std::function<GString()> strHighestLvl = [&]() { return to_string(m_grid->currentHighestLvl()); };
@@ -311,9 +311,18 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   m_grid->setGeometryManager(m_geometry);
 
   if(m_geometry->noObjects() == 0 || has_config_value("boundingBox")) {
-    m_grid->setBoundingBox(opt_config_value<std::vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim - 1)));
+    auto               tmp = opt_config_value<std::vector<GDouble>>("boundingBox", DEFAULT_BOUNDINGBOX.at(m_dim - 1));
+    BoundingBoxDynamic tmpBB;
+    tmpBB.init(m_dim);
+    for(GInt dir = 0; dir < m_dim; ++dir) {
+      tmpBB.min[dir] = tmp[2 * dir];
+      tmpBB.max[dir] = tmp[2 * dir + 1];
+    }
+
+    m_grid->setBoundingBox(*static_cast<BoundingBoxInterface*>(static_cast<void*>(&tmpBB)));
   } else {
-    m_grid->setBoundingBox(m_geometry->getBoundingBox());
+    auto tmp = m_geometry->getBoundingBox();
+    m_grid->setBoundingBox(*static_cast<BoundingBoxInterface*>(static_cast<void*>(&tmp)));
   }
 
 

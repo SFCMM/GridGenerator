@@ -1,5 +1,9 @@
 #ifndef GRIDGENERATOR_GRIDINTERFACE_H
 #define GRIDGENERATOR_GRIDINTERFACE_H
+
+#include "boundingbox.h"
+#include "geometry.h"
+
 class GridInterface {
  public:
   GridInterface()          = default;
@@ -15,7 +19,7 @@ class GridInterface {
 
   /// Set the bounding box for the current grid.
   /// \param bbox Provide the bounding box in the following format {x1, x2, y1, y2...}
-  virtual void setBoundingBox(std::vector<GDouble> bbox) = 0;
+  virtual void setBoundingBox(const BoundingBoxInterface& bbox) = 0;
 
   /// Set the maximum number of cells that this grid can use. Can only be called once!
   /// \param capacity The capacity of this grid object to store cells.
@@ -42,7 +46,7 @@ class GridInterface {
 
   /// The bounding box of the grid.
   /// \return Bounding box.
-  [[nodiscard]] virtual inline auto boundingBox() const -> std::vector<GDouble> = 0;
+  [[nodiscard]] virtual inline auto boundingBox() const -> const BoundingBoxInterface& = 0;
 
   /// Direction of the largest length of the bounding box.
   /// \return Direction of largest length of the bounding box..

@@ -69,7 +69,7 @@ class KDTree {
     std::vector<OffsetType> offset;
     offset.resize(noNodes);
 
-    std::vector<GDouble> bbox = gm.getBoundingBox();
+    m_boundingBox = BoundingBoxCT<NDIM>(gm.getBoundingBox());
 
     // set root node
     m_root                   = 0;
@@ -78,8 +78,6 @@ class KDTree {
     m_nodes[m_root].m_parent = 0; // no parent
     m_nodes[m_root].m_depth  = 0;
 
-    std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
-
     if(noNodes == 1) {
       // with one node we don't need to search so we just return the root element anyway
       m_nodes[m_root].m_leftSubtree  = 0;
@@ -87,8 +85,8 @@ class KDTree {
       m_nodes[m_root].m_element      = 0;
 
       // set some reasonable values
-      m_nodes[m_root].m_max = bbox[1];
-      m_nodes[m_root].m_min = bbox[0];
+      m_nodes[m_root].m_max = m_boundingBox.max[0];
+      m_nodes[m_root].m_min = m_boundingBox.min[0];
       return;
     }
 
@@ -175,7 +173,7 @@ class KDTree {
 
   /// Build a min/max kd tree using the provided triangles.
   /// \param gm Geometry Manager for which to build the kd tree
-  void buildTree(std::vector<triangle<NDIM>>& triangles, const std::vector<GDouble>& bbox) {
+  void buildTree(std::vector<triangle<NDIM>>& triangles, const BoundingBoxInterface& bbox) {
     // todo: this is mostly the same as above find a way to unify
 
     // count number of total geometry elements
@@ -202,7 +200,7 @@ class KDTree {
     m_nodes[m_root].m_parent = 0; // no parent
     m_nodes[m_root].m_depth  = 0;
 
-    std::copy_n(bbox.begin(), 2 * NDIM, m_boundingBox.begin());
+    m_boundingBox = BoundingBoxCT<NDIM>(bbox);
 
     if(noNodes == 1) {
       // with one node we don't need to search so we just return the root element anyway
@@ -211,8 +209,8 @@ class KDTree {
       m_nodes[m_root].m_element      = 0;
 
       // set some reasonable values
-      m_nodes[m_root].m_max = bbox[1];
-      m_nodes[m_root].m_min = bbox[0];
+      m_nodes[m_root].m_max = m_boundingBox.max[0];
+      m_nodes[m_root].m_min = m_boundingBox.min[0];
       return;
     }
 
@@ -324,10 +322,10 @@ class KDTree {
     std::array<GDouble, 2 * NDIM> min;
     std::array<GDouble, 2 * NDIM> max;
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      min[dir]        = m_boundingBox[2 * dir] - GDoubleEps;
+      min[dir]        = m_boundingBox.min[dir] - GDoubleEps;
       min[dir + NDIM] = targetRegion[2 * dir] - GDoubleEps;
       max[dir]        = targetRegion[2 * dir + 1] + GDoubleEps;
-      max[dir + NDIM] = m_boundingBox[2 * dir + 1] + GDoubleEps;
+      max[dir + NDIM] = m_boundingBox.max[dir] + GDoubleEps;
     }
 
     // Init empty stack and start at first node
@@ -463,9 +461,9 @@ class KDTree {
   }
 
 
-  GInt                          m_root = -1;
-  std::vector<KDNode>           m_nodes;
-  std::array<GDouble, 2 * NDIM> m_boundingBox{};
-  std::vector<GInt>             m_nodeList;
+  GInt                m_root = -1;
+  std::vector<KDNode> m_nodes;
+  BoundingBoxCT<NDIM> m_boundingBox;
+  std::vector<GInt>   m_nodeList;
 };
 #endif // GRIDGENERATOR_KDTREE_H
