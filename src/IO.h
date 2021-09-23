@@ -84,8 +84,9 @@ static inline auto piece_header(const GInt noOfPoints) -> GString {
 
 template <GInt DIM, GBool BINARY = false>
 static inline auto point_header() -> GString {
+  // todo: allow change of float type
   if(BINARY) {
-    return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
+    return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
   }
   return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
 }

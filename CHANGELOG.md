@@ -51,6 +51,8 @@
 - boundary smoothing
 - move more functionality into bounding box
 - refactor kdtree
+- refactor bounding boxes
+- allow type changes in VTK output
 
 # V0.0.4 (~5.9.21)
 
@@ -83,7 +85,6 @@
 ## Ongoing:
 
 - allow defining the output values that are written to the point files
-- introduce type for bounding boxes
 - cleanup vtk io code
 
 ## Done:
@@ -105,6 +106,8 @@
 ### Documentation
 
 ### Refactoring
+
+- introduce type for bounding boxes
 
 # V0.0.3 (16.9.21)
 
