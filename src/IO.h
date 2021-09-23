@@ -100,7 +100,7 @@ template <GBool BINARY = false>
 static constexpr auto vert_header() -> string_view {
   if(BINARY) {
     return "      <Verts>\n"
-           "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"BINARY\"> \n";
+           "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"binary\"> \n";
   }
   return "      <Verts>\n"
          "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\"> \n";
@@ -110,7 +110,7 @@ static constexpr auto offset_data_header() -> string_view {
   return "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\"> \n";
 }
 
-static constexpr auto data_footer() -> string_view { return "        </DataArray>"; }
+static constexpr auto data_footer() -> string_view { return "        </DataArray> \n"; }
 
 static constexpr auto vert_footer() -> string_view { return "        </Verts> \n"; }
 
@@ -261,6 +261,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
     pointFile << base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells) << padders[padding];
   }
+  pointFile << "\n";
   pointFile << data_footer();
   pointFile << offset_data_header();
   pointFile << noOutCells << "\n";
