@@ -206,9 +206,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // Grid output configuration
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    GString filter = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
-    GString format = config::opt_config_value(gridOutConfig, "format", GString("ASCII"));
-    GString type   = config::opt_config_value(gridOutConfig, "type", GString("point"));
+    GString              filter    = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
+    GString              format    = config::opt_config_value(gridOutConfig, "format", GString("ASCII"));
+    GString              type      = config::opt_config_value(gridOutConfig, "type", GString("point"));
+    std::vector<GString> outvalues = config::opt_config_value(gridOutConfig, "outputValues", std::vector<GString>({"level"}));
 
     std::function<GBool(GInt)>& outputFilter = isLeaf;
     if(filter == "highestLvl") {
@@ -219,10 +220,23 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Unknown output filter " + filter);
     }
 
-    std::vector<GString>              index = {"Level", "NoChildren"};
+    std::vector<GString>              index;
     std::vector<std::vector<GString>> values;
-    values.emplace_back(toStringVector(m_level, m_size));
-    values.emplace_back(toStringVector(m_noChildren, m_size));
+    cerr0 << "Selected output values:";
+    for(const auto& outputvalue : outvalues) {
+      if(outputvalue == "level") {
+        index.emplace_back("Level");
+        values.emplace_back(toStringVector(m_level, m_size));
+        cerr0 << " level ";
+      } else if(outputvalue == "noChildren") {
+        index.emplace_back("NoChildren");
+        values.emplace_back(toStringVector(m_noChildren, m_size));
+        cerr0 << " noChildren ";
+      } else {
+        logger << "WARNING: The output value " + outputvalue + " is not a valid output!" << std::endl;
+      }
+    }
+    cerr0 << std::endl;
 
     if(format == "ASCII") {
       ASCII::writePointsCSV<NDIM>(fileName, m_size, m_center, index, values, outputFilter);

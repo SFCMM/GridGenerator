@@ -203,6 +203,9 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
 
+
+  cerr0 << "debugging " << strStreamify(index).str() << std::endl;
+
   // number of points to output
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {
@@ -265,15 +268,14 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << vert_footer();
   pointFile << point_data_header();
   {
+    GInt i = 0;
     for(const auto& column : values) {
-      GInt i = 0;
       pointFile << point_data_int32<true>(index[i++]);
       std::vector<GInt32> tmp_val;
 
       for(GInt id = 0; id < noValues; ++id) {
         if(filter(id)) {
           tmp_val.emplace_back(std::stoi(column[id]));
-          cerr0 << column[id] << std::endl;
         }
       }
       GInt       header_val_size = static_cast<GInt>(sizeof(GInt32)) * noOutCells;

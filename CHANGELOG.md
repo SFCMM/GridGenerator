@@ -97,7 +97,6 @@
 ## Ongoing:
 
 - define more output filters (targetLvl etc.)
-- allow defining the output values that are written to the point files
 
 ## Done:
 
@@ -110,8 +109,8 @@
 ### Usability
 
 ### IO
-
 - output data columns in binary as well for VTK binary files
+- allow defining the output values that are written to the point files
 
 ### Performance
 

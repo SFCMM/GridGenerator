@@ -1,16 +1,20 @@
 {
   "dry-run": true,
   "dim": 3,
-  "partitionLevel": 2,
-  "uniformLevel": 3,
-  "maxRfnmtLvl": 4,
+  "partitionLevel": 3,
+  "uniformLevel": 4,
+  "maxRfnmtLvl": 6,
   "maxNoCells": 4000000,
   "outputDir": "out2",
   "gridFileName": "gridD",
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
-    "type": "points"
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
   },
   "geometry": {
     "stlA": {
