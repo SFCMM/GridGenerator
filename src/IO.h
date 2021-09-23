@@ -116,6 +116,14 @@ static constexpr auto vert_footer() -> string_view { return "        </Verts> \n
 
 static constexpr auto point_data_header() -> string_view { return "      <PointData> \n"; }
 
+template <GBool binary = false>
+static inline auto point_data_int32(const GString& name) -> GString {
+  if(binary) {
+    return "<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"binary\">\n";
+  }
+  return "<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ascii\">\n";
+}
+
 static constexpr auto point_data_footer() -> string_view { return "      </PointData> \n"; }
 
 
@@ -128,17 +136,11 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
 
+  // number of points to output
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {
-    if(!filter(id)) {
-      continue;
-    }
-    noOutCells++;
+    noOutCells += static_cast<GInt>(filter(id));
   }
-
-  auto                         point_data_int32   = [](const GString& name) {
-    return GString("<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ascii\">\n");
-  };
 
   ofstream                      pointFile;
   static constexpr unsigned int N           = 64;
@@ -201,17 +203,11 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
 
+  // number of points to output
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {
-    if(!filter(id)) {
-      continue;
-    }
-    noOutCells++;
+    noOutCells += static_cast<GInt>(filter(id));
   }
-
-  auto                         point_data_int32   = [](const GString& name) {
-    return GString("<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ASCII\">\n");
-  };
 
   ofstream                                         pointFile;
   static constexpr unsigned int                    N           = 64;
@@ -268,16 +264,26 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << data_footer();
   pointFile << vert_footer();
   pointFile << point_data_header();
-  GInt i = 0;
-  for(const auto& column : values) {
-    pointFile << point_data_int32(index[i++]);
-    for(GInt id = 0; id < noValues; ++id) {
-      if(!filter(id)) {
-        continue;
+  {
+    for(const auto& column : values) {
+      GInt i = 0;
+      pointFile << point_data_int32<true>(index[i++]);
+      std::vector<GInt32> tmp_val;
+
+      for(GInt id = 0; id < noValues; ++id) {
+        if(filter(id)) {
+          tmp_val.emplace_back(std::stoi(column[id]));
+          cerr0 << column[id] << std::endl;
+        }
       }
-      pointFile << column[id] << "\n";
+      GInt       header_val_size = static_cast<GInt>(sizeof(GInt32)) * noOutCells;
+      const GInt number_bytes    = binary::BYTE_SIZE + header_val_size;
+      const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
+      const GInt padding         = 4 - (number_chars % 4);
+      pointFile << base64::encodeLE<GInt, 1>(&header_val_size);
+      pointFile << base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells) << padders[padding];
+      pointFile << "\n" << data_footer();
     }
-    pointFile << data_footer();
   }
   pointFile << point_data_footer();
   pointFile << footer();

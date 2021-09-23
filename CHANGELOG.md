@@ -28,6 +28,7 @@
 - add benchmark support for scalings
 - move kdtree to common
 - move boundingbox to common
+- move io to common
 
 # V0.1.0 (~Q3/21)
 
@@ -53,6 +54,7 @@
 - refactor kdtree
 - refactor bounding boxes
 - allow type changes in VTK output
+- cleanup vtk io code
 
 # V0.0.4 (~5.9.21)
 
@@ -85,7 +87,6 @@
 ## Ongoing:
 
 - allow defining the output values that are written to the point files
-- cleanup vtk io code
 
 ## Done:
 
@@ -103,11 +104,14 @@
 
 ### Bugs
 
+-fix some small typos in binary vtk code
+
 ### Documentation
 
 ### Refactoring
 
 - introduce type for bounding boxes
+- small cleanup in IO code
 
 # V0.0.3 (16.9.21)
 
