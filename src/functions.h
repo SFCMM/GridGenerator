@@ -29,6 +29,8 @@ static constexpr inline auto opt_config_value(const json& config, const GString&
   }
   return defaultValue;
 }
+
+static inline auto has_config_value(const json& config, const GString& key) -> GBool { return config.contains(key); }
 } // namespace config
 
 template <GInt NDIM, class T, class U>

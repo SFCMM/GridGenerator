@@ -55,6 +55,9 @@
 - refactor bounding boxes
 - allow type changes in VTK output
 - cleanup vtk io code
+- more output values (properties)
+- more complex filters for output (multiple filters, options)
+- move all configuration function stuff to functions.h::config
 
 # V0.0.4 (~30.9.21)
 
@@ -96,7 +99,6 @@
 
 ## Ongoing:
 
-- define more output filters (targetLvl etc.)
 
 ## Done:
 
@@ -111,6 +113,7 @@
 ### IO
 - output data columns in binary as well for VTK binary files
 - allow defining the output values that are written to the point files
+- more output filters have been added (partitionLvl, lowestLvl, targetLvl)
 
 ### Performance
 

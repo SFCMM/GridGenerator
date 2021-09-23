@@ -193,8 +193,18 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void save(const GString& fileName, const json& gridOutConfig) override {
+    // Grid output configuration
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    GString              filter    = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
+    GString              format    = config::opt_config_value(gridOutConfig, "format", GString("ASCII"));
+    GString              type      = config::opt_config_value(gridOutConfig, "type", GString("point"));
+    std::vector<GString> outvalues = config::opt_config_value(gridOutConfig, "outputValues", std::vector<GString>({"level"}));
+    GInt                 outputLvl = config::opt_config_value(gridOutConfig, "outputLvl", 0);
+
     // Cell filter functions
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // only output the lowest level
+    std::function<GBool(GInt)> isLowestLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == partitionLvl(); };
 
     // only output the highest level
     std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == currentHighestLvl(); };
@@ -202,20 +212,22 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return m_noChildren[cellId] == 0; };
 
+    // only output the lowest level
+    std::function<GBool(GInt)> isTargetLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == outputLvl; };
 
-    // Grid output configuration
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    GString              filter    = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
-    GString              format    = config::opt_config_value(gridOutConfig, "format", GString("ASCII"));
-    GString              type      = config::opt_config_value(gridOutConfig, "type", GString("point"));
-    std::vector<GString> outvalues = config::opt_config_value(gridOutConfig, "outputValues", std::vector<GString>({"level"}));
 
     std::function<GBool(GInt)>& outputFilter = isLeaf;
     if(filter == "highestLvl") {
       outputFilter = isHighestLevel;
+    } else if(filter == "lowestLvl" || filter == "partitionLvl") {
+      outputFilter = isLowestLevel;
     } else if(filter == "leafCells") {
       outputFilter = isLeaf;
+    } else if(filter == "targetLvl") {
+      if(!config::has_config_value(gridOutConfig, "outputLvl")) {
+        TERMM(-1, "Required value not set!");
+      }
+      outputFilter = isTargetLevel;
     } else {
       TERMM(-1, "Unknown output filter " + filter);
     }
