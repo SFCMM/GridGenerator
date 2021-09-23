@@ -1,4 +1,4 @@
-# V1.1.0
+# V1.1.0 (6/22)
 
 ## Planned:
 
@@ -8,7 +8,7 @@
 - Generate parallel geometry
 - use CGAL algorithms
 
-# V1.0.0
+# V1.0.0 (3/22)
 
 ## Planned:
 
@@ -17,7 +17,7 @@
 - Add LZMA2 compression options, https://github.com/google/brotli, https://github.com/schnaader/precomp-cpp
 - Add messagePack, https://amzn.github.io/ion-docs/
 
-# V0.2.0  (~Q4/21)
+# V0.2.0  (~12/21)
 
 ## Planned:
 
@@ -30,7 +30,7 @@
 - move boundingbox to common
 - move io to common
 
-# V0.1.0 (~Q3/21)
+# V0.1.0 (~10/21)
 
 ## Planned:
 
@@ -56,36 +56,47 @@
 - allow type changes in VTK output
 - cleanup vtk io code
 
-# V0.0.4 (~5.9.21)
+# V0.0.4 (~30.9.21)
 
-- Save HDF5 grid format.
+- Save HDF5 grid format. (1)
 
 ### Moved from V0.0.3:
 
-- Implement MPI communication.
-- Save svg of the mesh.
-- Add python script to analyse performance.
-- Add error for missing documentation
-- add more geometries pyramid, cone, tube
-- add tutorial
-- add circular container based on vector...
-- activate profile guided optimization
-- add performance testing results to CI
-- define more output filters (targetLvl etc.)
-- activate backtrace
-- Add doxygen generation to CI
-- Run coverage within CI
-- Generate porous mesh provided with some porosity value.
-- (Optimize IO speed by manual buffering.)
-- Setup valgrind and sanitize tests
-- check geometries are touching
-- add UnitTest and testcases for grid generation
-- add documentation for the configuration files
-- BUG: donut_lowres.stl at level 6/4 produces some cells outside
-- add test for 1D, 2D, 3D
+- Implement MPI communication. (1)
+
+- Save svg of the mesh. (4)
+- add more geometries pyramid, cone, tube(4)
+- add circular container based on vector... (3)
+
+- Generate porous mesh provided with some porosity value.(2)
+
+- Optimize IO speed by manual buffering.(1)
+- check geometries are touching(2)
+
+- add documentation for the configuration files (4)
+- add tutorial (5)
+
+- add test for 1D, 2D, 3D (2)
+- add UnitTest and testcases for grid generation (2)
+
+- Setup valgrind and sanitize tests (4)
+- activate backtrace (3)
+- activate profile guided optimization (3)
+
+- Run coverage within CI (4)
+- Add doxygen generation to CI (4)
+- add performance testing results to CI (5)
+- Add error for missing documentation (6)
+- Add python script to analyse performance. (5)
+
+- BUG: donut_lowres.stl at level 6/4 produces some cells outside (3)
+- fix all warnings (4)
+- cleanup todo items (5)
+- check for stuff that needs refactoring (6)
 
 ## Ongoing:
 
+- define more output filters (targetLvl etc.)
 - allow defining the output values that are written to the point files
 
 ## Done:
@@ -100,10 +111,11 @@
 
 ### IO
 
+- output data columns in binary as well for VTK binary files
+
 ### Performance
 
 ### Bugs
-
 -fix some small typos in binary vtk code
 
 ### Documentation
