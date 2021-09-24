@@ -58,22 +58,19 @@
 - more output values (properties)
 - more complex filters for output (multiple filters, options)
 - move all configuration function stuff to functions.h::config
+- limit buffer size during IO writing to buffersize not cell count
 
 # V0.0.4 (~30.9.21)
 
 - Save HDF5 grid format. (1)
 
 ### Moved from V0.0.3:
-
-- Implement MPI communication. (1)
-
 - Save svg of the mesh. (4)
 - add more geometries pyramid, cone, tube(4)
 - add circular container based on vector... (3)
 
 - Generate porous mesh provided with some porosity value.(2)
 
-- Optimize IO speed by manual buffering.(1)
 - check geometries are touching(2)
 
 - add documentation for the configuration files (4)
@@ -98,6 +95,8 @@
 - check for stuff that needs refactoring (6)
 
 ## Ongoing:
+
+- Implement MPI communication.
 
 
 ## Done:

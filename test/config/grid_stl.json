@@ -1,10 +1,10 @@
 {
   "dry-run": true,
   "dim": 3,
-  "partitionLevel": 3,
-  "uniformLevel": 4,
-  "maxRfnmtLvl": 6,
-  "maxNoCells": 4000000,
+  "partitionLevel": 4,
+  "uniformLevel": 6,
+  "maxRfnmtLvl": 10,
+  "maxNoCells": 8000000,
   "outputDir": "out2",
   "gridFileName": "gridD",
   "gridOutput": {

@@ -204,8 +204,6 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
 
 
-  cerr0 << "debugging " << strStreamify(index).str() << std::endl;
-
   // number of points to output
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {
@@ -243,7 +241,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     const GInt number_chars      = static_cast<GInt>(gcem::ceil(static_cast<GDouble>(number_bytes) * 8.0 / 6.0));
     const GInt padding           = 4 - (number_chars % 4);
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
-    pointFile << base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues) << padders[padding];
+    pointFile.write(base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues).c_str(), header_coord_size);
+    pointFile << padders[padding];
   }
 
   pointFile << "\n" << point_footer();
@@ -258,7 +257,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     const GInt number_chars      = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
     const GInt padding           = 4 - (number_chars % 4);
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
-    pointFile << base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells) << padders[padding];
+    pointFile.write(base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells).c_str(), header_coord_size);
+    pointFile << padders[padding];
   }
   pointFile << "\n";
   pointFile << data_footer();
@@ -283,7 +283,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
       const GInt padding         = 4 - (number_chars % 4);
       pointFile << base64::encodeLE<GInt, 1>(&header_val_size);
-      pointFile << base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells) << padders[padding];
+      pointFile.write(base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells).c_str(), header_val_size);
+      pointFile << padders[padding];
       pointFile << "\n" << data_footer();
     }
   }
