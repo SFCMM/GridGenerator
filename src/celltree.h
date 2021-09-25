@@ -1,5 +1,5 @@
-#ifndef GRIDGENERATOR_GTREE_H
-#define GRIDGENERATOR_GTREE_H
+#ifndef GRIDGENERATOR_CELLTREE_H
+#define GRIDGENERATOR_CELLTREE_H
 
 #include <bitset>
 #include <sfcmm_common.h>
@@ -208,9 +208,9 @@ class Tree {
   [[nodiscard]] inline auto isLeafCell(const GInt id) const -> GBool {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-      return m_isLeafCell.at(id);
+      return m_properties.at(id)[static_cast<GInt>(CellProperties::leaf)];
     }
-    return m_isLeafCell[id];
+    return m_properties[id][static_cast<GInt>(CellProperties::leaf)];
   }
 
   inline auto hasProperty(const GInt id, const Cell p) -> PropertyBitsetType::reference {
@@ -313,22 +313,20 @@ class Tree {
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
   void reset(const GInt capacity) {
-    m_parentIds.reserve(capacity);
-    m_childIds.reserve(capacity);
-    m_neighborIds.reserve(capacity);
-    m_globalIds.reserve(capacity);
-    m_levels.reserve(capacity);
-    m_coordinates.reserve(capacity);
-    m_weight.reserve(capacity);
-    m_isLeafCell.reserve(capacity);
-    m_properties.reserve(capacity);
-    m_noOffsprings.reserve(capacity);
-    m_workload.reserve(capacity);
+    m_parentIds.resize(capacity);
+    m_childIds.resize(capacity);
+    m_neighborIds.resize(capacity);
+    m_globalIds.resize(capacity);
+    m_levels.resize(capacity);
+    m_coordinates.resize(capacity);
+    m_weight.resize(capacity);
+    m_properties.resize(capacity);
+    m_noOffsprings.resize(capacity);
+    m_workload.resize(capacity);
     reset();
   }
 
  private:
-  // Methods required by base class for CRTP
   void reset() {
     std::fill(m_parentIds.begin(), m_parentIds.end(), -1);
     std::fill(m_childIds.begin(), m_childIds.end(), -1);
@@ -337,7 +335,6 @@ class Tree {
     std::fill(m_levels.begin(), m_levels.end(), -1);
     std::fill(m_coordinates.begin(), m_coordinates.end(), NAN);
     std::fill(m_weight.begin(), m_weight.end(), NAN);
-    std::fill(m_isLeafCell.begin(), m_isLeafCell.end(), false);
     std::fill(m_properties.begin(), m_properties.end(), 0);
     std::fill(m_noOffsprings.begin(), m_noOffsprings.end(), -1);
     std::fill(m_workload.begin(), m_workload.end(), NAN);
@@ -352,7 +349,6 @@ class Tree {
     std::fill(m_levels.begin() + begin, m_levels.begin() + end, -1);
     std::fill(m_coordinates.begin() + begin, m_coordinates.begin() + end, NAN);
     std::fill(m_weight.begin() + begin, m_weight.begin() + end, NAN);
-    std::fill(m_isLeafCell.begin() + begin, m_isLeafCell.begin() + end, false);
     std::fill(m_properties.begin() + begin, m_properties.begin() + end, 0);
     std::fill(m_noOffsprings.begin() + begin, m_noOffsprings.begin() + end, -1);
     std::fill(m_workload.begin() + begin, m_workload.begin() + end, NAN);
@@ -463,19 +459,22 @@ class Tree {
   }
 
   // Data containers
-  std::vector<GInt>               m_parentIds{};
-  std::vector<GInt>               m_childIds{};
-  std::vector<GInt>               m_neighborIds{};
-  std::vector<GInt>               m_globalIds{};
-  std::vector<GInt>               m_levels{};
-  std::vector<GDouble>            m_coordinates{};
-  std::vector<GFloat>             m_weight{};
-  std::vector<GBool>              m_isLeafCell{};
+  std::vector<GInt> m_globalIds{};
+  std::vector<GInt> m_parentIds{};
+  std::vector<GInt> m_childIds{};
+  std::vector<GInt> m_neighborIds{};
+  std::vector<GInt> m_levels{};
+  std::vector<GInt> m_noOffsprings{};
+
   std::vector<PropertyBitsetType> m_properties{};
-  std::vector<GInt>               m_noOffsprings{};
-  std::vector<GFloat>             m_workload{};
-  GInt                            m_size = 0;
+
+  std::vector<GFloat> m_weight{};
+  std::vector<GFloat> m_workload{};
+
+  std::vector<GDouble> m_coordinates{};
+
+  GInt m_size = 0;
 };
 } // namespace cartesian
 
-#endif // GRIDGENERATOR_GTREE_H
+#endif // GRIDGENERATOR_CELLTREE_H

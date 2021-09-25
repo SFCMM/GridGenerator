@@ -59,6 +59,7 @@
 - more complex filters for output (multiple filters, options)
 - move all configuration function stuff to functions.h::config
 - limit buffer size during IO writing to buffersize not cell count
+- set log file name
 
 # V0.0.4 (~30.9.21)
 
