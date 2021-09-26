@@ -9,7 +9,7 @@
 #include "celltree.h"
 #include "geometry.h"
 #include "globaltimers.h"
-#include "gridInterface.h"
+#include "interface/gridInterface.h"
 #include "IO.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
