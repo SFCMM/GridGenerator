@@ -74,23 +74,23 @@ class GridInterface {
   [[nodiscard]] virtual inline auto currentHighestLvl() const -> GInt = 0;
 
 
-  //// Grid Generation specific
-  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
-  /// configuration file. The grid up to this level is always produced on a single MPI rank.
-  /// \param partioningLvl Level of the partitioing grid.
-  virtual void createPartitioningGrid(const GInt partioningLvl) = 0;
-
-  /// Uniformly refine the grid up to the provided level.
-  /// \param uniformLvl Level of uniform refinement.
-  virtual void uniformRefineGrid(const GInt uniformLvl) = 0;
-
-  /// Refine the cells that have been marked for refinement.
-  /// \param noCellsToRefine The number of cells that have been marked.
-  virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
-
-  /// Mark all boundary cells for refinement
-  /// \return Number of cells marked for refinement
-  virtual auto markBndryCells() -> GInt = 0;
+  //  //// Grid Generation specific
+  //  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
+  //  /// configuration file. The grid up to this level is always produced on a single MPI rank.
+  //  /// \param partioningLvl Level of the partitioing grid.
+  //  virtual void createPartitioningGrid(const GInt partioningLvl) = 0;
+  //
+  //  /// Uniformly refine the grid up to the provided level.
+  //  /// \param uniformLvl Level of uniform refinement.
+  //  virtual void uniformRefineGrid(const GInt uniformLvl) = 0;
+  //
+  //  /// Refine the cells that have been marked for refinement.
+  //  /// \param noCellsToRefine The number of cells that have been marked.
+  //  virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
+  //
+  //  /// Mark all boundary cells for refinement
+  //  /// \return Number of cells marked for refinement
+  //  virtual auto markBndryCells() -> GInt = 0;
 
 
   ////IO
