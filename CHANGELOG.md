@@ -60,6 +60,7 @@
 - move all configuration function stuff to functions.h::config
 - limit buffer size during IO writing to buffersize not cell count
 - set log file name
+- Bug: Some how just calling ofstream.write() yields binary differences???
 
 # V0.0.4 (~30.9.21)
 
