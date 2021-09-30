@@ -16,19 +16,17 @@
 #include <utility>
 #include <vector>
 
-//todo: documentation
-//todo: tests
+// todo: documentation
+// todo: tests
 
-using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
+using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock,
+                                                std::chrono::duration<double>>;
 
 class Timer {
- public:
+public:
   Timer(std::string n, const GInt g, const GInt id, const GInt p)
-    : m_name(std::move(n)),
-      m_group(g),
-      m_timerId(id),
-      m_parent(p),
-      m_recordedTime(0),
+      : m_name(std::move(n)), m_group(g), m_timerId(id), m_parent(p),
+        m_recordedTime(0),
       m_status(Timer::Uninitialized),
       m_subTimers(0),
       m_display(false) {}
@@ -61,7 +59,6 @@ class Timer {
 
   [[nodiscard]] auto inline display() const -> GBool { return m_display; }
   auto inline display() -> GBool& { return m_display; }
-
 
  private:
   GString           m_name;  ///< Timer Name
@@ -155,7 +152,6 @@ class TimerManager {
 
 auto timers() -> TimerManager&;
 
-
 inline auto TimerManager::time() -> chronoTimePoint {
   using clock = std::chrono::system_clock;
   return clock::now();
@@ -248,7 +244,6 @@ inline void TimerManager::startTimer(const GInt timerId, const GString& pos) {
   m_timers[timerId].start(t);
 }
 
-
 /// Returns the timer Value.
 inline auto TimerManager::returnTimer(const GInt timerId) -> GDouble {
 #ifdef TIMER_RANK_AVG
@@ -271,8 +266,11 @@ inline void TimerManager::stopTimer(const GInt timerId, const GString& pos) {
   }
 
   if(m_timers[timerId].status() == Timer::Running) {
-    const chronoTimePoint t     = time();
-    m_timers[timerId].cpuTime() = t - m_timers[timerId].cpuTime() + m_timers[timerId].oldCpuTime();
+    const chronoTimePoint t = time();
+
+    m_timers[timerId].cpuTime() =
+        chronoTimePoint(t - m_timers[timerId].cpuTime());
+
     m_timers[timerId].stop();
 
     std::ignore = pos;
@@ -281,7 +279,6 @@ inline void TimerManager::stopTimer(const GInt timerId, const GString& pos) {
     std::cerr << msg << std::endl;
   }
 }
-
 
 // Stops all timers.
 inline void TimerManager::stopAllTimers() {
@@ -306,7 +303,6 @@ inline void TimerManager::stopAllRecordTimers() {
   }
 }
 
-
 inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDisplayed, const GInt tIndent, const GDouble superTime) {
   GBool running = false;
   if(m_timers[timerId].display()) {
@@ -324,15 +320,16 @@ inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDi
   // Calculate time relative to the parent timer
   GDouble percentage = NAN;
   if(superTime < 0.0) {
-    // If the parent time is less than zero, that means that there is no parent timer
-    // and the percentage should be 100%
+    // If the parent time is less than zero, that means that there is no parent
+    // timer and the percentage should be 100%
     percentage = 100.0;
   } else if(approx(superTime, 0.0, GDoubleEps)) {
-    // If the parent time is approximately zero, that probably means that the timer was never
-    // run - therefore the percentage is set to 0%
+    // If the parent time is approximately zero, that probably means that the
+    // timer was never run - therefore the percentage is set to 0%
     percentage = 0.0;
   } else {
-    // Otherwise calculate the percentage as the fraction of this timer vs. the parent timer times 100%
+    // Otherwise calculate the percentage as the fraction of this timer vs. the
+    // parent timer times 100%
     percentage = 100.0 * m_timers[timerId].recordedTime() / superTime;
   }
 
@@ -360,7 +357,9 @@ inline void TimerManager::displayTimer_(const GInt timerId, const GBool toggleDi
 inline void TimerManager::displayTimerHeader_() {}
 
 inline void TimerManager::displayTimerGroupHeader_(const GInt groupId) {
-  logger << "--------------------------------------------------------------------------------" << std::endl;
+  logger << "------------------------------------------------------------------"
+            "--------------"
+         << std::endl;
   logger.width(50);
   logger.precision(12);
   logger.setf(std::ios::left);
@@ -458,10 +457,8 @@ inline void RESET_ALL_RECORDS() { timers().resetRecords(); }
 #define RECORD_TIMER_START(timerId) timers().recordTimerStart(timerId, AT_)
 #define RECORD_TIMER_STOP(timerId)  timers().recordTimerStop(timerId, AT_)
 
-
 class TimerProfiling;
 class FunctionTiming;
-
 
 inline auto cpuTime() -> clock_t { return clock(); }
 
@@ -483,7 +480,6 @@ class FunctionTiming {
   FunctionTiming(FunctionTiming&)                     = default;
   FunctionTiming(const FunctionTiming&)               = default;
   FunctionTiming(FunctionTiming&&)                    = default;
-
 
   void in() {
     m_tmpCpuTime  = cpuTime();
@@ -631,7 +627,7 @@ class TimerProfiling {
       time << (static_cast<GInt>(div)) << " hours, ";
       rem -= div * DHOUR;
     }
-    if(rem > DMINUTE) {
+    if (rem > DMINUTE) {
       const GDouble div = floor(rem / DMINUTE);
       time << (static_cast<GInt>(div)) << " mins, ";
       rem -= div * DMINUTE;
@@ -640,10 +636,10 @@ class TimerProfiling {
     return time.str();
   }
 
- private:
-  const clock_t     m_initCpuTime;
-  const GDouble     m_initWallTime;
-  const std::string                         m_name;
+private:
+  const clock_t m_initCpuTime;
+  const GDouble m_initWallTime;
+  const std::string m_name;
   inline static std::vector<FunctionTiming> s_functionTimings;
 };
 
