@@ -107,13 +107,19 @@ class AppConfiguration {
 void startupInfo(GChar** argv) {
   using namespace std;
 
+
   if(MPI::isRoot()) {
-    cout << R"(    __  _______  __  _________     _     __)" << endl;
-    cout << R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)" << endl;
-    cout << R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )" << endl;
-    cout << R"( / /  / / /_/ / /  / / /_/ / /  / / /_/ /  )" << endl;
-    cout << R"(/_/  /_/\____/_/  /_/\____/_/  /_/\__,_/   )" << endl;
-    cout << R"(                                           )" << endl;
+    cout << "==========================================================" << endl;
+    cout << "  O)) O)   O))))))))    O))    O))       O)) O))       O))" << endl;
+    cout << "O))    O)) O))       O))   O)) O) O))   O))) O) O))   O)))" << endl;
+    cout << " O))       O))      O))        O)) O)) O O)) O)) O)) O O))" << endl;
+    cout << "   O))     O))))))  O))        O))  O))  O)) O))  O))  O))" << endl;
+    cout << "      O))  O))      O))        O))   O)  O)) O))   O)  O))" << endl;
+    cout << "O))    O)) O))       O))   O)) O))       O)) O))       O))" << endl;
+    cout << "  O)) O)   O))         O))))   O))       O)) O))       O))" << endl;
+    cout << "                                                v" << XSTRINGIFY(PROJECT_VER) << "b" << XSTRINGIFY(BUILD_NUM) << endl;
+    cout << "----------------------------------------------------------" << endl;
+
     cout << "Start time:            " << dateString() << "\n"
          << "Number of ranks:       " << MPI::globalNoDomains() << "\n"
 #ifdef _OPENMP
