@@ -1,6 +1,7 @@
 #ifndef GRIDGENERATOR_GRIDINTERFACE_H
 #define GRIDGENERATOR_GRIDINTERFACE_H
 
+#include <sfcmm_common.h>
 #include "common/boundingbox.h"
 #include "geometry.h"
 
@@ -72,6 +73,10 @@ class GridInterface {
   /// Get the currently highest level present in the grid.
   /// \return Return currently highest level.
   [[nodiscard]] virtual inline auto currentHighestLvl() const -> GInt = 0;
+
+  /// Get the number of dimensions.
+  /// \return Dimensions of the grid.
+  [[nodiscard]] virtual inline auto dim() const -> GInt = 0;
 
 
   //  //// Grid Generation specific
