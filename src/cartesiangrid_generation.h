@@ -13,6 +13,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::geometry;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::property;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::parent;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -34,7 +35,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       return;
     }
     m_center.resize(capacity);
-    m_parentId.resize(capacity);
     m_globalId.resize(capacity);
     m_noChildren.resize(capacity);
     m_nghbrIds.resize(capacity);
@@ -47,14 +47,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void reset() override {
     m_center.clear();
-    m_parentId.clear();
     m_globalId.clear();
     m_noChildren.clear();
     m_nghbrIds.clear();
     m_childIds.clear();
     m_rfnDistance.clear();
     m_level.clear();
-    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::reset();
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::clear();
   }
 
   void setMaxLvl(const GInt _maxLvl) override {
@@ -137,7 +136,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       refineGrid(l);
     }
 
-    std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
+    std::fill(&parent(0), &parent(capacity()), INVALID_CELLID);
     reorderHilbertCurve();
 
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridPart]);
@@ -283,10 +282,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto capacity() const -> GInt { return m_capacity; }
 
-  [[nodiscard]] auto size() const -> GInt { return m_size; }
-
-  [[nodiscard]] auto parent(const GInt id) const -> GInt { return m_parentId[id]; }
-
   [[nodiscard]] auto globalId(const GInt id) const -> GInt { return m_globalId[id]; }
 
   [[nodiscard]] auto level(const GInt id) const -> std::byte { return m_level[id]; }
@@ -300,7 +295,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
  private:
   std::vector<LevelOffsetType>    m_levelOffsets{};
   std::vector<Point<NDIM>>        m_center{};
-  std::vector<GInt>               m_parentId{};
   std::vector<GInt>               m_globalId{};
   std::vector<GInt>               m_noChildren{};
   std::vector<std::byte>          m_level{};
@@ -413,7 +407,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
           + HALF * refinedLvlLength
                 * Point<NDIM>(cartesian::childDir[childId].data()); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
       m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
-      m_parentId[childCellId] = cellId;
+      parent(childCellId)     = cellId;
       m_globalId[childCellId] = childCellId;
 
       // reset since we overwrite previous levels
@@ -499,11 +493,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
              "Properties not set correctly! bndry implies IsInside!");
       // remove cell since it is not inside
       if(!property(cellId, CellProperties::inside)) {
-        const GInt parentId = m_parentId[cellId];
+        const GInt parentId = parent(cellId);
         ASSERT(parentId != INVALID_CELLID, "Invalid parentId! (cellId: " + std::to_string(cellId) + ")");
 
         // remove from parent
-        updateParent(m_parentId[cellId], cellId, INVALID_CELLID);
+        updateParent(parent(cellId), cellId, INVALID_CELLID);
         --m_noChildren[parentId];
 
         // remove from neighbors
@@ -582,7 +576,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_level[to]      = m_level[from];
     m_center[to]     = m_center[from];
     m_globalId[to]   = m_globalId[from];
-    m_parentId[to]   = m_parentId[from];
+    parent(to)       = parent(from);
     m_nghbrIds[to]   = m_nghbrIds[from];
     m_childIds[to]   = m_childIds[from];
     m_noChildren[to] = m_noChildren[from];
@@ -594,13 +588,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_nghbrIds[from].n[dir] = INVALID_CELLID;
     }
 
-    if(m_parentId[to] != INVALID_CELLID) {
-      updateParent(m_parentId[to], from, to);
+    if(parent(to) != INVALID_CELLID) {
+      updateParent(parent(to), from, to);
     }
 
     for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
       if(m_childIds[to].c[childId] != INVALID_CELLID) {
-        m_parentId[m_childIds[to].c[childId]] = to;
+        parent(m_childIds[to].c[childId]) = to;
       }
     }
   }
