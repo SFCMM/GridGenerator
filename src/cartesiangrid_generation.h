@@ -12,6 +12,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::increaseCurrentHighestLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::geometry;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::property;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -39,9 +40,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_nghbrIds.resize(capacity);
     m_childIds.resize(capacity);
     m_rfnDistance.resize(capacity);
-    m_properties.resize(capacity);
     m_level.resize(capacity);
     m_capacity = capacity;
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setCapacity(capacity);
   }
 
   void reset() override {
@@ -52,8 +53,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_nghbrIds.clear();
     m_childIds.clear();
     m_rfnDistance.clear();
-    m_properties.clear();
     m_level.clear();
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::reset();
   }
 
   void setMaxLvl(const GInt _maxLvl) override {
@@ -297,18 +298,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto center(const GInt id, const GInt dir) const -> GDouble { return m_center[id][dir]; }
 
  private:
-  inline auto                  property(const GInt id, CellProperties p) -> auto { return m_properties[id][static_cast<GInt>(p)]; }
-  [[nodiscard]] inline auto    property(const GInt id, CellProperties p) const -> GBool { return m_properties[id][static_cast<GInt>(p)]; }
-  std::vector<LevelOffsetType> m_levelOffsets{};
-  std::vector<Point<NDIM>>     m_center{};
-  std::vector<GInt>            m_parentId{};
-  std::vector<GInt>            m_globalId{};
-  std::vector<GInt>            m_noChildren{};
-  std::vector<std::byte>       m_level{};
+  std::vector<LevelOffsetType>    m_levelOffsets{};
+  std::vector<Point<NDIM>>        m_center{};
+  std::vector<GInt>               m_parentId{};
+  std::vector<GInt>               m_globalId{};
+  std::vector<GInt>               m_noChildren{};
+  std::vector<std::byte>          m_level{};
   std::vector<NeighborList<NDIM>> m_nghbrIds{};
   std::vector<ChildList<NDIM>>    m_childIds{};
   std::vector<GInt>               m_rfnDistance{};
-  std::vector<PropertyBitsetType> m_properties{};
 
   GInt m_capacity{0};
   GInt m_size{0};
@@ -420,7 +418,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
       // reset since we overwrite previous levels
       m_noChildren[childCellId] = 0;
-      m_properties[childCellId].reset();
+      property(childCellId).reset();
       m_childIds[childCellId] = {INVALID_LIST<cartesian::maxNoChildren<NDIM>()>()};
       m_nghbrIds[childCellId] = {INVALID_LIST<cartesian::maxNoNghbrs<NDIM>()>()};
 
@@ -580,7 +578,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     ASSERT(from >= 0, "Invalid from!");
     ASSERT(to >= 0, "Invalid to!");
 
-    m_properties[to] = m_properties[from];
+    property(to)     = property(from);
     m_level[to]      = m_level[from];
     m_center[to]     = m_center[from];
     m_globalId[to]   = m_globalId[from];
