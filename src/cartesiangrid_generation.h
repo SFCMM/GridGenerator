@@ -293,18 +293,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto center(const GInt id, const GInt dir) const -> GDouble { return m_center[id][dir]; }
 
  private:
-  std::vector<LevelOffsetType>    m_levelOffsets{};
-  std::vector<Point<NDIM>>        m_center{};
-  std::vector<GInt>               m_globalId{};
-  std::vector<GInt>               m_noChildren{};
-  std::vector<std::byte>          m_level{};
-  std::vector<NeighborList<NDIM>> m_nghbrIds{};
-  std::vector<ChildList<NDIM>>    m_childIds{};
-  std::vector<GInt>               m_rfnDistance{};
-
-  GInt m_capacity{0};
-  GInt m_size{0};
-
   void outOfMemory(GInt level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
     logger << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
@@ -687,5 +675,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
     }
   }
+
+  std::vector<LevelOffsetType>    m_levelOffsets{};
+  std::vector<Point<NDIM>>        m_center{};
+  std::vector<GInt>               m_globalId{};
+  std::vector<GInt>               m_noChildren{};
+  std::vector<std::byte>          m_level{};
+  std::vector<NeighborList<NDIM>> m_nghbrIds{};
+  std::vector<ChildList<NDIM>>    m_childIds{};
+  std::vector<GInt>               m_rfnDistance{};
+
+  GInt m_capacity{0};
+  GInt m_size{0};
 };
 #endif // GRIDGENERATOR_CARTESIANGRID_GENERATION_H
