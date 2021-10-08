@@ -131,6 +131,23 @@ class BaseCartesianGrid : public GridInterface {
 
   [[nodiscard]] inline auto level() -> std::vector<std::byte>& { return m_level; }
 
+  inline auto globalId(const GInt id) -> GInt& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_globalId.at(id);
+    }
+    return m_globalId[id];
+  }
+
+  [[nodiscard]] inline auto globalId(const GInt id) const -> GInt {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_globalId.at(id);
+    }
+    return m_globalId[id];
+  }
+
+
   [[nodiscard]] inline auto propertiesToBits(const GInt id) const -> GUint {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -232,12 +249,14 @@ class BaseCartesianGrid : public GridInterface {
     m_properties.resize(capacity);
     m_parentId.resize(capacity);
     m_level.resize(capacity);
+    m_globalId.resize(capacity);
   }
 
   void reset() override {
     std::for_each(m_properties.begin(), m_properties.end(), [](auto& prop) { prop.reset(); });
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
     std::fill(m_level.begin(), m_level.end(), std::byte(-1));
+    std::fill(m_globalId.begin(), m_globalId.end(), INVALID_CELLID);
     m_size = 0;
   }
 
@@ -245,6 +264,7 @@ class BaseCartesianGrid : public GridInterface {
     m_properties.clear();
     m_parentId.clear();
     m_level.clear();
+    m_globalId.clear();
     m_size = 0;
   }
 
@@ -277,6 +297,7 @@ class BaseCartesianGrid : public GridInterface {
 
   std::vector<PropertyBitsetType> m_properties{};
   std::vector<GInt>               m_parentId{};
+  std::vector<GInt>               m_globalId{};
   std::vector<std::byte>          m_level{};
 };
 
