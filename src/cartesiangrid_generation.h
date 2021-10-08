@@ -14,6 +14,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::geometry;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::property;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::parent;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::level;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -40,7 +41,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_nghbrIds.resize(capacity);
     m_childIds.resize(capacity);
     m_rfnDistance.resize(capacity);
-    m_level.resize(capacity);
     m_capacity = capacity;
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setCapacity(capacity);
   }
@@ -52,7 +52,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_nghbrIds.clear();
     m_childIds.clear();
     m_rfnDistance.clear();
-    m_level.clear();
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::clear();
   }
 
@@ -213,16 +212,16 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // Cell filter functions
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // only output the lowest level
-    std::function<GBool(GInt)> isLowestLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == partitionLvl(); };
+    std::function<GBool(GInt)> isLowestLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == partitionLvl(); };
 
     // only output the highest level
-    std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == currentHighestLvl(); };
+    std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == currentHighestLvl(); };
 
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return m_noChildren[cellId] == 0; };
 
     // only output the lowest level
-    std::function<GBool(GInt)> isTargetLevel = [&](GInt cellId) { return std::to_integer<GInt>(m_level[cellId]) == outputLvl; };
+    std::function<GBool(GInt)> isTargetLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == outputLvl; };
 
 
     std::function<GBool(GInt)>& outputFilter = isLeaf;
@@ -247,7 +246,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     for(const auto& outputvalue : outvalues) {
       if(outputvalue == "level") {
         index.emplace_back("Level");
-        values.emplace_back(toStringVector(m_level, m_size));
+        values.emplace_back(toStringVector(level(), m_size));
         cerr0 << " level ";
       } else if(outputvalue == "noChildren") {
         index.emplace_back("NoChildren");
@@ -283,8 +282,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto capacity() const -> GInt { return m_capacity; }
 
   [[nodiscard]] auto globalId(const GInt id) const -> GInt { return m_globalId[id]; }
-
-  [[nodiscard]] auto level(const GInt id) const -> std::byte { return m_level[id]; }
 
   [[nodiscard]] auto child(const GInt id, const GInt childId) const -> GInt { return m_childIds[id].c[childId]; }
 
@@ -385,7 +382,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(DEBUG_LEVEL > Debug_Level::debug) {
       logger << "refine cell " << cellId << " with offset " << offset << std::endl;
     }
-    const GInt    refinedLvl       = std::to_integer<GInt>(m_level[cellId]) + 1;
+    const GInt    refinedLvl       = std::to_integer<GInt>(level(cellId)) + 1;
     const GDouble refinedLvlLength = lengthOnLvl(refinedLvl);
 
     for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
@@ -394,7 +391,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
           m_center[cellId]
           + HALF * refinedLvlLength
                 * Point<NDIM>(cartesian::childDir[childId].data()); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-      m_level[childCellId]    = static_cast<std::byte>(refinedLvl);
+      level(childCellId)      = static_cast<std::byte>(refinedLvl);
       parent(childCellId)     = cellId;
       m_globalId[childCellId] = childCellId;
 
@@ -415,9 +412,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  void findChildLevelNghbrs(const std::vector<LevelOffsetType>& levelOffset, const GInt level) {
+  void findChildLevelNghbrs(const std::vector<LevelOffsetType>& levelOffset, const GInt _level) {
     // check all children at the given level
-    for(GInt parentId = levelOffset[level].begin; parentId < levelOffset[level].end; ++parentId) {
+    for(GInt parentId = levelOffset[_level].begin; parentId < levelOffset[_level].end; ++parentId) {
       const GInt* __restrict children = &m_childIds[parentId].c[0];
       for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
         if(children[childId] == INVALID_CELLID) {
@@ -451,17 +448,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
             if(DEBUG_LEVEL > Debug_Level::min_debug && neighbors[dir] != INVALID_CELLID
                && (m_center[neighbors[dir]] - m_center[children[childId]]).norm()
-                      > 1.9 * lengthOnLvl(std::to_integer<GInt>(m_level[children[childId]]))) {
+                      > 1.9 * lengthOnLvl(std::to_integer<GInt>(level(children[childId])))) {
               cerr0 << "neighbors[dir] " << neighbors[dir] << " cellId " << children[childId] << std::endl;
               cerr0 << "neighbors " << strStreamify<NDIM>(m_center[neighbors[dir]]).str() << std::endl;
               cerr0 << "neighbors " << strStreamify<NDIM>(m_center[children[childId]]).str() << std::endl;
               cerr0 << "ndiff " << (m_center[neighbors[dir]] - m_center[children[childId]]).norm() << " vs "
-                    << lengthOnLvl(std::to_integer<GInt>(m_level[children[childId]])) << std::endl;
+                    << lengthOnLvl(std::to_integer<GInt>(level(children[childId]))) << std::endl;
               cerr0 << "parentId " << parentId << " np " << m_nghbrIds[parentId].n[dir] << std::endl;
               cerr0 << "parent " << strStreamify<NDIM>(m_center[parentId]).str() << std::endl;
               cerr0 << "parent neighbors " << strStreamify<NDIM>(m_center[m_nghbrIds[parentId].n[dir]]).str() << std::endl;
               cerr0 << "pdiff " << (m_center[parentId] - m_center[m_nghbrIds[parentId].n[dir]]).norm() << " vs "
-                    << lengthOnLvl(std::to_integer<GInt>(m_level[parentId])) << std::endl;
+                    << lengthOnLvl(std::to_integer<GInt>(level(parentId))) << std::endl;
 
               TERMM(-1, "Invalid neighbor");
             }
@@ -471,11 +468,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  void deleteOutsideCells(const GInt level) {
-    markOutsideCells(m_levelOffsets, level);
+  void deleteOutsideCells(const GInt _level) {
+    markOutsideCells(m_levelOffsets, _level);
 
     // delete cells that have been marked as being outside
-    for(GInt cellId = m_levelOffsets[level].end - 1; cellId >= m_levelOffsets[level].begin; --cellId) {
+    for(GInt cellId = m_levelOffsets[_level].end - 1; cellId >= m_levelOffsets[_level].begin; --cellId) {
       ASSERT(!property(cellId, CellProperties::bndry)
                  || property(cellId, CellProperties::inside) == property(cellId, CellProperties::bndry),
              "Properties not set correctly! bndry implies IsInside!");
@@ -495,14 +492,14 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
             m_nghbrIds[nghbrCellId].n[cartesian::oppositeDir(dir)] = INVALID_CELLID;
           }
         }
-        if(cellId != m_levelOffsets[level].end - 1) {
+        if(cellId != m_levelOffsets[_level].end - 1) {
           // copy an inside cell to the current position to fill the hole
-          copyCell(m_levelOffsets[level].end - 1, cellId);
+          copyCell(m_levelOffsets[_level].end - 1, cellId);
         }
-        m_levelOffsets[level].end--;
+        m_levelOffsets[_level].end--;
       }
     }
-    m_size = levelSize(m_levelOffsets[level]);
+    m_size = levelSize(m_levelOffsets[_level]);
     logger << SP3 << "* grid has " << m_size << " cells" << std::endl;
     std::cout << SP3 << "* grid has " << m_size << " cells" << std::endl;
   }
@@ -551,7 +548,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto pointIsInside(const Point<NDIM>& x) const -> GBool { return geometry()->pointIsInside(x); }
 
   [[nodiscard]] auto cellHasCut(GInt cellId) const -> GBool {
-    const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(m_level[cellId]));
+    const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
     return geometry()->cutWithCell(m_center[cellId], cellLength);
   }
 
@@ -561,7 +558,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     ASSERT(to >= 0, "Invalid to!");
 
     property(to)     = property(from);
-    m_level[to]      = m_level[from];
+    level(to)        = level(from);
     m_center[to]     = m_center[from];
     m_globalId[to]   = m_globalId[from];
     parent(to)       = parent(from);
@@ -680,7 +677,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   std::vector<Point<NDIM>>        m_center{};
   std::vector<GInt>               m_globalId{};
   std::vector<GInt>               m_noChildren{};
-  std::vector<std::byte>          m_level{};
   std::vector<NeighborList<NDIM>> m_nghbrIds{};
   std::vector<ChildList<NDIM>>    m_childIds{};
   std::vector<GInt>               m_rfnDistance{};
