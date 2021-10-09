@@ -1,9 +1,12 @@
 #ifndef GRIDGENERATOR_BOUNDINGBOX_H
 #define GRIDGENERATOR_BOUNDINGBOX_H
 
+#include "common/constants.h"
+#include "common/sfcmm_types.h"
+
 /// Interface for accessing bounding boxes.
 class BoundingBoxInterface {
- public:
+public:
   /// Return the minimum values of the bounding box (const)
   /// \param dir Direction of the value
   /// \return min[dir]
@@ -71,14 +74,19 @@ template <GInt NDIM>
 class BoundingBoxCT : public BoundingBox<BoundingBoxCT<NDIM>> {
   friend BoundingBox<BoundingBoxCT<NDIM>>;
 
- public:
+public:
   BoundingBoxCT() = default;
-  BoundingBoxCT(const BoundingBoxDynamic& rhs);
-  BoundingBoxCT(const BoundingBoxInterface& rhs);
+  /// Initialize from dynamic bounding box
+  /// \param rhs Dynamic Bounding Box type to copy from
+  BoundingBoxCT(const BoundingBoxDynamic &rhs);
+
+  /// Initialize from any bounding box
+  /// \param rhs Any bounding box type
+  BoundingBoxCT(const BoundingBoxInterface &rhs);
 
   [[nodiscard]] inline auto size() const -> GInt override { return NDIM; }
 
- private:
+private:
   std::array<GDouble, NDIM> m_min{NAN_LIST<NDIM>()};
   std::array<GDouble, NDIM> m_max{NAN_LIST<NDIM>()};
 };
@@ -101,12 +109,17 @@ class BoundingBoxReference : public BoundingBox<BoundingBoxReference> {
 class BoundingBoxDynamic : public BoundingBox<BoundingBoxDynamic> {
   friend BoundingBox<BoundingBoxDynamic>;
 
- public:
+public:
+  // todo: add constructor with dimension
   BoundingBoxDynamic() = default;
 
-  template <GInt NDIM>
-  BoundingBoxDynamic(const BoundingBoxCT<NDIM>& rhs);
+  /// Initialize from a compile time constant bounding box
+  /// \param rhs Compile time constant bounding box type
+  template <GInt NDIM> BoundingBoxDynamic(const BoundingBoxCT<NDIM> &rhs);
 
+  /// initialize dynamic type
+  /// \param dim Dimension of the initialization.
+  // todo: add init to interface
   void init(const GInt dim) {
     m_min.resize(dim);
     m_max.resize(dim);
@@ -114,9 +127,11 @@ class BoundingBoxDynamic : public BoundingBox<BoundingBoxDynamic> {
     std::fill_n(m_max.begin(), dim, NAN);
   }
 
-  [[nodiscard]] inline auto size() const -> GInt override { return static_cast<GInt>(m_min.size()); }
+  [[nodiscard]] inline auto size() const -> GInt override {
+    return static_cast<GInt>(m_min.size());
+  }
 
- private:
+private:
   std::vector<GDouble> m_min;
   std::vector<GDouble> m_max;
 };
