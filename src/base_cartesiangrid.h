@@ -198,7 +198,7 @@ class BaseCartesianGrid : public GridInterface {
     }
   }
 
-  [[nodiscard]] inline auto capacity() const -> GInt { return m_parentId.capacity(); }
+  [[nodiscard]] inline auto capacity() const -> GInt { return m_capacity; }
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
@@ -263,6 +263,8 @@ class BaseCartesianGrid : public GridInterface {
     return m_level[id];
   }
 
+  inline auto size() -> GInt& { return m_size; }
+
   /// Increase the current highest level by 1
   inline void increaseCurrentHighestLvl() {
     ASSERT(m_currentHighestLvl <= m_maxLvl, "Level increased over maximum level!");
@@ -281,6 +283,7 @@ class BaseCartesianGrid : public GridInterface {
     m_parentId.resize(capacity);
     m_level.resize(capacity);
     m_globalId.resize(capacity);
+    m_capacity = capacity;
   }
 
   void reset() override {
@@ -297,7 +300,9 @@ class BaseCartesianGrid : public GridInterface {
     m_level.clear();
     m_center.clear();
     m_globalId.clear();
-    m_size = 0;
+    m_size     = 0;
+    m_capacity = 0;
+    m_size     = 0;
   }
 
   void checkDir(const GInt dir) const {
@@ -320,6 +325,7 @@ class BaseCartesianGrid : public GridInterface {
   GInt m_partitioningLvl   = 0;
   GInt m_maxLvl            = 0;
   GInt m_size              = 0;
+  GInt m_capacity          = 0;
 
 
   // box containing the whole geometry
