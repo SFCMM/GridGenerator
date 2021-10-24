@@ -82,7 +82,6 @@
 - add UnitTest and testcases for grid generation (2)
 
 - Setup valgrind and sanitize tests (4)
-- activate backtrace (3)
 - activate profile guided optimization (3)
 
 - Run coverage within CI (4)
@@ -108,6 +107,7 @@
 ### Buildsystem
 
 ### Testing
+- activate backtracing
 
 ### Usability
 

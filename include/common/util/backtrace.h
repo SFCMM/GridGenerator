@@ -4,6 +4,7 @@
 #define SFCMM_BACKTRACE_H
 
 #include "common/compiler_config.h"
+#include "config.h"
 #include <cmath>
 #include <iostream>
 #include <sstream>
@@ -18,19 +19,22 @@
 
 // General backtrace macro
 #if defined(ENABLE_BACKTRACE)
-#include "llvm/Support/Signals.h"
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS
-#endif
-#ifndef __STDC_CONSTANT_MACROS
-#define __STDC_CONSTANT_MACROS
-#endif
-#include "llvm/Support/raw_ostream.h"
+//#include "llvm/Support/Signals.h"
+//#ifndef __STDC_LIMIT_MACROS
+//#define __STDC_LIMIT_MACROS
+//#endif
+//#ifndef __STDC_CONSTANT_MACROS
+//#define __STDC_CONSTANT_MACROS
+//#endif
+//#include "llvm/Support/raw_ostream.h"
 
-#define BACKTRACE()                                                                                                                        \
-  do {                                                                                                                                     \
-    debug::backtrace();                                                                                                                    \
-  } while(false)
+#define BOOST_STACKTRACE_USE_ADDR2LINE
+#include "boost_internal/stacktrace.h"
+
+#define BACKTRACE()                                                            \
+  do {                                                                         \
+    debug::backtrace();                                                        \
+  } while (false)
 #else
 #define BACKTRACE()                                                                                                                        \
   do {                                                                                                                                     \
@@ -50,8 +54,10 @@ namespace debug {
 
 #if defined(ENABLE_BACKTRACE)
 inline void backtrace() {
-  llvm::errs() << "Backtrace (line numbers may be too large by 1-3 lines):\n";
-  llvm::sys::PrintStackTrace(llvm::errs());
+  std::cout << boost::stacktrace::stacktrace() << std::endl;
+
+  //  llvm::errs() << "Backtrace (line numbers may be too large by 1-3
+  //  lines):\n"; llvm::sys::PrintStackTrace(llvm::errs());
 }
 #endif
 

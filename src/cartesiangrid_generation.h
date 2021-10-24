@@ -135,7 +135,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       refineGrid(l);
     }
 
-    std::fill(&parent(0), &parent(capacity()), INVALID_CELLID);
+    std::fill(&parent(0), &parent(capacity() - 1), INVALID_CELLID);
     reorderHilbertCurve();
 
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridPart]);
@@ -403,7 +403,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
       // if parent is a boundary cell check for children as well
       if(property(cellId, CellProperties::bndry)) {
-        property(childCellId, CellProperties::bndry) = cellHasCut(childCellId);
+        property(childCellId, CellProperties::bndry) = cellHasCut(childCellId, refinedLvlLength);
       }
 
       // update parent
@@ -546,9 +546,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto pointIsInside(const Point<NDIM>& x) const -> GBool { return geometry()->pointIsInside(x); }
 
-  [[nodiscard]] auto cellHasCut(GInt cellId) const -> GBool {
+  [[nodiscard]] auto cellHasCut(const GInt cellId) const -> GBool {
     const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
-    return geometry()->cutWithCell(center(cellId), cellLength);
+    return cellHasCut(cellId, cellLength);
+  }
+
+  [[nodiscard]] inline auto cellHasCut(const GInt cellId, const GDouble length) const -> GBool {
+    return geometry()->cutWithCell(center(cellId), length);
   }
 
   void copyCell(const GInt from, const GInt to) {
