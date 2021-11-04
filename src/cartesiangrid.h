@@ -3,6 +3,8 @@
 
 #include <gcem.hpp>
 
+#include <common/surface.h>
+#include <set>
 #include <sfcmm_common.h>
 #include "base_cartesiangrid.h"
 //#include "celltree.h"
@@ -15,6 +17,7 @@
 #include "cartesiangrid_generation.h"
 #endif
 #include "interface/grid_interface.h"
+//#include "lbm_constants.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
@@ -112,7 +115,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
 
-  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
+  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       //      checkDir(dir);
@@ -235,6 +238,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
+  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& { return m_bndrySurfaces[id]; }
+
+
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
   void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid) {
@@ -276,11 +282,17 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
 
     setProperties();
+
+    determineBoundaryCells();
+    identifyBndrySurfaces();
+    setupPeriodicConnections();
+    addDiagonalNghbrs();
+    //    setupPeriodicConnections();//works
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
     //    }
-    addDiagonalNghbrs();
+    //    TERMM(-1, "testing");
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -336,7 +348,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       property(cellId, CellProperties::leaf) = isLeaf;
       m_noLeafCells += static_cast<GInt>(isLeaf);
     }
-    determineBoundaryCells();
   };
 
   void determineBoundaryCells() {
@@ -367,6 +378,92 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_noBndCells += static_cast<GInt>(property(cellId, CellProperties::bndry) && property(cellId, CellProperties::leaf));
     }
   }
+
+  void identifyBndrySurfaces() {
+    // todo: make settable
+    const GBool axisAligned = true;
+    if(axisAligned) {
+      m_bndrySurfaces.resize(cartesian::maxNoNghbrs<NDIM>());
+
+      for(GInt cellId = 0; cellId < size(); ++cellId) {
+        if(property(cellId, Cell::bndry)) {
+          for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+            if(!hasNeighbor(cellId, dir)) {
+              m_bndrySurfaces[dir].addCell(cellId, dir);
+            }
+          }
+        }
+      }
+    } else {
+      TERMM(-1, "Not implemented");
+    }
+  }
+
+  // todo: move somewhere else!
+  void setupPeriodicConnections() {
+    logger << "Setting up periodic connections!" << std::endl;
+    // todo: make settable
+    //    addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
+    addPeriodicConnection(bndrySurface(static_cast<GInt>(0)), bndrySurface(static_cast<GInt>(1)));
+  }
+
+  // todo: fix for refinement level changes
+  // todo: simplify
+  void addPeriodicConnection(const Surface<NDIM>& surfA, const Surface<NDIM>& surfB) {
+    // connect cells of surfA and surfB
+    for(const GInt cellIdA : surfA.getCellList()) {
+      for(const GInt cellIdB : surfB.getCellList()) {
+        GInt        notMatchingDir = -1;
+        const auto& centerA        = center(cellIdA);
+        const auto& centerB        = center(cellIdB);
+
+        // find cells of surfA and surfB to connect
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          // connect cells that have one direction which is identical
+          if(std::abs(centerA[dir] - centerB[dir]) > GDoubleEps) {
+            if(notMatchingDir >= 0) {
+              // periodic connection not possible since two directions don't match (3D)
+              notMatchingDir = -1;
+              break;
+            }
+            notMatchingDir = dir;
+            continue;
+          }
+        }
+
+        // cells need to be connected
+        if(notMatchingDir >= 0) {
+          // identify periodic direction for each cell
+          const GInt nghbrDir = 2 * notMatchingDir;
+          if(centerA[notMatchingDir] > centerB[notMatchingDir]) {
+            if constexpr(DEBUG_LEVEL > Debug_Level::min_debug) {
+              if(neighbor(cellIdB, nghbrDir) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir));
+              }
+              if(neighbor(cellIdA, nghbrDir + 1) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdA:" + std::to_string(cellIdA) + " dir:" + std::to_string(nghbrDir + 1));
+              }
+            }
+            neighbor(cellIdB, nghbrDir)     = cellIdA;
+            neighbor(cellIdA, nghbrDir + 1) = cellIdB;
+          } else {
+            if constexpr(DEBUG_LEVEL > Debug_Level::min_debug) {
+              if(neighbor(cellIdA, nghbrDir) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdA:" + std::to_string(cellIdA) + " dir:" + std::to_string(nghbrDir));
+              }
+              if(neighbor(cellIdB, nghbrDir + 1) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir + 1));
+              }
+            }
+            neighbor(cellIdA, nghbrDir)     = cellIdB;
+            neighbor(cellIdB, nghbrDir + 1) = cellIdA;
+          }
+        }
+      }
+    }
+  }
+
+
   void setWorkload() { TERMM(-1, "Not implemented!"); };
   void calculateOffspringsAndWeights() { TERMM(-1, "Not implemented!"); };
 
@@ -484,6 +581,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;
+
+  std::vector<Surface<NDIM>> m_bndrySurfaces;
 
   // Data containers
   std::vector<GInt> m_childIds{};
