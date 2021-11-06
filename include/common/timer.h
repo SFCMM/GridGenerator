@@ -26,10 +26,8 @@ class Timer {
 public:
   Timer(std::string n, const GInt g, const GInt id, const GInt p)
       : m_name(std::move(n)), m_group(g), m_timerId(id), m_parent(p),
-        m_recordedTime(0),
-      m_status(Timer::Uninitialized),
-      m_subTimers(0),
-      m_display(false) {}
+        m_recordedTime(0), m_status(Timer::Uninitialized), m_subTimers(0),
+        m_display(false) {}
   enum { Uninitialized = 0, Running = 1, Stopped = 0 };
 
   void start(chronoTimePoint t) {
@@ -622,7 +620,7 @@ class TimerProfiling {
       time << (static_cast<GInt>(div)) << " days, ";
       rem -= div * DDAY;
     }
-    if(rem > DHOUR) {
+    if (rem > DHOUR) {
       const GDouble div = floor(rem / DHOUR);
       time << (static_cast<GInt>(div)) << " hours, ";
       rem -= div * DHOUR;

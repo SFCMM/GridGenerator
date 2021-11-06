@@ -15,7 +15,7 @@ public:
   /// Return the minimum values of the bounding box
   /// \param dir Direction of the value
   /// \return min[dir]
-  virtual auto min(const GInt dir) -> GDouble& = 0;
+  virtual auto min(const GInt dir) -> GDouble & = 0;
 
   /// Return the maximum values of the bounding box (const)
   /// \param dir Direction of the value

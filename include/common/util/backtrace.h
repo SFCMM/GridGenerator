@@ -4,10 +4,12 @@
 #define SFCMM_BACKTRACE_H
 
 #include "common/compiler_config.h"
-#include "config.h"
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#if __has_include("config.h")
+#include "config.h"
+#endif
 
 // todo: activate
 
