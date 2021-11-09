@@ -64,7 +64,8 @@
 
 # V0.0.4 (~30.9.21)
 
-- Save HDF5 grid format. (1)
+- Save HDF5 grid format.
+- write paraview plugin.
 
 ### Moved from V0.0.3:
 - Save svg of the mesh. (4)
@@ -127,6 +128,7 @@
 
 - introduce type for bounding boxes
 - small cleanup in IO code
+- refactor configuration file loading code
 
 # V0.0.3 (16.9.21)
 
