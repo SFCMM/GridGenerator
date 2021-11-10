@@ -17,7 +17,7 @@
 #include "cartesiangrid_generation.h"
 #endif
 #include "interface/grid_interface.h"
-//#include "lbm_constants.h"
+#include "lbm_constants.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
@@ -238,7 +238,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
-  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& { return m_bndrySurfaces[id]; }
+  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      return m_bndrySurfaces.at(id);
+    }
+    return m_bndrySurfaces[id];
+  }
 
 
   /// Load the generated grid in-memory and set additional properties
@@ -399,12 +404,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  // todo: move somewhere else!
   void setupPeriodicConnections() {
     logger << "Setting up periodic connections!" << std::endl;
     // todo: make settable
-    //    addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
-    addPeriodicConnection(bndrySurface(static_cast<GInt>(0)), bndrySurface(static_cast<GInt>(1)));
+    addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
   }
 
   // todo: fix for refinement level changes
