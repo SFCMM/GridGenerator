@@ -7,20 +7,20 @@
 #include <set>
 #include <sfcmm_common.h>
 #include "base_cartesiangrid.h"
-//#include "celltree.h"
 #include "common/IO.h"
+#include "configuration.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
 #include "gridgenerator/cartesiangrid_generation.h"
+#include "lbm_constants.h"
 #else
 #include "cartesiangrid_generation.h"
 #endif
 #include "interface/grid_interface.h"
-#include "lbm_constants.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
-class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
+class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private configuration {
  public:
   /// Underlying enum type for property access
   using Cell = CellProperties;
@@ -238,17 +238,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
-  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      return m_bndrySurfaces.at(id);
-    }
-    return m_bndrySurfaces[id];
-  }
+  auto bndrySurface(const GString& id) -> Surface<NDIM>& { return m_bndrySurfaces[id]; }
 
 
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
   void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid, const json& properties) {
+    setConfiguration(properties);
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
     m_geometry = grid.geometry();
@@ -280,7 +276,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 #endif
 
-    m_axisAlignedBnd = properties["assumeAxisAligned"];
+    m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
+    m_periodic       = has_any_key_value("type", "periodic");
 
     currentHighestLvl() = grid.currentHighestLvl();
     partitionLvl()      = grid.partitionLvl();
@@ -294,12 +291,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     identifyBndrySurfaces();
     setupPeriodicConnections();
     addDiagonalNghbrs();
-    //    setupPeriodicConnections();//works
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
     //    }
-    //    TERMM(-1, "testing");
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -388,13 +383,15 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
-      m_bndrySurfaces.resize(cartesian::maxNoNghbrs<NDIM>());
+      for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
+        m_bndrySurfaces[static_cast<GString>(DirIdString[surfId])] = Surface<NDIM>();
+      }
 
       for(GInt cellId = 0; cellId < size(); ++cellId) {
         if(property(cellId, Cell::bndry)) {
           for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
             if(!hasNeighbor(cellId, dir)) {
-              m_bndrySurfaces[dir].addCell(cellId, dir);
+              m_bndrySurfaces[static_cast<GString>(DirIdString[dir])].addCell(cellId, dir);
             }
           }
         }
@@ -405,9 +402,24 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void setupPeriodicConnections() {
-    logger << "Setting up periodic connections!" << std::endl;
-    // todo: make settable
-    addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
+    if(m_periodic) {
+      std::vector<json>                    periodicBnds = get_all_items_with_value("periodic");
+      std::unordered_map<GString, GString> periodicConnections;
+      for(const auto& bnd : periodicBnds) {
+        for(const auto& [surfName, props] : bnd.items()) {
+          periodicConnections.emplace(surfName, config::required_config_value<GString>(props, "connection"));
+        }
+      }
+      logger << "Setting up periodic connections!" << std::endl;
+      for(const auto& connection : periodicConnections) {
+        if(periodicConnections.count(connection.second) != 0) {
+          periodicConnections.erase(connection.second);
+          //          GInt srfA = std::find(LBMDirString.begin(), LBMDirString.end(), connection.first) - LBMDirString.begin();
+          //          GInt srfB = std::find(LBMDirString.begin(), LBMDirString.end(), connection.second) - LBMDirString.begin();
+          addPeriodicConnection(bndrySurface(connection.first), bndrySurface(connection.second));
+        }
+      }
+    }
   }
 
   // todo: fix for refinement level changes
@@ -585,8 +597,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;
   GBool m_axisAlignedBnd = false;
+  GBool m_periodic       = false;
 
-  std::vector<Surface<NDIM>> m_bndrySurfaces;
+  std::unordered_map<GString, Surface<NDIM>> m_bndrySurfaces;
 
   // Data containers
   std::vector<GInt> m_childIds{};

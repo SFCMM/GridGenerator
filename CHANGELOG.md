@@ -95,6 +95,7 @@
 - fix all warnings (4)
 - cleanup todo items (5)
 - check for stuff that needs refactoring (6)
+- remove config:: namespace since it is redundant
 
 ## Ongoing:
 

@@ -90,13 +90,17 @@ static inline auto resolveGeomType(const GString& type) -> GeomType {
   if(index == static_cast<GInt>(GeomType::cube)) {
     return GeomType::cube;
   }
-  if(index == static_cast<GInt>(GeomType::box)) {
+  if (index == static_cast<GInt>(GeomType::box)) {
     return GeomType::box;
   }
-  if(index == static_cast<GInt>(GeomType::stl)) {
+  if (index == static_cast<GInt>(GeomType::stl)) {
     return GeomType::stl;
   }
   return GeomType::unknown;
 }
+
+enum class DirId { mX, pX, mY, pY, mZ, pZ };
+static constexpr std::array<std::string_view, 6> DirIdString = {
+    "-x", "+x", "-y", "+y", "-z", "+z"};
 
 #endif

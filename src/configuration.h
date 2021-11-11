@@ -7,7 +7,17 @@ class configuration {
  public:
   void setConfiguration(const GString& configFileName) { m_configFileName = configFileName; }
 
+  void setConfiguration(const json& config) {
+    m_config = config;
+    setupUnusedTracking();
+  }
+
+
   void loadConfiguration(const GString& section = "") {
+    if(!m_config.empty()) {
+      logger << "Warning loading configuration, but configuration already loaded!" << std::endl;
+      TERMM(-1, "Invalid operation!");
+    }
     logger << "Loading configuration file [" << configFile() << "]" << std::endl;
 
     // 1. open configuration file on root process
@@ -17,10 +27,7 @@ class configuration {
       if(!section.empty()) {
         m_config = m_config[section];
       }
-      // put all available keys in map to keep track of usage
-      for(const auto& element : m_config.items()) {
-        m_configKeys.emplace(element.key(), false);
-      }
+      setupUnusedTracking();
       configFileStream.close();
     }
   }
@@ -47,10 +54,82 @@ class configuration {
 
   auto has_config_value(const GString& key) -> GBool { return m_config.template contains(key); }
 
+  auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
+    auto has_config_value_key = [=](const json& cc, const GString& key, const GString& val) {
+      // entry exists
+      if(cc.contains(key)) {
+        // value matches
+        if(cc[key] == val) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    std::stack<json> stack;
+    stack.emplace(m_config);
+
+    do {
+      json tmp = stack.top();
+      stack.pop();
+
+      if(has_config_value_key(tmp, key, value)) {
+        return true;
+      }
+      for(const auto& item : tmp) {
+        if(item.is_object()) {
+          stack.emplace(item);
+        }
+      }
+    } while(!stack.empty());
+
+    return false;
+  }
+
+  auto get_all_items_with_value(const GString& value) const -> std::vector<json> {
+    auto has_config_value = [=](const json& cc, const GString& val) {
+      // entry exists
+      for(const auto& item : cc) {
+        if(item == val) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    std::vector<json>   found;
+    std::stack<json>    stack;
+    std::stack<GString> keyStack;
+    stack.emplace(m_config);
+    keyStack.emplace("default");
+
+
+    do {
+      json tmp = stack.top();
+      stack.pop();
+      GString tmpK = keyStack.top();
+      keyStack.pop();
+
+      if(has_config_value(tmp, value)) {
+        json hit;
+        hit[tmpK] = tmp;
+        found.emplace_back(hit);
+        continue;
+      }
+      for(const auto& [key, v] : tmp.items()) {
+        if(v.is_object()) {
+          stack.emplace(v);
+          keyStack.emplace(key);
+        }
+      }
+    } while(!stack.empty());
+
+    return found;
+  }
 
   void unusedConfigValues() {
     GInt i = 0;
-    logger << "The following values in the configuration file are unused:" << std::endl;
+    logger << "The following values in the configuration file are unused: \n";
     for(const auto& configKey : m_configKeys) {
       if(!configKey.second) {
         logger << "[" << ++i << "] " << configKey.first << "\n";
@@ -64,6 +143,13 @@ class configuration {
   auto config() const -> const json& { return m_config; }
 
  private:
+  void setupUnusedTracking() {
+    // put all available keys in map to keep track of usage
+    for(const auto& element : m_config.items()) {
+      m_configKeys.emplace(element.key(), false);
+    }
+  }
+
   GString                            m_configFileName = "grid.json";
   json                               m_config{};
   std::unordered_map<GString, GBool> m_configKeys{};
