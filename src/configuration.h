@@ -5,14 +5,19 @@ using json = nlohmann::json;
 
 class configuration {
  public:
+  /// Set the configuration file name
+  /// \param configFileName Configuration file name
   void setConfiguration(const GString& configFileName) { m_configFileName = configFileName; }
 
+  /// Set the configuration from json-object
+  /// \param config json-object to be used for configuration
   void setConfiguration(const json& config) {
     m_config = config;
     setupUnusedTracking();
   }
 
-
+  /// Load the configuration from a configuration file based on the object
+  /// \param section Section of the configuration file to use (optional default=everything)
   void loadConfiguration(const GString& section = "") {
     if(!m_config.empty()) {
       logger << "Warning loading configuration, but configuration already loaded!" << std::endl;
@@ -32,28 +37,44 @@ class configuration {
     }
   }
 
+  /// Get a required configuration value (exit if it doesn't exist)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \return Configuration value if it exist or exit
   template <typename T>
   auto required_config_value(const GString& key) -> T {
     // todo: check for types
     if(m_config.template contains(key)) {
-      m_configKeys[key] = true;
+      m_unusedKeys[key] = true;
       return static_cast<T>(m_config[key]);
     }
     TERMM(-1, "The required configuration value is missing: " + key);
   }
 
+  /// Get an optional configuration value (return default value if value not found)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \param defaultValue Default value
+  /// \return Configuration value if it exists or the given default
   template <typename T>
   auto opt_config_value(const GString& key, const T& defaultValue) -> T {
     // todo: check for types
     if(m_config.template contains(key)) {
-      m_configKeys[key] = true;
+      m_unusedKeys[key] = true;
       return static_cast<T>(m_config[key]);
     }
     return defaultValue;
   }
 
+  /// Check if a configuration value exists
+  /// \param key Key of the value to check
+  /// \return true if it exists
   auto has_config_value(const GString& key) -> GBool { return m_config.template contains(key); }
 
+  /// Exists a key-value pair in the configuration?
+  /// \param key The key of the value
+  /// \param value The value
+  /// \return The key-value pair exits -> true
   auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
     auto has_config_value_key = [=](const json& cc, const GString& _key, const GString& val) {
       // entry exists
@@ -86,6 +107,9 @@ class configuration {
     return false;
   }
 
+  /// Get all the keys with a certain value
+  /// \param value Value to search for
+  /// \return List of keys with the value
   auto get_all_items_with_value(const GString& value) const -> std::vector<json> {
     auto has_config_value = [=](const json& cc, const GString& val) {
       // entry exists
@@ -127,10 +151,11 @@ class configuration {
     return found;
   }
 
+  /// Print out a list of unused configuration values
   void unusedConfigValues() {
     GInt i = 0;
     logger << "The following values in the configuration file are unused: \n";
-    for(const auto& configKey : m_configKeys) {
+    for(const auto& configKey : m_unusedKeys) {
       if(!configKey.second) {
         logger << "[" << ++i << "] " << configKey.first << "\n";
       }
@@ -138,21 +163,29 @@ class configuration {
     logger << std::endl;
   }
 
+  /// Get the configuration file name
+  /// \return Configuration file name
   auto configFile() const -> GString { return m_configFileName; }
 
+  /// Get the json-object of the configuration
+  /// \return JSON-object
   auto config() const -> const json& { return m_config; }
 
  private:
+  /// Init the tracking of unused configuration values
   void setupUnusedTracking() {
     // put all available keys in map to keep track of usage
     for(const auto& element : m_config.items()) {
-      m_configKeys.emplace(element.key(), false);
+      m_unusedKeys.emplace(element.key(), false);
     }
   }
 
-  GString                            m_configFileName = "grid.json";
-  json                               m_config{};
-  std::unordered_map<GString, GBool> m_configKeys{};
+  // file name of the configuration
+  GString m_configFileName = "grid.json";
+  // json configuration object
+  json m_config{};
+  // map used for tracking the unused values
+  std::unordered_map<GString, GBool> m_unusedKeys{};
 };
 
 #endif // LBM_CONFIGURATION_H
