@@ -283,7 +283,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto child(const GInt id, const GInt childId) const -> GInt { return m_childIds[id].c[childId]; }
 
-  [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id].n[dir]; }
+  [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt override { return m_nghbrIds[id].n[dir]; }
 
  protected:
   [[nodiscard]] auto neighbor(const GInt id, const GInt dir) -> GInt& { return m_nghbrIds[id].n[dir]; }

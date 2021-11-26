@@ -247,10 +247,10 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     return m_center[id][dir];
   }
 
-  [[nodiscard]] inline auto center(const GInt id) -> Point<NDIM>& {
-    //    if(DEBUG_LEVEL >= Debug_Level::debug) {
-    //      checkBounds(id);
-    //    }
+  [[nodiscard]] inline auto center(const GInt id) -> Point<NDIM>& override {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      m_center.at(id);
+    }
     return m_center[id];
   }
 
