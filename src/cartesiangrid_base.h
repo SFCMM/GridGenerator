@@ -1,5 +1,5 @@
-#ifndef GRIDGENERATOR_BASE_CARTESIANGRID_H
-#define GRIDGENERATOR_BASE_CARTESIANGRID_H
+#ifndef GRIDGENERATOR_CARTESIANGRID_BASE_H
+#define GRIDGENERATOR_CARTESIANGRID_BASE_H
 
 #include <gcem.hpp>
 
@@ -354,4 +354,4 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
   std::vector<std::byte>          m_level{};
 };
 
-#endif // GRIDGENERATOR_BASE_CARTESIANGRID_H
+#endif // GRIDGENERATOR_CARTESIANGRID_BASE_H

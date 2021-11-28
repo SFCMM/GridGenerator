@@ -1,5 +1,5 @@
-#ifndef GRIDGENERATOR_WEIGHTMETHOD_H
-#define GRIDGENERATOR_WEIGHTMETHOD_H
+#ifndef GRIDGENERATOR_LOADBALANCING_WEIGHTS_H
+#define GRIDGENERATOR_LOADBALANCING_WEIGHTS_H
 
 enum class WeightMethodsTypes { uniform };
 
@@ -28,4 +28,4 @@ class WeightUniform : public WeightMethod {
   auto weight(GInt /*id*/) -> GFloat override { return 1.0; }
 };
 
-#endif // GRIDGENERATOR_WEIGHTMETHOD_H
+#endif // GRIDGENERATOR_LOADBALANCING_WEIGHTS_H
