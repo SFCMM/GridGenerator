@@ -1,5 +1,5 @@
-#ifndef GRIDGENERATOR_CARTESIANGRID_BASE_H
-#define GRIDGENERATOR_CARTESIANGRID_BASE_H
+#ifndef GRIDGENERATOR_BASE_CARTESIANGRID_H
+#define GRIDGENERATOR_BASE_CARTESIANGRID_H
 
 #include <gcem.hpp>
 
@@ -10,6 +10,21 @@
 #include "globaltimers.h"
 #include "gridcell_properties.h"
 #include "interface/grid_interface.h"
+
+template <GInt NDIM>
+class CartesianGridData {
+ public:
+  CartesianGridData(const GInt noCells, const std::vector<Point<NDIM>>& center) : m_noCells(noCells), m_center(center) {}
+
+  inline auto noCells() const -> GInt { return m_noCells; }
+
+  inline auto center(const GInt cellId) const -> const Point<NDIM>& { return m_center[cellId]; }
+
+ private:
+  const GInt m_noCells;
+
+  const std::vector<Point<NDIM>>& m_center;
+};
 
 struct LevelOffsetType {
  public:
@@ -224,6 +239,8 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     return m_parentId[id] > -1;
   }
 
+  auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(noCells(), center()); }
+
  protected:
   inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
 
@@ -354,4 +371,4 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
   std::vector<std::byte>          m_level{};
 };
 
-#endif // GRIDGENERATOR_CARTESIANGRID_BASE_H
+#endif // GRIDGENERATOR_BASE_CARTESIANGRID_H
