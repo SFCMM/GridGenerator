@@ -56,6 +56,8 @@ static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {
 
 enum class SolverType { NONE, LBM };
 static constexpr std::array<std::string_view, 2> SOLVER_NAME = {"NONE", "LBM"};
+static constexpr std::array<std::string_view, 2> SOLVER_NAMELC = {"none",
+                                                                  "lbm"};
 
 static const std::vector<std::vector<GDouble>> DEFAULT_BOUNDINGBOX = {
     {0.0, 1.0},
@@ -87,7 +89,7 @@ static inline auto resolveGeomType(const GString& type) -> GeomType {
   if(index == static_cast<GInt>(GeomType::sphere)) {
     return GeomType::sphere;
   }
-  if(index == static_cast<GInt>(GeomType::cube)) {
+  if (index == static_cast<GInt>(GeomType::cube)) {
     return GeomType::cube;
   }
   if (index == static_cast<GInt>(GeomType::box)) {

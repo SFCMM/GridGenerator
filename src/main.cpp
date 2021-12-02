@@ -6,7 +6,7 @@
 #include "interface/solver_interface.h"
 #ifdef SOLVER_AVAILABLE
 #include "gridgenerator/gridGenerator.h"
-#include "lbm_solverExe.h"
+#include "lbm/lbm_solverExe.h"
 #else
 #include "gridGenerator.h"
 #endif
@@ -54,7 +54,19 @@ class AppConfiguration {
   void setBenchmark() { m_benchmark = true; }
 
   [[nodiscard]] auto toRun(const SolverType solver) const -> GBool {
-    return true; // todo: implement
+    // open configuration file
+    if(MPI::isRoot() && isFile(m_configurationFile)) {
+      std::ifstream configFileStream(m_configurationFile);
+      json          config;
+      configFileStream >> config;
+      // check for solvers for solver-> type
+      const GString solverType = config["solver"]["type"];
+      if(SOLVER_NAME[static_cast<GInt>(solver)] == solverType || SOLVER_NAMELC[static_cast<GInt>(solver)] == solverType) {
+        return true;
+      }
+    }
+    // todo: communicate the decision
+    return false;
   }
 
   [[nodiscard]] auto grid() const -> const GridInterface& { return m_app->grid(); }
@@ -98,10 +110,10 @@ class AppConfiguration {
 
   std::unique_ptr<SolverInterface> m_app;
   GString                          m_configurationFile = "grid.json";
-  GBool                         m_benchmark         = false;
-  GBool                         m_init              = false;
-  GInt32                        m_domainId          = -1;
-  GInt32                        m_noDomains         = -1;
+  GBool                            m_benchmark         = false;
+  GBool                            m_init              = false;
+  GInt32                           m_domainId          = -1;
+  GInt32                           m_noDomains         = -1;
 };
 } // namespace internal_
 
@@ -154,6 +166,7 @@ auto main(int argc, GChar** argv) -> int {
   options.add_options()("c,config", "Configuration file (default=grid.json)", cxxopts::value<std::string>()->default_value("grid.json"));
   options.add_options()("b,bench", "Run benchmark");
 #ifdef SOLVER_AVAILABLE
+  // todo: set solver type
   options.add_options()("s,solver", "Run solver");
 #endif
 
