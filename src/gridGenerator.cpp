@@ -41,7 +41,7 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_fil
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::initBenchmark(int argc, GChar** argv) {
-  m_benchmark             = true;
+  m_benchmark = true;
 
   m_dim              = 3;
   m_maxNoCells       = 100000;
