@@ -12,8 +12,8 @@
 //#   pragma once
 //#endif
 
-#include <boost/stacktrace/detail/to_dec_array.hpp>
 #include <boost/stacktrace/detail/to_hex_array.hpp>
+#include <boost/stacktrace/detail/to_dec_array.hpp>
 #include <boost/stacktrace/detail/try_dec_convert.hpp>
 //#include <boost/core/demangle.hpp>
 #include <cstdio>
@@ -68,6 +68,9 @@ public:
     }
 
     pid = ::fork();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-default"
+
     switch (pid) {
     case -1:
       // Failed...
@@ -90,6 +93,7 @@ public:
       //    default:
       //      std::terminate();
     }
+#pragma GCC diagnostic pop
 
     p = ::fdopen(pdes[0], "r");
     ::close(pdes[1]);
