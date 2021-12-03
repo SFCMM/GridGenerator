@@ -8,7 +8,7 @@
 #include <sfcmm_common.h>
 #include "cartesiangrid_base.h"
 #include "common/IO.h"
-#include "configuration.h"
+#include "common/configuration.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
