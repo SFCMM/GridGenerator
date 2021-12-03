@@ -4,7 +4,7 @@
 #define SFCMM_TIMER_H
 
 #include "sfcmm_types.h"
-#include "term.h"
+#include "common/term.h"
 #include <chrono>
 #include <cmath>
 #include <common/math/mathfunctions.h>

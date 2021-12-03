@@ -23,7 +23,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_executable(gridgenerator
         src/main.cpp src/gridGenerator.cpp src/gridGenerator.h src/config.h.in
         src/globaltimers.h src/cartesiangrid.h
-        src/gridcell_properties.h src/loadbalancing_weights.h src/geometry.h src/functions.h src/common/IO.h src/term.h
+        src/gridcell_properties.h src/loadbalancing_weights.h src/geometry.h src/functions.h src/common/IO.h src/common/term.h
         src/cartesiangrid_generation.h src/cartesiangrid_base.h src/common/line.h src/common/mesh.h)
 
 #TARGET_LINK_LIBRARIES(gridgenerator PUBLIC mpi)
