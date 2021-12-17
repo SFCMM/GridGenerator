@@ -2,12 +2,12 @@
 
 #ifndef SFCMM_STRING_HELPER_H
 #define SFCMM_STRING_HELPER_H
-#include "common/sfcmm_types.h"
 #include <bitset>
 #include <gcem.hpp>
 #include <iostream>
 #include <map>
 #include <sstream>
+#include "common/sfcmm_types.h"
 
 /// Get a stringstream from a given std::vector. Type needs to overload "<<".
 /// \tparam LENGTH Length of the vector to be streamed.
@@ -86,8 +86,12 @@ static inline auto toStringVector(const std::vector<T> &in, GInt size = -1)
   }
 
   std::transform(in.begin(), in.begin() + size,
-                 std::back_inserter(string_vector),
-                 [](T b) -> GString { return std::to_string(b); });
+                 std::back_inserter(string_vector), [](T b) -> GString {
+                   std::ostringstream out;
+                   out.precision(std::numeric_limits<T>::digits10);
+                   out << std::fixed << b;
+                   return out.str();
+                 });
   return string_vector;
 }
 
