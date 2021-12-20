@@ -3,10 +3,10 @@
 #ifndef SFCMM_CONSTANTS_H
 #define SFCMM_CONSTANTS_H
 
-#include "sfcmm_types.h"
 #include <array>
 #include <limits>
 #include <vector>
+#include "sfcmm_types.h"
 
 static constexpr GInt BASE2 = 2;
 static constexpr GDouble HALF = 0.5;
@@ -50,14 +50,15 @@ static constexpr GInt WEEK = DAY * 7;
 static constexpr GDouble DWEEK = DDAY * 7;
 } // namespace timeconst
 
-enum class Debug_Level { no_debug, min_debug, debug, more_debug, max_debug };
-static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {
-    "NO DEBUG", "MINIMAL DEBUG", "DEBUG", "MORE DEBUG", "MAXIMUM DEBUG"};
+enum class Debug_Level { no_debug, debug, max_debug };
+static constexpr std::array<std::string_view, 3> DEBUG_LEVEL = {
+    "NO DEBUG", "DEBUG", "MAXIMUM DEBUG"};
 
-enum class SolverType { NONE, LBM };
-static constexpr std::array<std::string_view, 2> SOLVER_NAME = {"NONE", "LBM"};
-static constexpr std::array<std::string_view, 2> SOLVER_NAMELC = {"none",
-                                                                  "lbm"};
+enum class SolverType { NONE, GRIDDER, LBM, LPT };
+static constexpr std::array<std::string_view, 4> SOLVER_NAME = {
+    "NONE", "GRIDDER", "LBM", "LPT"};
+static constexpr std::array<std::string_view, 4> SOLVER_NAMELC = {
+    "none", "gridder", "lbm", "lpt"};
 
 static const std::vector<std::vector<GDouble>> DEFAULT_BOUNDINGBOX = {
     {0.0, 1.0},
@@ -86,7 +87,7 @@ static constexpr std::array<std::string_view, static_cast<GInt>(GeomType::NumTyp
 
 static inline auto resolveGeomType(const GString& type) -> GeomType {
   GInt index = std::distance(GeomTypeString.begin(), std::find(GeomTypeString.begin(), GeomTypeString.end(), type));
-  if(index == static_cast<GInt>(GeomType::sphere)) {
+  if (index == static_cast<GInt>(GeomType::sphere)) {
     return GeomType::sphere;
   }
   if (index == static_cast<GInt>(GeomType::cube)) {
