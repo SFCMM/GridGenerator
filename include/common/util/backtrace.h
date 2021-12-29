@@ -3,10 +3,10 @@
 #ifndef SFCMM_BACKTRACE_H
 #define SFCMM_BACKTRACE_H
 
-#include "common/compiler_config.h"
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include "common/compiler_config.h"
 #if __has_include("config.h")
 #include "config.h"
 #endif
@@ -33,10 +33,10 @@
 #define BOOST_STACKTRACE_USE_ADDR2LINE
 #include "boost_internal/stacktrace.h"
 
-#define BACKTRACE()                                                            \
-  do {                                                                         \
-    debug::backtrace();                                                        \
-  } while (false)
+#define BACKTRACE()                                                                                                                        \
+  do {                                                                                                                                     \
+    debug::backtrace();                                                                                                                    \
+  } while(false)
 #else
 #define BACKTRACE()                                                                                                                        \
   do {                                                                                                                                     \
@@ -58,8 +58,8 @@ namespace debug {
 inline void backtrace() {
   std::cout << boost::stacktrace::stacktrace() << std::endl;
 
-  //  llvm::errs() << "Backtrace (line numbers may be too large by 1-3
-  //  lines):\n"; llvm::sys::PrintStackTrace(llvm::errs());
+  //  llvm::errs() << "Backtrace (line numbers may be too large by 1-3 lines):\n";
+  //  llvm::sys::PrintStackTrace(llvm::errs());
 }
 #endif
 

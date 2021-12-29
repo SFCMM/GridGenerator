@@ -8,14 +8,13 @@
 
 namespace cartesian {
 
-template <GInt NDIM> static constexpr inline auto maxNoNghbrsDiag() -> GInt;
+template <GInt NDIM>
+static constexpr inline auto maxNoNghbrsDiag() -> GInt;
 
 /// The direction opposite to the given dir. [Main directions only]
 /// \param dir Direction for which to obtain opposite direction.
 /// \return The opposite direction to dir.
-static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
-  return dir + 1 - 2 * (dir % 2);
-}
+static constexpr inline auto oppositeDir(const GInt dir) -> GInt { return dir + 1 - 2 * (dir % 2); }
 
 /// The direction opposite to the given dir. [Including diagonals]
 /// \param dir Direction for which to obtain opposite direction.
@@ -23,10 +22,10 @@ static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
 template <GInt NDIM>
 static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
   assert(dir < 2 * maxNoNghbrsDiag<NDIM>() && "Invalid direction");
-  if (dir < 2 * NDIM) {
+  if(dir < 2 * NDIM) {
     return dir + 1 - 2 * (dir % 2);
   }
-  if constexpr (NDIM == 2) {
+  if constexpr(NDIM == 2) {
     return dir > 5 ? dir - 2 : dir + 2;
   }
 }
@@ -34,29 +33,31 @@ static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
 /// Return maximum number of children per cell
 /// \tparam NDIM Number of dimension of the Cartesian grid
 /// \return The maximum number of children for a NDIM Cartesian mesh
-template <GInt NDIM> static constexpr inline auto maxNoChildren() -> GInt {
+template <GInt NDIM>
+static constexpr inline auto maxNoChildren() -> GInt {
   return gcem::pow(2, NDIM);
 }
 
 /// Return maximum number of Neighbors per cell
 /// \tparam NDIM Number of dimensions of the Cartesian grid
 /// \return The maximum number of same level neighbors at the given NDIM.
-template <GInt NDIM> static constexpr inline auto maxNoNghbrs() -> GInt {
+template <GInt NDIM>
+static constexpr inline auto maxNoNghbrs() -> GInt {
   return 2 * NDIM;
 }
 
-/// Return maximum number of Neighbors including diagonals (2D/3D) and
-/// tridiagonals (3D) per cell \tparam NDIM Number of dimensions of the
-/// Cartesian grid \return The maximum number of same level neighbors at the
-/// given NDIM including diagonals.
-template <GInt NDIM> static constexpr inline auto maxNoNghbrsDiag() -> GInt {
-  if (NDIM == 1) {
+/// Return maximum number of Neighbors including diagonals (2D/3D) and tridiagonals (3D) per cell
+/// \tparam NDIM Number of dimensions of the Cartesian grid
+/// \return The maximum number of same level neighbors at the given NDIM including diagonals.
+template <GInt NDIM>
+static constexpr inline auto maxNoNghbrsDiag() -> GInt {
+  if(NDIM == 1) {
     return 2;
   }
-  if (NDIM == 2) {
+  if(NDIM == 2) {
     return 8;
   }
-  if (NDIM == 3) {
+  if(NDIM == 3) {
     return 26;
   }
   return 50;
@@ -65,45 +66,41 @@ template <GInt NDIM> static constexpr inline auto maxNoNghbrsDiag() -> GInt {
 // todo: replace with constant expression function
 /// Given the childId gives the "direction" of this child relative to the center
 /// of a cell.
-static constexpr std::array<std::array<GDouble, sfcmm::MAX_DIM>,
-                            cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
-    childDir = {{
-        //-> 2D
-        // -x,-y, -z
-        {{-1, -1, -1, -1}}, // 0
-        //+x, -y, -z
-        {{1, -1, -1, -1}}, // 1
-        //-x, +y, -z
-        {{-1, 1, -1, -1}}, // 2
-        //+x, -y, -z
-        {{1, 1, -1, -1}}, // 3
-        //<- 2D
+static constexpr std::array<std::array<GDouble, sfcmm::MAX_DIM>, cartesian::maxNoChildren<sfcmm::MAX_DIM>()> childDir = {{
+    //-> 2D
+    // -x,-y, -z
+    {{-1, -1, -1, -1}}, // 0
+    //+x, -y, -z
+    {{1, -1, -1, -1}}, // 1
+    //-x, +y, -z
+    {{-1, 1, -1, -1}}, // 2
+    //+x, -y, -z
+    {{1, 1, -1, -1}}, // 3
+    //<- 2D
 
-        //-> 3D (+z)
-        {{-1, -1, 1, -1}}, // 4
-        {{1, -1, 1, -1}},  // 5
-        {{-1, 1, 1, -1}},  // 6
-        {{1, 1, 1, -1}},   // 7
-        //<- 3D (+z)
+    //-> 3D (+z)
+    {{-1, -1, 1, -1}}, // 4
+    {{1, -1, 1, -1}},  // 5
+    {{-1, 1, 1, -1}},  // 6
+    {{1, 1, 1, -1}},   // 7
+    //<- 3D (+z)
 
-        //-> 4D
-        {{-1, -1, -1, 1}}, // 8
-        {{1, -1, -1, 1}},  // 9
-        {{-1, 1, -1, 1}},  // 10
-        {{1, 1, -1, 1}},   // 11
-        {{-1, -1, 1, 1}},  // 12
-        {{1, -1, 1, 1}},   // 13
-        {{-1, 1, 1, 1}},   // 14
-        {{1, 1, 1, 1}}     // 15
-                           //<- 4D
-    }};
+    //-> 4D
+    {{-1, -1, -1, 1}}, // 8
+    {{1, -1, -1, 1}},  // 9
+    {{-1, 1, -1, 1}},  // 10
+    {{1, 1, -1, 1}},   // 11
+    {{-1, -1, 1, 1}},  // 12
+    {{1, -1, 1, 1}},   // 13
+    {{-1, 1, 1, 1}},   // 14
+    {{1, 1, 1, 1}}     // 15
+                       //<- 4D
+}};
 
 // todo: replace with constant expression function
 /// Given the childId gives the neighboring childIds(and existence ==-1 ->
 /// doesnot exist)
-static constexpr std::array<
-    std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MAX_DIM>()>,
-    cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
+static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MAX_DIM>()>, cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
     nghbrInside = {{
         //-x +x -y +y -z +z -zz +zz
         {{-1, 1, -1, 2, -1, 4, -1, 8}},  // 0
@@ -129,9 +126,7 @@ static constexpr std::array<
 // todo: replace with constant expression function
 /// Given the childId obtain the possible neighbors in a neighboring cell that
 /// doesnot have the same parent
-static constexpr std::array<
-    std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MAX_DIM>()>,
-    cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
+static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MAX_DIM>()>, cartesian::maxNoChildren<sfcmm::MAX_DIM>()>
     nghbrParentChildId = {{
         //-x +x -y +y -z +z -zz +zz
         {{1, -1, 2, -1, 4, -1, 8, -1}},  // 0

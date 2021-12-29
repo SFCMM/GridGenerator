@@ -3,8 +3,6 @@
 #ifndef SFCMM_TIMER_H
 #define SFCMM_TIMER_H
 
-#include "sfcmm_types.h"
-#include "common/term.h"
 #include <chrono>
 #include <cmath>
 #include <common/math/mathfunctions.h>
@@ -15,19 +13,25 @@
 #include <unistd.h>
 #include <utility>
 #include <vector>
+#include "sfcmm_types.h"
+#include "common/term.h"
 
 // todo: documentation
 // todo: tests
 
-using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock,
-                                                std::chrono::duration<double>>;
+using chronoTimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>>;
 
 class Timer {
-public:
+ public:
   Timer(std::string n, const GInt g, const GInt id, const GInt p)
-      : m_name(std::move(n)), m_group(g), m_timerId(id), m_parent(p),
-        m_recordedTime(0), m_status(Timer::Uninitialized), m_subTimers(0),
-        m_display(false) {}
+    : m_name(std::move(n)),
+      m_group(g),
+      m_timerId(id),
+      m_parent(p),
+      m_recordedTime(0),
+      m_status(Timer::Uninitialized),
+      m_subTimers(0),
+      m_display(false) {}
   enum { Uninitialized = 0, Running = 1, Stopped = 0 };
 
   void start(chronoTimePoint t) {
@@ -233,9 +237,8 @@ inline void TimerManager::recordTimerStart(const GInt timerId, const GString& po
 
 inline void TimerManager::startTimer(const GInt timerId, const GString& pos) {
   ASSERT(m_timers[timerId].status() != Timer::Running,
-         "The timer " + m_timers[timerId].name() +
-             " with id: " + std::to_string(timerId) +
-             " can't be started because it is already running! " + pos);
+         "The timer " + m_timers[timerId].name() + " with id: " + std::to_string(timerId)
+             + " can't be started because it is already running! " + pos);
   std::ignore = pos;
 
   chronoTimePoint t = time();
@@ -266,8 +269,7 @@ inline void TimerManager::stopTimer(const GInt timerId, const GString& pos) {
   if(m_timers[timerId].status() == Timer::Running) {
     const chronoTimePoint t = time();
 
-    m_timers[timerId].cpuTime() =
-        chronoTimePoint(t - m_timers[timerId].cpuTime());
+    m_timers[timerId].cpuTime() = chronoTimePoint(t - m_timers[timerId].cpuTime());
 
     m_timers[timerId].stop();
 
@@ -620,12 +622,12 @@ class TimerProfiling {
       time << (static_cast<GInt>(div)) << " days, ";
       rem -= div * DDAY;
     }
-    if (rem > DHOUR) {
+    if(rem > DHOUR) {
       const GDouble div = floor(rem / DHOUR);
       time << (static_cast<GInt>(div)) << " hours, ";
       rem -= div * DHOUR;
     }
-    if (rem > DMINUTE) {
+    if(rem > DMINUTE) {
       const GDouble div = floor(rem / DMINUTE);
       time << (static_cast<GInt>(div)) << " mins, ";
       rem -= div * DMINUTE;
@@ -634,10 +636,10 @@ class TimerProfiling {
     return time.str();
   }
 
-private:
-  const clock_t m_initCpuTime;
-  const GDouble m_initWallTime;
-  const std::string m_name;
+ private:
+  const clock_t                             m_initCpuTime;
+  const GDouble                             m_initWallTime;
+  const std::string                         m_name;
   inline static std::vector<FunctionTiming> s_functionTimings;
 };
 

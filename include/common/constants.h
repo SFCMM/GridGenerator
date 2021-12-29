@@ -8,9 +8,9 @@
 #include <vector>
 #include "sfcmm_types.h"
 
-static constexpr GInt BASE2 = 2;
-static constexpr GDouble HALF = 0.5;
-static constexpr GInt INVALID_CELLID = -1;
+static constexpr GInt    BASE2          = 2;
+static constexpr GDouble HALF           = 0.5;
+static constexpr GInt    INVALID_CELLID = -1;
 
 static constexpr GDouble PI = 3.141592653589793238462643383279;
 
@@ -35,36 +35,30 @@ static constexpr auto NAN_LIST() -> std::array<GDouble, LENGTH> {
 }
 
 // Memory
-static constexpr GInt KBIT = 1024;
+static constexpr GInt    KBIT  = 1024;
 static constexpr GDouble DKBIT = static_cast<GDouble>(KBIT);
 
 // Time
 namespace timeconst {
-static constexpr GInt MINUTE = 60;
+static constexpr GInt    MINUTE  = 60;
 static constexpr GDouble DMINUTE = 60;
-static constexpr GInt HOUR = 3600;
-static constexpr GDouble DHOUR = 3600;
-static constexpr GInt DAY = HOUR * 24;
-static constexpr GDouble DDAY = DHOUR * 24;
-static constexpr GInt WEEK = DAY * 7;
-static constexpr GDouble DWEEK = DDAY * 7;
+static constexpr GInt    HOUR    = 3600;
+static constexpr GDouble DHOUR   = 3600;
+static constexpr GInt    DAY     = HOUR * 24;
+static constexpr GDouble DDAY    = DHOUR * 24;
+static constexpr GInt    WEEK    = DAY * 7;
+static constexpr GDouble DWEEK   = DDAY * 7;
 } // namespace timeconst
 
 enum class Debug_Level { no_debug, debug, max_debug };
-static constexpr std::array<std::string_view, 3> DEBUG_LEVEL = {
-    "NO DEBUG", "DEBUG", "MAXIMUM DEBUG"};
+static constexpr std::array<std::string_view, 3> DEBUG_LEVEL = {"NO DEBUG", "DEBUG", "MAXIMUM DEBUG"};
 
 enum class SolverType { NONE, GRIDDER, LBM, LPT };
-static constexpr std::array<std::string_view, 4> SOLVER_NAME = {
-    "NONE", "GRIDDER", "LBM", "LPT"};
-static constexpr std::array<std::string_view, 4> SOLVER_NAMELC = {
-    "none", "gridder", "lbm", "lpt"};
+static constexpr std::array<std::string_view, 4> SOLVER_NAME   = {"NONE", "GRIDDER", "LBM", "LPT"};
+static constexpr std::array<std::string_view, 4> SOLVER_NAMELC = {"none", "gridder", "lbm", "lpt"};
 
 static const std::vector<std::vector<GDouble>> DEFAULT_BOUNDINGBOX = {
-    {0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0, 0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0}};
+    {0.0, 1.0}, {0.0, 1.0, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0}};
 
 // just some spaces to arrange output
 static constexpr std::string_view SP1{"  "};
@@ -87,23 +81,22 @@ static constexpr std::array<std::string_view, static_cast<GInt>(GeomType::NumTyp
 
 static inline auto resolveGeomType(const GString& type) -> GeomType {
   GInt index = std::distance(GeomTypeString.begin(), std::find(GeomTypeString.begin(), GeomTypeString.end(), type));
-  if (index == static_cast<GInt>(GeomType::sphere)) {
+  if(index == static_cast<GInt>(GeomType::sphere)) {
     return GeomType::sphere;
   }
-  if (index == static_cast<GInt>(GeomType::cube)) {
+  if(index == static_cast<GInt>(GeomType::cube)) {
     return GeomType::cube;
   }
-  if (index == static_cast<GInt>(GeomType::box)) {
+  if(index == static_cast<GInt>(GeomType::box)) {
     return GeomType::box;
   }
-  if (index == static_cast<GInt>(GeomType::stl)) {
+  if(index == static_cast<GInt>(GeomType::stl)) {
     return GeomType::stl;
   }
   return GeomType::unknown;
 }
 
 enum class DirId { mX, pX, mY, pY, mZ, pZ };
-static constexpr std::array<std::string_view, 6> DirIdString = {
-    "-x", "+x", "-y", "+y", "-z", "+z"};
+static constexpr std::array<std::string_view, 6> DirIdString = {"-x", "+x", "-y", "+y", "-z", "+z"};
 
 #endif
