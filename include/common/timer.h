@@ -15,6 +15,9 @@
 #include <vector>
 #include "sfcmm_types.h"
 #include "macros.h"
+#ifdef USE_ASSERTS
+#include "term.h"
+#endif
 
 // todo: documentation
 // todo: tests
