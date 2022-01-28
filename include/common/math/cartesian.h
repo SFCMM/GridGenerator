@@ -5,9 +5,6 @@
 
 #include <gcem.hpp>
 #include <cassert>
-#include <iostream>
-#include <array>
-#include "../sfcmm_types.h"
 
 namespace cartesian {
 
@@ -195,6 +192,7 @@ constexpr auto inbetweenDiagDirs<2>(GInt dir1, GInt dir2) -> GInt {
       std::cerr << "Invalid dist in inbetweenDiagDirs<2>()" << std::endl;
       std::exit(-1);
   }
+  return -1;
 }
 
 /// Return the direction unit vector.
@@ -206,6 +204,24 @@ inline auto dirVec(GInt /*dir*/) -> VectorD<NDIM> {
   std::cerr << "Invalid dir in dirVec()" << std::endl;
   std::exit(-1);
   VectorD<NDIM> tmp;
+  tmp.fill(NAN);
+  return tmp;
+}
+
+template <>
+inline auto dirVec<1>(GInt dir) -> VectorD<1> {
+  VectorD<1> tmp;
+  switch(dir) {
+    case 0:
+      tmp.fill(-1);
+      return tmp;
+    case 1:
+      tmp.fill(1);
+      return tmp;
+    default:
+      std::cerr << "Invalid dir in dirVec<1>()" << std::endl;
+      std::exit(-1);
+  }
   tmp.fill(NAN);
   return tmp;
 }
