@@ -1,0 +1,25 @@
+{
+  "dry-run": true,
+  "dim": 3,
+  "partitionLevel": 4,
+  "uniformLevel": 6,
+  "maxRfnmtLvl": 7,
+  "maxNoCells": 2000000,
+  "outputDir": "out",
+  "gridFileName": "cube",
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "stlA": {
+      "type": "stl",
+      "filename": "cube.stl"
+    }
+  }
+}
