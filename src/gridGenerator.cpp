@@ -208,6 +208,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridRefinement]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridGeneration]);
+  // don't output level anymore as a xml attribute
   logger.eraseAttribute("level");
 
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);

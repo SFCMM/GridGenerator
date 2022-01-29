@@ -1,0 +1,26 @@
+{
+  "dry-run": true,
+  "dim": 3,
+  "partitionLevel": 3,
+  "uniformLevel": 4,
+  "maxRfnmtLvl": 5,
+  "maxNoCells": 2000000,
+  "outputDir": "out",
+  "gridFileName": "donut_lowres_lvl4",
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "targetLvl",
+    "outputLvl": 4,
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "stlA": {
+      "type": "stl",
+      "filename": "donut_lowres.stl"
+    }
+  }
+}

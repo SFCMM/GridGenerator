@@ -152,13 +152,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       return;
     }
 
-    for(GInt l = partitionLvl(); l < uniformLevel; l++) {
-      m_levelOffsets[l + 1] = {size(), size() + levelSize(m_levelOffsets[l]) * cartesian::maxNoChildren<NDIM>()};
-      if(m_levelOffsets[l + 1].end > capacity()) {
-        outOfMemory(l + 1);
+    for(GInt lvl = partitionLvl(); lvl < uniformLevel; lvl++) {
+      m_levelOffsets[lvl + 1] = {size(), size() + levelSize(m_levelOffsets[lvl]) * cartesian::maxNoChildren<NDIM>()};
+      if(m_levelOffsets[lvl + 1].end > capacity()) {
+        outOfMemory(lvl + 1);
       }
 
-      refineGrid<true>(l);
+      refineGrid<true>(lvl);
     }
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
   }
@@ -220,7 +220,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return m_noChildren[cellId] == 0; };
 
-    // only output the lowest level
+    // only output the given level
     std::function<GBool(GInt)> isTargetLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == outputLvl; };
 
 
@@ -236,6 +236,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         TERMM(-1, "Required value not set!");
       }
       outputFilter = isTargetLevel;
+      if(outputLvl < partitionLvl()) {
+        TERMM(-1, "Outputting a lvl below the partition lvl is not possible!");
+      }
     } else {
       TERMM(-1, "Unknown output filter " + filter);
     }
@@ -305,6 +308,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     TERMM(-1, "Out of memory!");
   }
 
+  /// Refine grid to an one higher level.
+  /// \tparam DISTRIBUTED Grid is using MPI
+  /// \tparam UNIFORM Grid is uniform
+  /// \param _level Level to be refined
   template <GBool DISTRIBUTED = false, GBool UNIFORM = true>
   void refineGrid(const GInt _level) {
     if(DISTRIBUTED && !MPI::isSerial()) {
