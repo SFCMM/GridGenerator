@@ -1,4 +1,4 @@
-# V1.1.0 (6/22)
+# V1.1.0 (Q2/23)
 
 ## Planned:
 
@@ -8,7 +8,7 @@
 - Generate parallel geometry
 - use CGAL algorithms
 
-# V1.0.0 (3/22)
+# V1.0.0 (Q1/23)
 
 ## Planned:
 
@@ -17,7 +17,7 @@
 - Add LZMA2 compression options, https://github.com/google/brotli, https://github.com/schnaader/precomp-cpp
 - Add messagePack, https://amzn.github.io/ion-docs/
 
-# V0.2.0  (~12/21)
+# V0.2.0  (Q4/22)
 
 ## Planned:
 
@@ -30,7 +30,7 @@
 - move boundingbox to common
 - move io to common
 
-# V0.1.0 (~10/21)
+# V0.1.0 (Q2/22)
 
 ## Planned:
 
@@ -62,7 +62,7 @@
 - set log file name
 - Bug: Some how just calling ofstream.write() yields binary differences???
 
-# V0.0.4 (~30.9.21)
+# V0.0.4 (Q1/22)
 
 - Save HDF5 grid format.
 - write paraview plugin.
@@ -100,6 +100,9 @@
 ## Ongoing:
 
 - Implement MPI communication.
+- allow to generate grids with nodes on the surface of the geometry
+- add more testcases
+- compare result of testcases
 
 
 ## Done:
@@ -109,7 +112,9 @@
 ### Buildsystem
 
 ### Testing
+
 - activate backtracing
+- automatically run testcases
 
 ### Usability
 
