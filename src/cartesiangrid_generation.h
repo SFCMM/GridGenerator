@@ -311,29 +311,29 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   /// Refine grid to an one higher level.
   /// \tparam DISTRIBUTED Grid is using MPI
   /// \tparam UNIFORM Grid is uniform
-  /// \param _level Level to be refined
+  /// \param lvlToBeRefined Level to be refined
   template <GBool DISTRIBUTED = false, GBool UNIFORM = true>
-  void refineGrid(const GInt _level) {
+  void refineGrid(const GInt lvlToBeRefined) {
     if(DISTRIBUTED && !MPI::isSerial()) {
       // updateHaloOffsets();
     }
 
     if(UNIFORM) {
-      refineGrid(m_levelOffsets, _level);
+      refineGrid(m_levelOffsets, lvlToBeRefined);
       if(DISTRIBUTED && !MPI::isSerial()) {
         // todo:implement
         // refineGrid(m_haloOffsets, l);
       }
     } else {
-      refineGridMarkedOnly(m_levelOffsets, _level);
+      refineGridMarkedOnly(m_levelOffsets, lvlToBeRefined);
       if(DISTRIBUTED && !MPI::isSerial()) {
         // todo:implement
         // refineGridMarkedOnly(m_haloOffsets, l);
       }
     }
-    size() = m_levelOffsets[_level + 1].end;
+    size() = m_levelOffsets[lvlToBeRefined + 1].end;
 
-    findChildLevelNghbrs(m_levelOffsets, _level);
+    findChildLevelNghbrs(m_levelOffsets, lvlToBeRefined);
     if(DISTRIBUTED && !MPI::isSerial()) {
       // todo:implement
       // findChildLevelNeighbors(m_haloOffsets, l);
@@ -343,10 +343,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       // todo:implement
       //        deleteOutsideCellsParallel(l + 1);
     } else {
-      deleteOutsideCells(_level + 1);
+      deleteOutsideCells(lvlToBeRefined + 1);
     }
 
-    size() = m_levelOffsets[_level + 1].end;
+    size() = m_levelOffsets[lvlToBeRefined + 1].end;
     increaseCurrentHighestLvl();
     logger.updateAttributes();
   }
@@ -363,14 +363,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     {
 #endif
 
-      const GInt begin = levelOffset[_level].begin;
-      const GInt end   = levelOffset[_level].end;
+      const GInt firstCellOfLvl = levelOffset[_level].begin;
+      const GInt lastCellOfLvl  = levelOffset[_level].end;
+      const GInt refinedLvl     = _level + 1;
 #ifdef _OPENMP
 #pragma omp for
 #endif
-      for(GInt cellId = begin; cellId < end; ++cellId) {
-        const GInt cellCount = cellId - begin;
-        refineCell(cellId, levelOffset[_level + 1].begin + cellCount * cartesian::maxNoChildren<NDIM>());
+      for(GInt cellId = firstCellOfLvl; cellId < lastCellOfLvl; ++cellId) {
+        const GInt cellCount = cellId - firstCellOfLvl;
+        refineCell(cellId, levelOffset[refinedLvl].begin + cellCount * cartesian::maxNoChildren<NDIM>());
       }
 #ifdef _OPENMP
     }

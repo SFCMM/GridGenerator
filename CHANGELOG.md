@@ -91,7 +91,6 @@
 - Add error for missing documentation (6)
 - Add python script to analyse performance. (5)
 
-- BUG: donut_lowres.stl at level 6/4 produces some cells outside (3)
 - fix all warnings (4)
 - cleanup todo items (5)
 - check for stuff that needs refactoring (6)
@@ -112,7 +111,6 @@
 ### Buildsystem
 
 ### Testing
-
 - activate backtracing
 - automatically run testcases
 

@@ -1,12 +1,12 @@
 {
   "dry-run": true,
   "dim": 3,
-  "partitionLevel": 2,
-  "uniformLevel": 3,
-  "maxRfnmtLvl": 6,
+  "partitionLevel": 3,
+  "uniformLevel": 4,
+  "maxRfnmtLvl": 7,
   "maxNoCells": 2000000,
   "outputDir": "out",
-  "gridFileName": "donut_lowres",
+  "gridFileName": "f22",
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -19,7 +19,7 @@
   "geometry": {
     "stlA": {
       "type": "stl",
-      "filename": "donut_lowres.stl"
+      "filename": "f22.stl"
     }
   }
 }

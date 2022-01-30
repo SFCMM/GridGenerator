@@ -1,12 +1,12 @@
 {
   "dry-run": true,
   "dim": 3,
-  "partitionLevel": 2,
-  "uniformLevel": 3,
-  "maxRfnmtLvl": 6,
-  "maxNoCells": 2000000,
+  "partitionLevel": 3,
+  "uniformLevel": 4,
+  "maxRfnmtLvl": 9,
+  "maxNoCells": 4000000,
   "outputDir": "out",
-  "gridFileName": "donut_lowres",
+  "gridFileName": "sphere_ultrares_large",
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -19,7 +19,7 @@
   "geometry": {
     "stlA": {
       "type": "stl",
-      "filename": "donut_lowres.stl"
+      "filename": "sphere_ultrares_binary.stl"
     }
   }
 }

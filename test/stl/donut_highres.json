@@ -6,7 +6,7 @@
   "maxRfnmtLvl": 6,
   "maxNoCells": 2000000,
   "outputDir": "out",
-  "gridFileName": "donut_lowres",
+  "gridFileName": "donut_highres",
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -19,7 +19,7 @@
   "geometry": {
     "stlA": {
       "type": "stl",
-      "filename": "donut_lowres.stl"
+      "filename": "donut_highres.stl"
     }
   }
 }

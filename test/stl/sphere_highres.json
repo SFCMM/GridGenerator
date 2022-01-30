@@ -1,16 +1,15 @@
 {
   "dry-run": true,
   "dim": 3,
-  "partitionLevel": 3,
-  "uniformLevel": 4,
-  "maxRfnmtLvl": 5,
+  "partitionLevel": 2,
+  "uniformLevel": 3,
+  "maxRfnmtLvl": 6,
   "maxNoCells": 2000000,
   "outputDir": "out",
-  "gridFileName": "donut_lowres_lvl2",
+  "gridFileName": "sphere_highres",
   "gridOutput": {
     "format": "VTKB",
-    "cellFilter": "targetLvl",
-    "outputLvl": 2,
+    "cellFilter": "leafCells",
     "type": "points",
     "outputValues": [
       "level",
@@ -20,7 +19,7 @@
   "geometry": {
     "stlA": {
       "type": "stl",
-      "filename": "donut_lowres.stl"
+      "filename": "sphere_highres.stl"
     }
   }
 }
