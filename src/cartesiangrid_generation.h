@@ -22,6 +22,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::size;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::capacity;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::boundingBox;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::transformMaxLvl;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -297,17 +298,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     cerr0 << "actual nodal extent: " << actualExtent.str() << std::endl;
-    std::array<GDouble, NDIM> transformationValues;
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      transformationValues[dir] = boundingBox().max(dir) / (actualExtent.max(dir) - actualExtent.min(dir));
-    }
+    GInt    alignDir            = 1;
+    GDouble transformationValue = boundingBox().max(alignDir) / (actualExtent.max(alignDir) - actualExtent.min(alignDir));
+
 
     for(GInt cellId = m_levelOffsets[maxLvl()].begin; cellId < m_levelOffsets[maxLvl()].end; ++cellId) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
         center(cellId, dir) =
-            center(cellId, dir) * transformationValues[dir] - (transformationValues[dir] * actualExtent.max(dir) - boundingBox().max(dir));
+            center(cellId, dir) * transformationValue - (transformationValue * actualExtent.max(dir) - boundingBox().max(dir));
       }
     }
+    transformMaxLvl(transformationValue);
   }
 
   static constexpr auto memorySizePerCell() -> GInt {
