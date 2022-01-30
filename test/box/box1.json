@@ -1,0 +1,32 @@
+{
+  "dry-run": true,
+  "dim": 2,
+  "partitionLevel": 5,
+  "uniformLevel": 5,
+  "maxRfnmtLvl": 5,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "box1",
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "cube": {
+      "type": "box",
+      "A": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        1.0,
+        1.0
+      ]
+    }
+  }
+}

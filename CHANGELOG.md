@@ -99,14 +99,13 @@
 ## Ongoing:
 
 - Implement MPI communication.
-- allow to generate grids with nodes on the surface of the geometry
-- add more testcases
 - compare result of testcases
 
 
 ## Done:
 
 ### Features
+- allow to generate grids with nodes on the surface of the geometry (for boxes)
 
 ### Buildsystem
 

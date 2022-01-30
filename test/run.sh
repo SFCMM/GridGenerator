@@ -90,6 +90,11 @@ time_test sphere_ultrares.json
 time_test sphere_ultrares_large.json
 cd ..
 
+cd box || exit
+time_test box1.json
+time_test box1_aligned.json
+cd ..
+
 ./clean.sh
 
 if [ $FAILED == 0 ]; then

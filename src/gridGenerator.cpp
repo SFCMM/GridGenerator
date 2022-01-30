@@ -137,6 +137,10 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
     m_outputDir += '/';
   }
 
+  // align the leaf nodes with the surface (only works with analytical geometries)
+  m_alignWithSurface = false;
+  m_alignWithSurface = opt_config_value("alignNodesWithSurface", m_alignWithSurface);
+
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridIo]);
 }
@@ -210,6 +214,11 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridGeneration]);
   // don't output level anymore as a xml attribute
   logger.eraseAttribute("level");
+
+  // todo: add check that we have only
+  if(m_alignWithSurface) {
+    gridGen<NDIM>().transformMaxRfnmtLvlToExtent();
+  }
 
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
   RECORD_TIMER_START(TimeKeeper[Timers::GridIo]);
