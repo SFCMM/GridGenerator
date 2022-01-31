@@ -304,8 +304,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     for(GInt cellId = m_levelOffsets[maxLvl()].begin; cellId < m_levelOffsets[maxLvl()].end; ++cellId) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        center(cellId, dir) =
-            center(cellId, dir) * transformationValue - (transformationValue * actualExtent.max(dir) - boundingBox().max(dir));
+        if(dir == alignDir) {
+          center(cellId, dir) =
+              center(cellId, dir) * transformationValue - (transformationValue * actualExtent.max(dir) - boundingBox().max(dir));
+        } else {
+          center(cellId, dir) = center(cellId, dir) * transformationValue;
+        }
       }
     }
     transformMaxLvl(transformationValue);
