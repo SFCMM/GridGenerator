@@ -58,8 +58,8 @@ namespace debug {
 inline void backtrace() {
   std::cout << boost::stacktrace::stacktrace() << std::endl;
 
-  //  llvm::errs() << "Backtrace (line numbers may be too large by 1-3 lines):\n";
-  //  llvm::sys::PrintStackTrace(llvm::errs());
+  //  llvm::errs() << "Backtrace (line numbers may be too large by 1-3
+  //  lines):\n"; llvm::sys::PrintStackTrace(llvm::errs());
 }
 #endif
 

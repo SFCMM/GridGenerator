@@ -7,7 +7,8 @@ static constexpr GChar maxValue = 64;
 // initialization value (0)
 static constexpr GChar base64_zero{'A'};
 // transposition table
-static constexpr std::array<unsigned char, 65> encodeTable{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
+static constexpr std::array<unsigned char, 65> encodeTable{
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
 
 // Masks for accessing single bits
 // 000001
@@ -157,8 +158,8 @@ inline static auto encodeLE(const T* c) -> GString {
 }
 
 // todo: unify with the compile-time constant version!
-/// Encode an array of type T variables to Base64  (Little Endian) (non compile-time constant version)
-/// \tparam T Type of the variables to be encoded.
+/// Encode an array of type T variables to Base64  (Little Endian) (non
+/// compile-time constant version)/// \tparam T Type of the variables to be encoded.
 /// \tparam shifted Pad at the beginning to align with byte boundary.
 /// \param length Length of the array to be encoded.
 /// \param c Values to be encoded.
