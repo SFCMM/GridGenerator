@@ -7,8 +7,7 @@ static constexpr GChar maxValue = 64;
 // initialization value (0)
 static constexpr GChar base64_zero{'A'};
 // transposition table
-static constexpr std::array<unsigned char, 65> encodeTable{
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
+static constexpr std::array<unsigned char, 65> encodeTable{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
 
 // Masks for accessing single bits
 // 000001
@@ -158,14 +157,21 @@ inline static auto encodeLE(const T* c) -> GString {
 }
 
 // todo: unify with the compile-time constant version!
-/// Encode an array of type T variables to Base64  (Little Endian) (non
-/// compile-time constant version)/// \tparam T Type of the variables to be encoded.
+/// Encode an array of type T variables to Base64  (Little Endian) (non compile-time constant version)
+/// \tparam T Type of the variables to be encoded.
 /// \tparam shifted Pad at the beginning to align with byte boundary.
 /// \param length Length of the array to be encoded.
 /// \param c Values to be encoded.
 /// \return String of the encoded array.
 template <typename T, GInt shifted = 0>
 inline static auto encodeLE(T* c, const GInt length) -> GString {
+  // Nothing to do for length 0
+  if(length == 0) {
+    std::cerr << "ERROR: Invalid call to encodeLE() with length = 0" << std::endl;
+    std::exit(-1);
+    // return "";
+  }
+
   const GInt num_chars = gcem::ceil((sizeof(T) * 8 * length - shifted) / 6.0);
 
   std::vector<T>      swapped_endian(length);

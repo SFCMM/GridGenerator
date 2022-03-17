@@ -101,6 +101,8 @@
 - Implement MPI communication.
 - compare result of testcases
 
+- allow subtracting geometry
+
 
 ## Done:
 
