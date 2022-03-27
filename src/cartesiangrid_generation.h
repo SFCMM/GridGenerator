@@ -204,6 +204,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void save(const GString& fileName, const json& gridOutConfig) const override {
+    if(size() == 0) {
+      TERMM(-1, "Nothing to save 0 cells in grid!");
+    }
+
     // Grid output configuration
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     GString              filter    = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
@@ -279,7 +283,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   /// Move the leaf nodes to the surface of the geometry.
-  void transformMaxRfnmtLvlToExtent() {
+  void transformMaxRfnmtLvlToExtent(const GInt alignDir = 1) {
     BoundingBoxCT<NDIM> actualExtent;
     for(GInt dir = 0; dir < NDIM; ++dir) {
       actualExtent.min(dir) = std::numeric_limits<GDouble>::max();
@@ -298,7 +302,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     cerr0 << "actual nodal extent: " << actualExtent.str() << std::endl;
-    GInt    alignDir            = 1;
     GDouble transformationValue = boundingBox().max(alignDir) / (actualExtent.max(alignDir) - actualExtent.min(alignDir));
 
 
@@ -531,34 +534,39 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
              "Properties not set correctly! bndry implies IsInside!");
       // remove cell since it is not inside
       if(!property(cellId, CellProperties::inside)) {
-        const GInt parentId = parent(cellId);
-
-        // partitionlvl doesn't have parents
-        if(_level != partitionLvl()) {
-          ASSERT(parentId != INVALID_CELLID, "Invalid parentId! (cellId: " + std::to_string(cellId) + ")");
-
-          // remove from parent
-          updateParent(parent(cellId), cellId, INVALID_CELLID);
-          --m_noChildren[parentId];
-        }
-
-        // remove from neighbors
-        for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
-          const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
-          if(nghbrCellId != INVALID_CELLID) {
-            m_nghbrIds[nghbrCellId].n[cartesian::oppositeDir(dir)] = INVALID_CELLID;
-          }
-        }
-        if(cellId != m_levelOffsets[_level].end - 1) {
-          // copy an inside cell to the current position to fill the hole
-          copyCell(m_levelOffsets[_level].end - 1, cellId);
-        }
-        m_levelOffsets[_level].end--;
+        deleteCell(cellId);
       }
     }
     size() = levelSize(m_levelOffsets[_level]);
     logger << SP3 << "* grid has " << size() << " cells" << std::endl;
     std::cout << SP3 << "* grid has " << size() << " cells" << std::endl;
+  }
+
+  void deleteCell(const GInt cellId) {
+    const GInt parentId = parent(cellId);
+    const GInt lvl      = static_cast<GInt>(level(cellId));
+
+    // partitionlvl doesn't have parents
+    if(lvl != partitionLvl()) {
+      ASSERT(parentId != INVALID_CELLID, "Invalid parentId! (cellId: " + std::to_string(cellId) + ")");
+
+      // remove from parent
+      updateParent(parent(cellId), cellId, INVALID_CELLID);
+      --m_noChildren[parentId];
+    }
+
+    // remove from neighbors
+    for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+      const GInt nghbrCellId = m_nghbrIds[cellId].n[dir];
+      if(nghbrCellId != INVALID_CELLID) {
+        m_nghbrIds[nghbrCellId].n[cartesian::oppositeDir(dir)] = INVALID_CELLID;
+      }
+    }
+    if(cellId != m_levelOffsets[lvl].end - 1) {
+      // copy an inside cell to the current position to fill the hole
+      copyCell(m_levelOffsets[lvl].end - 1, cellId);
+    }
+    m_levelOffsets[lvl].end--;
   }
 
   template <GBool CHECKALL = false>
