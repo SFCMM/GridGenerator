@@ -5,7 +5,7 @@
 
 #include <sfcmm_common.h>
 //#include "celltree.h"
-#include "common/IO.h"
+//#include "common/IO.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"
@@ -51,7 +51,9 @@ class CartesianGridData {
       m_properties(initGrid.props()),
       m_level(initGrid.level()),
       m_nghbrIds(initGrid.neighbor()),
-      m_lengthOnLevel(initGrid.lengthOnLvl()) {}
+      m_lengthOnLevel(initGrid.lengthOnLvl()),
+      m_partitionLvl(initGrid.partitionLvl()),
+      m_currentHighestLvl(initGrid.currentHighestLvl()) {}
 
   // todo: add asserts
   [[nodiscard]] inline auto noCells() const -> GInt { return m_noCells; }
@@ -72,7 +74,15 @@ class CartesianGridData {
 
   [[nodiscard]] inline auto boundingBox() const -> const BoundingBoxInterface& { return m_boundingBox; }
 
-  inline auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir]; }
+  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
+    return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir];
+  }
+
+  [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool { return m_properties[id][static_cast<GInt>(p)]; }
+
+  [[nodiscard]] inline auto currentHighestLvl() const -> GInt { return m_currentHighestLvl; }
+
+  [[nodiscard]] inline auto partitionLvl() const -> GInt { return m_partitionLvl; }
 
 
  private:
@@ -84,6 +94,9 @@ class CartesianGridData {
   const std::vector<std::byte>&          m_level;
   const std::vector<GInt>&               m_nghbrIds;
   const std::array<GDouble, MAX_LVL>     m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
+
+  const GInt& m_partitionLvl;
+  const GInt& m_currentHighestLvl;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -173,6 +186,7 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_properties[id][static_cast<GInt>(p)];
   }
+
   [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -180,6 +194,14 @@ class BaseCartesianGrid : public GridInterface {
       return m_properties.at(id)[grid::cell::p(p)];
     }
     return m_properties[id][static_cast<GInt>(p)];
+  }
+
+  inline auto property(const GInt id) -> PropertyBitsetType& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_properties.at(id);
+    }
+    return m_properties[id];
   }
 
   [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
@@ -242,14 +264,6 @@ class BaseCartesianGrid : public GridInterface {
     return m_properties[id].to_string();
   }
 
-  inline auto property(const GInt id) -> PropertyBitsetType& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      //      checkBounds(id);
-      return m_properties.at(id);
-    }
-    return m_properties[id];
-  }
-
   void resetProperties(const GInt id) {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -295,9 +309,6 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   [[nodiscard]] inline auto props() const -> const std::vector<PropertyBitsetType>& { return m_properties; }
-
-
-  //  virtual auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
 
  protected:
   inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }

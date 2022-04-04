@@ -2,6 +2,7 @@
 #define GRIDGENERATOR_CARTESIANGRID_GENERATION_H
 #include <sfcmm_common.h>
 #include "cartesiangrid_base.h"
+#include "common/IO.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
@@ -231,24 +232,27 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::function<GBool(GInt)> isTargetLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == outputLvl; };
 
 
-    std::function<GBool(GInt)>& outputFilter = isLeaf;
-    if(filter == "highestLvl") {
-      outputFilter = isHighestLevel;
-    } else if(filter == "lowestLvl" || filter == "partitionLvl") {
-      outputFilter = isLowestLevel;
-    } else if(filter == "leafCells") {
-      outputFilter = isLeaf;
-    } else if(filter == "targetLvl") {
-      if(!config::has_config_value(gridOutConfig, "outputLvl")) {
-        TERMM(-1, "Required value not set!");
-      }
-      outputFilter = isTargetLevel;
-      if(outputLvl < partitionLvl()) {
-        TERMM(-1, "Outputting a lvl below the partition lvl is not possible!");
-      }
-    } else {
-      TERMM(-1, "Unknown output filter " + filter);
-    }
+    //    std::function<GBool(GInt)>& outputFilter = isLeaf;
+    //    if(filter == "highestLvl") {
+    //      outputFilter = isHighestLevel;
+    //    } else if(filter == "lowestLvl" || filter == "partitionLvl") {
+    //      outputFilter = isLowestLevel;
+    //    } else if(filter == "leafCells") {
+    //      outputFilter = isLeaf;
+    //    } else if(filter == "targetLvl") {
+    //      if(!config::has_config_value(gridOutConfig, "outputLvl")) {
+    //        TERMM(-1, "Required value not set!");
+    //      }
+    //      outputFilter = isTargetLevel;
+    //      if(outputLvl < partitionLvl()) {
+    //        TERMM(-1, "Outputting a lvl below the partition lvl is not possible!");
+    //      }
+    //    } else {
+    //      TERMM(-1, "Unknown output filter " + filter);
+    //    }
+
+    auto filterList = std::make_unique<CellFilterManager<NDIM>>(config::opt_config_value(gridOutConfig, "cellFilter", json({"leafCells"})));
+
 
     std::vector<IOIndex>              index;
     std::vector<std::vector<GString>> values;
@@ -271,12 +275,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     cerr0 << std::endl;
 
     if(format == "ASCII") {
-      ASCII::writePointsCSV<NDIM>(fileName, size(), center(), index, values, outputFilter);
+      ASCII::writePointsCSV<NDIM>(fileName, size(), center(), filterList.get(), index, values);
     } else if(format == "VTK") {
-      VTK::ASCII::writePoints<NDIM>(fileName, size(), center(), index, values, outputFilter);
+      VTK::ASCII::writePoints<NDIM>(fileName, size(), center(), filterList.get(), index, values);
     } else if(format == "VTKB") {
       // todo: rename format
-      VTK::BINARY::writePoints<NDIM>(fileName, size(), center(), index, values, outputFilter);
+      VTK::BINARY::writePoints<NDIM>(fileName, size(), center(), filterList.get(), index, values);
     } else {
       TERMM(-1, "Unknown output format " + format);
     }
