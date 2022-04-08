@@ -215,41 +215,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     GString              format    = config::opt_config_value(gridOutConfig, "format", GString("ASCII"));
     GString              type      = config::opt_config_value(gridOutConfig, "type", GString("point"));
     std::vector<GString> outvalues = config::opt_config_value(gridOutConfig, "outputValues", std::vector<GString>({"level"}));
-    GInt                 outputLvl = config::opt_config_value(gridOutConfig, "outputLvl", 0);
-
-    // Cell filter functions
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // only output the lowest level
-    std::function<GBool(GInt)> isLowestLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == partitionLvl(); };
-
-    // only output the highest level
-    std::function<GBool(GInt)> isHighestLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == currentHighestLvl(); };
-
-    // only output leaf cells (i.e. cells without children)
-    std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return m_noChildren[cellId] == 0; };
-
-    // only output the given level
-    std::function<GBool(GInt)> isTargetLevel = [&](GInt cellId) { return std::to_integer<GInt>(level(cellId)) == outputLvl; };
-
-
-    //    std::function<GBool(GInt)>& outputFilter = isLeaf;
-    //    if(filter == "highestLvl") {
-    //      outputFilter = isHighestLevel;
-    //    } else if(filter == "lowestLvl" || filter == "partitionLvl") {
-    //      outputFilter = isLowestLevel;
-    //    } else if(filter == "leafCells") {
-    //      outputFilter = isLeaf;
-    //    } else if(filter == "targetLvl") {
-    //      if(!config::has_config_value(gridOutConfig, "outputLvl")) {
-    //        TERMM(-1, "Required value not set!");
-    //      }
-    //      outputFilter = isTargetLevel;
-    //      if(outputLvl < partitionLvl()) {
-    //        TERMM(-1, "Outputting a lvl below the partition lvl is not possible!");
-    //      }
-    //    } else {
-    //      TERMM(-1, "Unknown output filter " + filter);
-    //    }
 
     auto filterList = std::make_unique<CellFilterManager<NDIM>>(config::opt_config_value(gridOutConfig, "cellFilter", json({"leafCells"})));
 
