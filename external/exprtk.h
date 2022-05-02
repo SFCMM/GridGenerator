@@ -1882,9 +1882,7 @@ struct loop_runtime_check {
   };
 
   virtual void handle_runtime_violation(const violation_context &) {
-    //    throw std::runtime_error("ExprTk Loop run-time violation.");
-    std::cerr << "ExprTk Loop run-time violation." << std::endl;
-    std::exit(-1);
+    throw std::runtime_error("ExprTk Loop run-time violation.");
   }
 
   virtual ~loop_runtime_check() {}
@@ -2690,10 +2688,7 @@ public:
 
   explicit token_scanner(const std::size_t &stride) : stride_(stride) {
     if (stride > 4) {
-      //      throw std::invalid_argument("token_scanner() - Invalid stride
-      //      value");
-      std::cerr << "token_scanner() - Invalid stride value" << std::endl;
-      std::exit(-1);
+      throw std::invalid_argument("token_scanner() - Invalid stride value");
     }
   }
 
@@ -2784,10 +2779,7 @@ class token_inserter : public helper_interface {
 public:
   explicit token_inserter(const std::size_t &stride) : stride_(stride) {
     if (stride > 5) {
-      //      throw std::invalid_argument("token_inserter() - Invalid stride
-      //      value");
-      std::cerr << "token_inserter() - Invalid stride value" << std::endl;
-      std::exit(-1);
+      throw std::invalid_argument("token_inserter() - Invalid stride value");
     }
   }
 
@@ -6151,7 +6143,7 @@ public:
     const T result = return_.first ? return_.first->value()
                                    : std::numeric_limits<T>::quiet_NaN();
 
-    //    throw break_exception<T>(result);
+    throw break_exception<T>(result);
 
 #ifndef _MSC_VER
     return std::numeric_limits<T>::quiet_NaN();
@@ -6180,7 +6172,7 @@ template <typename T>
 class continue_node exprtk_final : public expression_node<T> {
 public:
   inline T value() const exprtk_override {
-//    throw continue_exception();
+    throw continue_exception();
 #ifndef _MSC_VER
     return std::numeric_limits<T>::quiet_NaN();
 #endif
@@ -6490,12 +6482,12 @@ public:
     T result = T(0);
 
     while (is_true(parent_t::condition_)) {
-      //      try {
-      result = parent_t::loop_body_.first->value();
-      //      } catch (const break_exception<T> &e) {
-      //        return e.value;
-      //      } catch (const continue_exception &) {
-      //      }
+      try {
+        result = parent_t::loop_body_.first->value();
+      } catch (const break_exception<T> &e) {
+        return e.value;
+      } catch (const continue_exception &) {
+      }
     }
 
     return result;
@@ -6523,12 +6515,12 @@ public:
     loop_runtime_checker::reset();
 
     while (is_true(parent_t::condition_) && loop_runtime_checker::check()) {
-      //      try {
-      result = parent_t::loop_body_.first->value();
-      //      } catch (const break_exception<T> &e) {
-      //        return e.value;
-      //      } catch (const continue_exception &) {
-      //      }
+      try {
+        result = parent_t::loop_body_.first->value();
+      } catch (const break_exception<T> &e) {
+        return e.value;
+      } catch (const continue_exception &) {
+      }
     }
 
     return result;
@@ -6551,12 +6543,12 @@ public:
     T result = T(0);
 
     do {
-      //      try {
-      result = parent_t::loop_body_.first->value();
-      //      } catch (const break_exception<T> &e) {
-      //        return e.value;
-      //      } catch (const continue_exception &) {
-      //      }
+      try {
+        result = parent_t::loop_body_.first->value();
+      } catch (const break_exception<T> &e) {
+        return e.value;
+      } catch (const continue_exception &) {
+      }
     } while (is_false(parent_t::condition_.first));
 
     return result;
@@ -6587,12 +6579,12 @@ public:
     loop_runtime_checker::reset();
 
     do {
-      //      try {
-      result = parent_t::loop_body_.first->value();
-      //      } catch (const break_exception<T> &e) {
-      //        return e.value;
-      //      } catch (const continue_exception &) {
-      //      }
+      try {
+        result = parent_t::loop_body_.first->value();
+      } catch (const break_exception<T> &e) {
+        return e.value;
+      } catch (const continue_exception &) {
+      }
     } while (is_false(parent_t::condition_.first) &&
              loop_runtime_checker::check());
 
@@ -6620,23 +6612,23 @@ public:
 
     if (parent_t::incrementor_.first) {
       while (is_true(parent_t::condition_)) {
-        //        try {
-        result = parent_t::loop_body_.first->value();
-        //        } catch (const break_exception<T> &e) {
-        //          return e.value;
-        //        } catch (const continue_exception &) {
-        //        }
+        try {
+          result = parent_t::loop_body_.first->value();
+        } catch (const break_exception<T> &e) {
+          return e.value;
+        } catch (const continue_exception &) {
+        }
 
         parent_t::incrementor_.first->value();
       }
     } else {
       while (is_true(parent_t::condition_)) {
-        //        try {
-        result = parent_t::loop_body_.first->value();
-        //        } catch (const break_exception<T> &e) {
-        //          return e.value;
-        //        } catch (const continue_exception &) {
-        //        }
+        try {
+          result = parent_t::loop_body_.first->value();
+        } catch (const break_exception<T> &e) {
+          return e.value;
+        } catch (const continue_exception &) {
+        }
       }
     }
 
@@ -6670,23 +6662,23 @@ public:
 
     if (parent_t::incrementor_.first) {
       while (is_true(parent_t::condition_) && loop_runtime_checker::check()) {
-        //        try {
-        result = parent_t::loop_body_.first->value();
-        //        } catch (const break_exception<T> &e) {
-        //          return e.value;
-        //        } catch (const continue_exception &) {
-        //        }
+        try {
+          result = parent_t::loop_body_.first->value();
+        } catch (const break_exception<T> &e) {
+          return e.value;
+        } catch (const continue_exception &) {
+        }
 
         parent_t::incrementor_.first->value();
       }
     } else {
       while (is_true(parent_t::condition_) && loop_runtime_checker::check()) {
-        //        try {
-        result = parent_t::loop_body_.first->value();
-        //        } catch (const break_exception<T> &e) {
-        //          return e.value;
-        //        } catch (const continue_exception &) {
-        //        }
+        try {
+          result = parent_t::loop_body_.first->value();
+        } catch (const break_exception<T> &e) {
+          return e.value;
+        } catch (const continue_exception &) {
+        }
       }
     }
 
@@ -7286,8 +7278,8 @@ public:
 
   swap_generic_node(expression_ptr var0, expression_ptr var1)
       : binary_node<T>(details::e_swap, var0, var1),
-        var0_(static_cast<ivariable_ptr>(static_cast<void *>(var0))),
-        var1_(static_cast<ivariable_ptr>(static_cast<void *>(var1))) {}
+        var0_(dynamic_cast<ivariable_ptr>(var0)),
+        var1_(dynamic_cast<ivariable_ptr>(var1)) {}
 
   inline T value() const exprtk_override {
     std::swap(var0_->ref(), var1_->ref());
@@ -7317,8 +7309,8 @@ public:
     if (is_ivector_node(binary_node<T>::branch_[0].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[0].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[0].first))) {
         vec0_node_ptr_ = vi->vec();
         vds() = vi->vds();
       }
@@ -7327,8 +7319,8 @@ public:
     if (is_ivector_node(binary_node<T>::branch_[1].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[1].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[1].first))) {
         vec1_node_ptr_ = vi->vec();
       }
     }
@@ -7565,14 +7557,12 @@ public:
     construct_branch_pair(branch_, str_branch);
 
     if (is_generally_string_node(branch_.first)) {
-      str_base_ptr_ =
-          static_cast<str_base_ptr>(static_cast<void *>(branch_.first));
+      str_base_ptr_ = dynamic_cast<str_base_ptr>(branch_.first);
 
       if (0 == str_base_ptr_)
         return;
 
-      str_range_ptr_ =
-          static_cast<irange_ptr>(static_cast<void *>(branch_.first));
+      str_range_ptr_ = dynamic_cast<irange_ptr>(branch_.first);
 
       if (0 == str_range_ptr_)
         return;
@@ -7673,28 +7663,28 @@ public:
     range_.cache.second = range_.n1_c.second;
 
     if (is_generally_string_node(binary_node<T>::branch_[0].first)) {
-      str0_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == str0_base_ptr_)
         return;
 
-      str0_range_ptr_ = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_range_ptr_ =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == str0_range_ptr_)
         return;
     }
 
     if (is_generally_string_node(binary_node<T>::branch_[1].first)) {
-      str1_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      str1_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == str1_base_ptr_)
         return;
 
-      str1_range_ptr_ = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      str1_range_ptr_ =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == str1_range_ptr_)
         return;
@@ -7845,14 +7835,14 @@ public:
         str1_base_ptr_(0), str0_range_ptr_(0), str1_range_ptr_(0),
         initialised_(false) {
     if (is_generally_string_node(binary_node<T>::branch_[0].first)) {
-      str0_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == str0_base_ptr_)
         return;
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == range)
         return;
@@ -7861,14 +7851,14 @@ public:
     }
 
     if (is_generally_string_node(binary_node<T>::branch_[1].first)) {
-      str1_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      str1_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == str1_base_ptr_)
         return;
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == range)
         return;
@@ -8000,8 +7990,7 @@ public:
     construct_branch_pair(branch_, branch);
 
     if (is_generally_string_node(branch_.first)) {
-      str_base_ptr_ =
-          static_cast<str_base_ptr>(static_cast<void *>(branch_.first));
+      str_base_ptr_ = dynamic_cast<str_base_ptr>(branch_.first);
 
       if (0 == str_base_ptr_)
         return;
@@ -8071,22 +8060,22 @@ public:
         str0_base_ptr_(0), str1_base_ptr_(0), str0_node_ptr_(0),
         str1_range_ptr_(0) {
     if (is_string_node(binary_node<T>::branch_[0].first)) {
-      str0_node_ptr_ = static_cast<strvar_node_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_node_ptr_ =
+          static_cast<strvar_node_ptr>(binary_node<T>::branch_[0].first);
 
-      str0_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
     }
 
     if (is_generally_string_node(binary_node<T>::branch_[1].first)) {
-      str1_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      str1_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == str1_base_ptr_)
         return;
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == range)
         return;
@@ -8170,11 +8159,11 @@ public:
       str0_rng_node_ptr_ =
           static_cast<str_rng_node_ptr>(binary_node<T>::branch_[0].first);
 
-      str0_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == range)
         return;
@@ -8183,14 +8172,14 @@ public:
     }
 
     if (is_generally_string_node(binary_node<T>::branch_[1].first)) {
-      str1_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      str1_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == str1_base_ptr_)
         return;
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == range)
         return;
@@ -8286,28 +8275,28 @@ public:
     range_.cache.second = range_.n1_c.second;
 
     if (is_generally_string_node(trinary_node<T>::branch_[0].first)) {
-      str0_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(trinary_node<T>::branch_[0].first));
+      str0_base_ptr_ =
+          dynamic_cast<str_base_ptr>(trinary_node<T>::branch_[0].first);
 
       if (0 == str0_base_ptr_)
         return;
 
-      str0_range_ptr_ = static_cast<irange_ptr>(
-          static_cast<void *>(trinary_node<T>::branch_[0].first));
+      str0_range_ptr_ =
+          dynamic_cast<irange_ptr>(trinary_node<T>::branch_[0].first);
 
       if (0 == str0_range_ptr_)
         return;
     }
 
     if (is_generally_string_node(trinary_node<T>::branch_[1].first)) {
-      str1_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(trinary_node<T>::branch_[1].first));
+      str1_base_ptr_ =
+          dynamic_cast<str_base_ptr>(trinary_node<T>::branch_[1].first);
 
       if (0 == str1_base_ptr_)
         return;
 
-      str1_range_ptr_ = static_cast<irange_ptr>(
-          static_cast<void *>(trinary_node<T>::branch_[1].first));
+      str1_range_ptr_ =
+          dynamic_cast<irange_ptr>(trinary_node<T>::branch_[1].first);
 
       if (0 == str1_range_ptr_)
         return;
@@ -8416,13 +8405,13 @@ public:
 
     if (is_generally_string_node(binary_node<T>::branch_[0].first)) {
       str0_base_ptr_ =
-          static_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == str0_base_ptr_)
         return;
 
       str0_range_ptr_ =
-          static_cast<irange_ptr>(binary_node<T>::branch_[0].first);
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == str0_range_ptr_)
         return;
@@ -8511,14 +8500,12 @@ public:
     else if (!is_generally_string_node(final_node_.first))
       return;
 
-    str_base_ptr_ =
-        static_cast<str_base_ptr>(static_cast<void *>(final_node_.first));
+    str_base_ptr_ = dynamic_cast<str_base_ptr>(final_node_.first);
 
     if (0 == str_base_ptr_)
       return;
 
-    str_range_ptr_ =
-        static_cast<irange_ptr>(static_cast<void *>(final_node_.first));
+    str_range_ptr_ = dynamic_cast<irange_ptr>(final_node_.first);
 
     if (0 == str_range_ptr_)
       return;
@@ -9108,8 +9095,7 @@ public:
     construct_branch_pair(v_, v);
 
     if (is_ivector_node(v_.first)) {
-      ivec_ptr_ =
-          static_cast<vector_interface<T> *>(static_cast<void *>(v_.first));
+      ivec_ptr_ = dynamic_cast<vector_interface<T> *>(v_.first);
     } else
       ivec_ptr_ = 0;
   }
@@ -9378,8 +9364,8 @@ public:
     } else if (is_ivector_node(binary_node<T>::branch_[1].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[1].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[1].first))) {
         vec1_node_ptr_ = vi->vec();
 
         if (!vi->side_effect()) {
@@ -9702,8 +9688,8 @@ public:
     } else if (is_ivector_node(binary_node<T>::branch_[1].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[1].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[1].first))) {
         vec1_node_ptr_ = vi->vec();
         vec1_node_ptr_->vds() = vds();
       } else
@@ -9814,8 +9800,8 @@ public:
     } else if (is_ivector_node(binary_node<T>::branch_[0].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[0].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[0].first))) {
         vec0_node_ptr_ = vi->vec();
         v0_is_ivec = true;
       }
@@ -9827,8 +9813,8 @@ public:
     } else if (is_ivector_node(binary_node<T>::branch_[1].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[1].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[1].first))) {
         vec1_node_ptr_ = vi->vec();
         v1_is_ivec = true;
       }
@@ -9959,8 +9945,8 @@ public:
     } else if (is_ivector_node(binary_node<T>::branch_[0].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[0].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[0].first))) {
         vec0_node_ptr_ = vi->vec();
         v0_is_ivec = true;
       }
@@ -10078,8 +10064,8 @@ public:
     } else if (is_ivector_node(binary_node<T>::branch_[1].first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(binary_node<T>::branch_[1].first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    binary_node<T>::branch_[1].first))) {
         vec1_node_ptr_ = vi->vec();
         v1_is_ivec = true;
       }
@@ -10196,8 +10182,8 @@ public:
     } else if (is_ivector_node(unary_node<T>::branch_.first)) {
       vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-      if (0 != (vi = static_cast<vector_interface<T> *>(
-                    static_cast<void *>(unary_node<T>::branch_.first)))) {
+      if (0 != (vi = dynamic_cast<vector_interface<T> *>(
+                    unary_node<T>::branch_.first))) {
         vec0_node_ptr_ = vi->vec();
         vec0_is_ivec = true;
       }
@@ -10312,8 +10298,8 @@ public:
     construct_branch_pair(alternative_, alternative);
 
     if (details::is_ivector_node(consequent_.first)) {
-      vec_interface_ptr ivec_ptr = static_cast<vec_interface_ptr>(
-          static_cast<void *>(consequent_.first));
+      vec_interface_ptr ivec_ptr =
+          dynamic_cast<vec_interface_ptr>(consequent_.first);
 
       if (0 != ivec_ptr) {
         consequent_node_ptr_ = ivec_ptr->vec();
@@ -10321,8 +10307,8 @@ public:
     }
 
     if (details::is_ivector_node(alternative_.first)) {
-      vec_interface_ptr ivec_ptr = static_cast<vec_interface_ptr>(
-          static_cast<void *>(alternative_.first));
+      vec_interface_ptr ivec_ptr =
+          dynamic_cast<vec_interface_ptr>(alternative_.first);
 
       if (0 != ivec_ptr) {
         alternative_node_ptr_ = ivec_ptr->vec();
@@ -10855,8 +10841,7 @@ public:
       else if (is_ivector_node(arg_list_[i])) {
         vector_interface<T> *vi = reinterpret_cast<vector_interface<T> *>(0);
 
-        if (0 == (vi = static_cast<vector_interface<T> *>(
-                      static_cast<void *>(arg_list_[i]))))
+        if (0 == (vi = dynamic_cast<vector_interface<T> *>(arg_list_[i])))
           return false;
 
         ts.size = vi->size();
@@ -10868,8 +10853,7 @@ public:
       else if (is_generally_string_node(arg_list_[i])) {
         string_base_node<T> *sbn = reinterpret_cast<string_base_node<T> *>(0);
 
-        if (0 == (sbn = static_cast<string_base_node<T> *>(
-                      static_cast<void *>(arg_list_[i]))))
+        if (0 == (sbn = dynamic_cast<string_base_node<T> *>(arg_list_[i])))
           return false;
 
         ts.size = sbn->size();
@@ -10883,8 +10867,7 @@ public:
 
         range_interface_t *ri = reinterpret_cast<range_interface_t *>(0);
 
-        if (0 == (ri = static_cast<range_interface_t *>(
-                      static_cast<void *>(arg_list_[i]))))
+        if (0 == (ri = dynamic_cast<range_interface_t *>(arg_list_[i])))
           return false;
 
         const range_t &rp = ri->range_ref();
@@ -10900,7 +10883,7 @@ public:
       else if (is_variable_node(arg_list_[i])) {
         variable_node_ptr_t var = variable_node_ptr_t(0);
 
-        if (0 == (var = static_cast<variable_node_ptr_t>(arg_list_[i])))
+        if (0 == (var = dynamic_cast<variable_node_ptr_t>(arg_list_[i])))
           return false;
 
         ts.size = 1;
@@ -11159,7 +11142,7 @@ public:
       results_context_->assign(
           parameter_list_t(gen_function_t::typestore_list_));
 
-      //      throw return_exception();
+      throw return_exception();
     }
 
     return std::numeric_limits<T>::quiet_NaN();
@@ -11188,15 +11171,15 @@ public:
   inline T value() const exprtk_override {
     assert(body_.first);
 
-    //    try {
-    return_invoked_ = false;
-    results_context_->clear();
+    try {
+      return_invoked_ = false;
+      results_context_->clear();
 
-    return body_.first->value();
-    //    } catch (const return_exception &) {
-    //      return_invoked_ = true;
-    //      return std::numeric_limits<T>::quiet_NaN();
-    //    }
+      return body_.first->value();
+    } catch (const return_exception &) {
+      return_invoked_ = true;
+      return std::numeric_limits<T>::quiet_NaN();
+    }
   }
 
   inline typename expression_node<T>::node_type type() const exprtk_override {
@@ -13837,14 +13820,14 @@ public:
       : binary_node<T>(opr, branch0, branch1), str0_base_ptr_(0),
         str1_base_ptr_(0), str0_range_ptr_(0), str1_range_ptr_(0) {
     if (is_generally_string_node(binary_node<T>::branch_[0].first)) {
-      str0_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      str0_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == str0_base_ptr_)
         return;
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[0].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[0].first);
 
       if (0 == range)
         return;
@@ -13853,14 +13836,14 @@ public:
     }
 
     if (is_generally_string_node(binary_node<T>::branch_[1].first)) {
-      str1_base_ptr_ = static_cast<str_base_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      str1_base_ptr_ =
+          dynamic_cast<str_base_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == str1_base_ptr_)
         return;
 
-      irange_ptr range = static_cast<irange_ptr>(
-          static_cast<void *>(binary_node<T>::branch_[1].first));
+      irange_ptr range =
+          dynamic_cast<irange_ptr>(binary_node<T>::branch_[1].first);
 
       if (0 == range)
         return;
@@ -14070,37 +14053,37 @@ private:
 };
 
 template <typename T> inline bool is_vov_node(const expression_node<T> *node) {
-  return (0 != static_cast<const vov_base_node<T> *>(node));
+  return (0 != dynamic_cast<const vov_base_node<T> *>(node));
 }
 
 template <typename T> inline bool is_cov_node(const expression_node<T> *node) {
-  return (0 != static_cast<const cov_base_node<T> *>(node));
+  return (0 != dynamic_cast<const cov_base_node<T> *>(node));
 }
 
 template <typename T> inline bool is_voc_node(const expression_node<T> *node) {
-  return (0 != static_cast<const voc_base_node<T> *>(node));
+  return (0 != dynamic_cast<const voc_base_node<T> *>(node));
 }
 
 template <typename T> inline bool is_cob_node(const expression_node<T> *node) {
-  return (0 != static_cast<const cob_base_node<T> *>(node));
+  return (0 != dynamic_cast<const cob_base_node<T> *>(node));
 }
 
 template <typename T> inline bool is_boc_node(const expression_node<T> *node) {
-  return (0 != static_cast<const boc_base_node<T> *>(node));
+  return (0 != dynamic_cast<const boc_base_node<T> *>(node));
 }
 
 template <typename T>
 inline bool is_t0ot1ot2_node(const expression_node<T> *node) {
-  return (0 != static_cast<const T0oT1oT2_base_node<T> *>(node));
+  return (0 != dynamic_cast<const T0oT1oT2_base_node<T> *>(node));
 }
 
 template <typename T>
 inline bool is_t0ot1ot2ot3_node(const expression_node<T> *node) {
-  return (0 != static_cast<const T0oT1oT2oT3_base_node<T> *>(node));
+  return (0 != dynamic_cast<const T0oT1oT2oT3_base_node<T> *>(node));
 }
 
 template <typename T> inline bool is_uv_node(const expression_node<T> *node) {
-  return (0 != static_cast<const uv_base_node<T> *>(node));
+  return (0 != dynamic_cast<const uv_base_node<T> *>(node));
 }
 
 template <typename T>
@@ -18911,7 +18894,7 @@ public:
               0;
 
           if (0 != (bracket_checker_ptr =
-                        static_cast<lexer::helper::bracket_checker *>(
+                        dynamic_cast<lexer::helper::bracket_checker *>(
                             helper_assembly_.error_token_scanner))) {
             set_error(make_error(
                 parser_error::e_token, bracket_checker_ptr->error_token(),
@@ -18919,7 +18902,7 @@ public:
                     bracket_checker_ptr->error_token().value + "'",
                 exprtk_error_location));
           } else if (0 != (numeric_checker_ptr =
-                               static_cast<lexer::helper::numeric_checker *>(
+                               dynamic_cast<lexer::helper::numeric_checker *>(
                                    helper_assembly_.error_token_scanner))) {
             for (std::size_t i = 0; i < numeric_checker_ptr->error_count();
                  ++i) {
@@ -18937,8 +18920,8 @@ public:
             }
           } else if (0 !=
                      (sequence_validator_ptr =
-                               static_cast<lexer::helper::sequence_validator *>(
-                                   helper_assembly_.error_token_scanner))) {
+                          dynamic_cast<lexer::helper::sequence_validator *>(
+                              helper_assembly_.error_token_scanner))) {
             for (std::size_t i = 0; i < sequence_validator_ptr->error_count();
                  ++i) {
               std::pair<lexer::token, lexer::token> error_token =
@@ -18954,7 +18937,7 @@ public:
             if (sequence_validator_ptr->error_count()) {
               sequence_validator_ptr->clear_errors();
             }
-          } else if (0 != (sequence_validator3_ptr = static_cast<
+          } else if (0 != (sequence_validator3_ptr = dynamic_cast<
                                lexer::helper::sequence_validator_3tokens *>(
                                helper_assembly_.error_token_scanner))) {
             for (std::size_t i = 0; i < sequence_validator3_ptr->error_count();
@@ -19479,7 +19462,7 @@ private:
   bool simplify_unary_negation_branch(expression_node_ptr &node) {
     {
       typedef details::unary_branch_node<T, details::neg_op<T>> ubn_t;
-      ubn_t *n = static_cast<ubn_t *>(node);
+      ubn_t *n = dynamic_cast<ubn_t *>(node);
 
       if (n) {
         expression_node_ptr un_r = n->branch(0);
@@ -19494,7 +19477,7 @@ private:
     {
       typedef details::unary_variable_node<T, details::neg_op<T>> uvn_t;
 
-      uvn_t *n = static_cast<uvn_t *>(node);
+      uvn_t *n = dynamic_cast<uvn_t *>(node);
 
       if (n) {
         const T &v = n->v();
@@ -21363,10 +21346,10 @@ private:
 
       bool rp_result = false;
 
-      //      try {
-      rp_result = rp(r0, r1);
-      //      } catch (std::runtime_error &) {
-      //      }
+      try {
+        rp_result = rp(r0, r1);
+      } catch (std::runtime_error &) {
+      }
 
       if (!rp_result || (r0 > r1)) {
         set_error(make_error(parser_error::e_syntax, current_token(),
@@ -23079,8 +23062,8 @@ private:
 
     expression_node_ptr result = error_node();
 
-    if ((0 != (v0 = static_cast<variable_node_ptr>(variable0))) &&
-        (0 != (v1 = static_cast<variable_node_ptr>(variable1)))) {
+    if ((0 != (v0 = dynamic_cast<variable_node_ptr>(variable0))) &&
+        (0 != (v1 = dynamic_cast<variable_node_ptr>(variable1)))) {
       result = node_allocator_.allocate<details::swap_node<T>>(v0, v1);
 
       if (variable0_generated) {
@@ -24147,12 +24130,12 @@ private:
         return cstrrng_str;
       else if (details::is_t0ot1ot2_node(branch))
         return "(" +
-               static_cast<details::T0oT1oT2_base_node<T> *>(branch)
+               dynamic_cast<details::T0oT1oT2_base_node<T> *>(branch)
                    ->type_id() +
                ")";
       else if (details::is_t0ot1ot2ot3_node(branch))
         return "(" +
-               static_cast<details::T0oT1oT2oT3_base_node<T> *>(branch)
+               dynamic_cast<details::T0oT1oT2oT3_base_node<T> *>(branch)
                    ->type_id() +
                ")";
       else
@@ -26190,8 +26173,8 @@ private:
         variable_node_ptr v0 = variable_node_ptr(0);
         variable_node_ptr v1 = variable_node_ptr(0);
 
-        if ((0 != (v0 = static_cast<variable_node_ptr>(branch[0]))) &&
-            (0 != (v1 = static_cast<variable_node_ptr>(branch[1])))) {
+        if ((0 != (v0 = dynamic_cast<variable_node_ptr>(branch[0]))) &&
+            (0 != (v1 = dynamic_cast<variable_node_ptr>(branch[1])))) {
           result = node_allocator_->allocate<details::swap_node<T>>(v0, v1);
         } else
           result = node_allocator_->allocate<details::swap_generic_node<T>>(
@@ -27584,7 +27567,7 @@ private:
                          const std::string &id, ExternalType t,
                          expression_node_ptr &node,
                          expression_node_ptr &result) {
-        SF3TypeNode *n = static_cast<SF3TypeNode *>(node);
+        SF3TypeNode *n = dynamic_cast<SF3TypeNode *>(node);
 
         if (n) {
           T0 t0 = n->t0();
@@ -27605,7 +27588,7 @@ private:
                                            ExternalType t,
                                            expression_node_ptr &node,
                                            expression_node_ptr &result) {
-        SF3TypeNode *n = static_cast<SF3TypeNode *>(node);
+        SF3TypeNode *n = dynamic_cast<SF3TypeNode *>(node);
 
         if (n) {
           T0 t0 = n->t0();
@@ -32929,7 +32912,7 @@ private:
       expression_node_ptr expression_point =
           node_allocator_->allocate<NodeType>(f);
       function_N_node_t *func_node_ptr =
-          static_cast<function_N_node_t *>(expression_point);
+          dynamic_cast<function_N_node_t *>(expression_point);
 
       if (0 == func_node_ptr) {
         free_all_nodes(*node_allocator_, branch);
