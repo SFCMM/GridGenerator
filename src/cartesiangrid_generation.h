@@ -30,11 +30,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
 
   explicit CartesianGridGen(const GInt maxNoCells) { setCapacity(maxNoCells); }
-  ~CartesianGridGen() override              = default;
-  CartesianGridGen(const CartesianGridGen&) = delete;
-  CartesianGridGen(CartesianGridGen&&)      = delete;
+  ~CartesianGridGen() override                                 = default;
+  CartesianGridGen(const CartesianGridGen&)                    = delete;
+  CartesianGridGen(CartesianGridGen&&)                         = delete;
   auto operator=(const CartesianGridGen&) -> CartesianGridGen& = delete;
-  auto operator=(CartesianGridGen&&) -> CartesianGridGen& = delete;
+  auto operator=(CartesianGridGen&&) -> CartesianGridGen&      = delete;
 
   void setCapacity(const GInt _capacity) override {
     if(!empty()) {

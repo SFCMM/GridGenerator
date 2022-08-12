@@ -19,11 +19,11 @@ template <Debug_Level DEBUG_LEVEL>
 class GridGenerator : public Runnable, private Configuration {
  public:
   GridGenerator(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
-  ~GridGenerator() override           = default;
-  GridGenerator(const GridGenerator&) = delete;
-  GridGenerator(GridGenerator&&)      = delete;
+  ~GridGenerator() override                              = default;
+  GridGenerator(const GridGenerator&)                    = delete;
+  GridGenerator(GridGenerator&&)                         = delete;
   auto operator=(const GridGenerator&) -> GridGenerator& = delete;
-  auto operator=(GridGenerator&&) -> GridGenerator& = delete;
+  auto operator=(GridGenerator&&) -> GridGenerator&      = delete;
 
 
   void init(int argc, GChar** argv);
