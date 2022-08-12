@@ -6,15 +6,17 @@
 // 3D: Surface 2D: Line 1D: Point
 class SurfaceInterface {
  public:
+  virtual ~SurfaceInterface() = default;
+
   [[nodiscard]] virtual auto getCellList() const -> const std::vector<GInt>& = 0;
   virtual void               setCellList(const std::vector<GInt>& cellList)  = 0;
   virtual void               addCell(const GInt cellId, const GInt dir)      = 0;
 
   [[nodiscard]] virtual auto normal_p(const GInt surfCellId) const -> const GDouble*               = 0;
+  [[nodiscard]] virtual auto normal_p() const -> const GDouble*                                    = 0;
   [[nodiscard]] virtual auto neighbor(const GInt cellId, const GInt dir) const -> GInt             = 0;
   [[nodiscard]] virtual auto property(const GInt cellId, const CellProperties prop) const -> GBool = 0;
-
- private:
+  [[nodiscard]] virtual auto no_cells() const -> GInt                                              = 0;
 };
 
 // 3D: Surface 2D: Line 1D: Point
@@ -22,7 +24,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class Surface : public SurfaceInterface {
  public:
   explicit Surface(CartesianGridData<NDIM> data, grid::cell::BitsetType* properties) : m_grid(data), m_properties(properties){};
-  ~Surface() = default;
+  ~Surface() override = default;
 
   Surface(const Surface<DEBUG_LEVEL, NDIM>& copy) = default;
 
@@ -65,12 +67,21 @@ class Surface : public SurfaceInterface {
 
   auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal.at(surfCellId); }
 
+  auto normal() const -> const VectorD<NDIM>& {
+    // todo: this is not really correct it just uses the first cell as representative which is not the actual normal of a surface
+    return m_normal.at(m_cellId[0]);
+  }
+
   [[nodiscard]] auto normal_p(const GInt surfCellId) const -> const GDouble* override { return &m_normal.at(surfCellId)[0]; }
 
 
-  [[nodiscard]] auto size() const -> GInt {
-    return m_cellId.size();
+  [[nodiscard]] auto normal_p() const -> const GDouble* override {
+    // todo: this is not really correct it just uses the first cell as representative which is not the actual normal of a surface
+    return &m_normal.at(m_cellId[0])[0];
   }
+
+
+  [[nodiscard]] auto size() const -> GInt { return m_cellId.size(); }
 
   auto center(const GInt cellId) const -> const VectorD<NDIM>& { return m_grid.center(cellId); }
 
@@ -86,17 +97,16 @@ class Surface : public SurfaceInterface {
     //    }
 
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      //      if(m_nghbrIds.count(cellId) == 0){
-      //        cerr0<<"ERROR: Invalid cellId " << cellId << std::endl;
-      //        std::exit(-1);
-      //      }
       if(dir >= cartesian::maxNoNghbrsDiag<NDIM>()) {
         cerr0 << "ERROR: Invalid direction for " << cellId << " and " << dir << std::endl;
         std::exit(-1);
       }
+      if(cellId == INVALID_CELLID) {
+        cerr0 << "ERROR: Invalid cellId " << std::endl;
+        std::exit(-1);
+      }
     }
     return m_grid.neighbor(cellId, dir);
-    //    return m_nghbrIds.at(cellId)[dir];
   }
 
   // todo: probably not needed
@@ -116,6 +126,8 @@ class Surface : public SurfaceInterface {
       property(surfCellId, prop, value);
     }
   }
+
+  [[nodiscard]] auto no_cells() const -> GInt override { return m_cellId.size(); }
 
  private:
   std::vector<GInt> m_cellId;
