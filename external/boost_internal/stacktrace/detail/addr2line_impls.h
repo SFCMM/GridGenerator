@@ -68,6 +68,9 @@ public:
     }
 
     pid = ::fork();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-default"
+
     switch (pid) {
     case -1:
       // Failed...
@@ -90,6 +93,7 @@ public:
       //    default:
       //      std::terminate();
     }
+#pragma GCC diagnostic pop
 
     p = ::fdopen(pdes[0], "r");
     ::close(pdes[1]);

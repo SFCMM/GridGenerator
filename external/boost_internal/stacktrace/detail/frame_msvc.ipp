@@ -43,7 +43,7 @@ DEFINE_GUID(IID_IDebugSymbols, 0x8c31e98c, 0x983a, 0x48a5, 0x90, 0x16, 0x6f,
 #endif
 
 // Testing. Remove later
-//#   define __uuidof(x) ::IID_ ## x
+// #   define __uuidof(x) ::IID_ ## x
 
 namespace boost {
 namespace stacktrace {
